@@ -1,0 +1,12 @@
+{
+  "name": "bind",
+  "url" : "https://github.com/jeremyfa/bind/",
+  "license": "",
+  "tags": ["cross", "bindings"],
+  "description": "Bind Objective-C and Java (JNI) code to Haxe without writing glue code.",
+  "version": "0.1.0",
+  "classPath": "src/",
+  "releasenote": "Active development.",
+  "contributors": ["jeremyfa"],
+  "dependencies": {}
+}

@@ -1,2 +1,2 @@
-# binder
-Bind Objective-C and Java code to Haxe automatically
+# bind
+Bind Objective-C and Java (JNI) code to Haxe without writing glue code.

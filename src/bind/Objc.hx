@@ -1,7 +1,6 @@
 package bind;
 
 import Sys.println;
-import bind.Class;
 
 using StringTools;
 
@@ -12,19 +11,12 @@ class Objc {
     static var RE_ALL_SPACES = ~/\s*/g;
     static var RE_BEFORE_COMMENT_LINE = ~/^[\s\*]*/g;
     static var RE_AFTER_COMMENT_LINE = ~/[\s\*]*$/g;
-
-    static var RE_TYPE = ~/^([a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:\(\s*\^\s*([A-Za-z_][A-Za-z_0-9]*)?\s*\)|([A-Za-z_][A-Za-z_0-9]*)?)\s*(?:\(\s*((?:[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))?\s*/;
+    //                       type                         protocol                                   block nullability                        nullability                           block arguments
+    static var RE_TYPE = ~/^([a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:\(\s*\^\s*(_Nullable|_Nonnull)?\s*\)|(_Nullable|_Nonnull)?)\s*(\(\s*((?:[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))?\s*/;
     static var RE_IDENTIFIER = ~/^[a-zA-Z_][a-zA-Z0-9_]*/;
-
-    //                                                                                                                                                                                                                                  name                   | name/arg                            return type                              nullability                                    block arguments                                                                         argument name
-    //static var RE_METHOD = ~/^(\-|\+)\s*\(\s*(([a-zA-Z_][a-zA-Z0-9_<>\s\*]*[\s\*]?)\s*\(?\s*\^?\s*([A-Za-z_][A-Za-z_0-9]*)?\s*\)?\s*(\(\s*((?:[a-zA-Z_][a-zA-Z0-9_<>\s\*]*[\s\*]?(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))?)\s*\)\s*(([a-zA-Z_][a-zA-Z0-9_]*)|(([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*\(\s*([a-zA-Z_][a-zA-Z0-9_<>\s\*]*[\s\*]?)\s*\(?\s*\^?\s*([A-Za-z_][A-Za-z_0-9]*)?\s*\)?\s*(\(\s*((?:[a-zA-Z_][a-zA-Z0-9_<>\s\*]*[\s\*]?(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))?\s*\)\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*)+)\s*;/;
-    //static var RE_METHOD = ~/^(\-|\+)\s*\(\s*([a-zA-Z_][a-zA-Z0-9_<>\s\*]*[\s\*]?)\s*\)\s*/;
-
     //                                       modifiers                           type                                                                (  name                    |          name                                  block arguments                                                                 )
     static var RE_PROPERTY = ~/^@property\s*(?:\((\s*(?:[a-z]+\s*,?\s*)*)\))?\s*([a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:([a-zA-Z_][a-zA-Z0-9_]*)|\(\s*\^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)\s*\(\s*((?:[a-zA-Z_][a-zA-Z0-9_<>\s\*]*[\s\*]?(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))\s*;/;
-
     static var RE_INTERFACE = ~/^@interface\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*(?::\s*([a-zA-Z_][a-zA-Z0-9_]*))?\s*(?:\(\s*([a-zA-Z_][a-zA-Z0-9_]*)?\s*\))?\s*(?:<(\s*(?:[a-zA-Z_][a-zA-Z0-9_]*\s*,?\s*)*)>)?/;
-    static var RE_ARG = ~/^\s*(\s*\(?\s*[a-zA-Z_][a-zA-Z0-9_<>\s\*]*[\s\*]?\s*\)?\s*)([a-zA-Z_][a-zA-Z0-9_]*)?/;
 
     /** Parse Objective-C header content to get class informations. */
     public static function parseClass(code:String, ?ctx:{i:Int}):bind.Class {
@@ -166,7 +158,7 @@ class Objc {
                         if (comment != null) {
                             method.description = comment;
                         }
-                        result.properties.push(method);
+                        result.methods.push(method);
                     }
                     comment = null;
                 }
@@ -189,7 +181,7 @@ class Objc {
 
     } //getClass
 
-    public static function parseProperty(code:String, ?ctx:{i:Int}):bind.Property {
+    public static function parseProperty(code:String, ?ctx:{i:Int}):bind.Class.Property {
 
         var i = ctx != null ? ctx.i : 0;
         var after = code.substr(i);
@@ -208,15 +200,15 @@ class Objc {
             if (objcName == null) {
                 // Block property
                 objcName = RE_PROPERTY.matched(4).trim();
-                var objcArgs = RE_PROPERTY.matched(5) != null
-                    ? RE_PROPERTY.matched(5).split(',').map(function(s) return removeSpaces(s))
+                var objcArgs = RE_PROPERTY.matched(5) != null && RE_PROPERTY.matched(5).trim() != ''
+                    ? RE_PROPERTY.matched(5).split(',').map(function(s) return s.trim())
                     : [];
 
                 var args = [];
                 for (objcArg in objcArgs) {
                     args.push(parseArg(objcArg));
                 }
-                type = bind.Type.Function(args);
+                type = bind.Class.Type.Function(args, parseType(objcType));
             }
             else {
                 // Standard property
@@ -228,11 +220,21 @@ class Objc {
                 ctx.i += RE_PROPERTY.matched(0).length;
             }
 
+            var nullable = switch (type) {
+                case Int(orig), Float(orig), Bool(orig):
+                    objcModifiers.indexOf('nullable') != -1;
+                case _:
+                    objcModifiers.indexOf('nonnull') == -1;
+            }
+
             return {
                 name: name,
                 type: type,
                 instance: true,
-                description: null
+                description: null,
+                orig: {
+                    nullable: nullable
+                }
             };
         }
         else {
@@ -251,36 +253,23 @@ class Objc {
 
     } //parseProperty
 
-    public static function parseBlockArg(code:String):Void {
-
-        if (RE_TYPE.match(code)) {
-            trace("BLOCK MATCH");
-        }
-        else {
-            trace("NO BLOCK");
-        }
-    }
-
-    public static function parseMethod(code:String, ?ctx:{i:Int}):bind.Method {
+    public static function parseMethod(code:String, ?ctx:{i:Int}):bind.Class.Method {
 
         var i = ctx != null ? ctx.i : 0;
         var after;
         var len = code.length;
-        var parsedSign = null;
-        var inReturn = false;
-        var inName = false;
         var c;
-        var name = null;
-        var methodParts = [];
         var lastI = -1;
 
+        var sign = null;
         var returnType = null;
+        var name = null;
+
+        var args:Array<bind.Class.Arg> = [];
+        var nameSection = null;
+        var fullNameSections = [];
 
         while (i < len) {
-
-            // TODO remove this
-            if (lastI == i) break;
-            lastI = i;
 
             c = code.charAt(i);
             after = code.substr(i);
@@ -288,18 +277,15 @@ class Objc {
             if (c.trim() == '') {
                 i++;
             }
-            else if (parsedSign == null) {
+            else if (sign == null) {
                 if (c == '+' || c == '-') {
-                    parsedSign = c;
-                    name = '';
-                    inReturn = true;
+                    sign = c;
                     i++;
+                    continue;
                 }
-                else {
-                    return null;
-                }
+                return null;
             }
-            else if (inReturn) {
+            else if (returnType == null) {
                 if (c == '(') {
                     i++;
                     c = code.charAt(i);
@@ -308,121 +294,181 @@ class Objc {
                         c = code.charAt(i);
                     }
                     after = code.substr(i);
-                    trace('test?');
                     if (RE_TYPE.match(after)) {
                         var objcReturnType = RE_TYPE.matched(0);
                         returnType = parseType(objcReturnType);
-                        trace('return: ');
-                        trace(returnType);
                         i += objcReturnType.length;
-                    }
-                    else {
-                        return null;
+                        while (code.charAt(i).trim() == '') i++;
+                        if (code.charAt(i) == ')') {
+                            i++;
+                            continue;
+                        }
                     }
                 }
-                else {
-                    return null;
-                }
+                return null;
             }
-            else if (returnType == null) {
+            else if (name == null) {
                 if (RE_IDENTIFIER.match(after)) {
-                    //
+                    var objcName = RE_IDENTIFIER.matched(0);
+                    name = objcName.trim();
+                    nameSection = name;
+                    fullNameSections.push(nameSection);
+                    i += objcName.length;
+                    continue;
                 }
-                else {
+                return null;
+            }
+            else if (nameSection == null) {
+                if (c == ';') {
+                    i++;
+                    break; // End
+                }
+                else if (RE_IDENTIFIER.match(after)) {
+                    nameSection = RE_IDENTIFIER.matched(0);
+                    fullNameSections.push(nameSection);
+                    continue;
+                }
+                return null;
+            }
+            else {
+                if (c == ';') {
+                    i++;
+                    break; // End
+                }
+                else if (c == ':') {
+                    i++;
+                    while (code.charAt(i).trim() == '') i++;
+                    if (code.charAt(i) == '(') {
+                        i++;
+                        while (code.charAt(i).trim() == '') i++;
+                        after = code.substr(i);
+
+                        if (RE_TYPE.match(after)) {
+                            var objcType = RE_TYPE.matched(0);
+                            var argType = parseType(objcType);
+                            i += objcType.length;
+
+                            if (argType != null) {
+                                while (code.charAt(i).trim() == '') i++;
+                                if (code.charAt(i) == ')') {
+                                    i++;
+                                    while (code.charAt(i).trim() == '') i++;
+                                    after = code.substr(i);
+                                    if (RE_IDENTIFIER.match(after)) {
+                                        var argName = RE_IDENTIFIER.matched(0).trim();
+                                        i += argName.length;
+
+                                        args.push({
+                                            name: argName,
+                                            type: argType,
+                                            orig: {
+                                                nameSection: nameSection
+                                            }
+                                        });
+
+                                        nameSection = null;
+                                        continue;
+                                    }
+                                }
+                            }
+                        }
+                    }
                     return null;
                 }
             }
         }
 
-        // if (RE_METHOD.match(after)) {
-        //
-        //     trace("METHOD MATCH");
-        //     for (i in 0...12) {
-        //         trace(i+' -> '+RE_METHOD.matched(i));
-        //     }
-        //
-        //     //var objcType =
-        //
-        //     var instance = RE_METHOD.matched(1) == '-';
-        //
-        //
-        //     var objcModifiers = RE_PROPERTY.matched(1) != null
-        //         ? RE_PROPERTY.matched(1).split(',').map(function(s) return s.trim())
-        //         : [];
-        //     var objcType = removeSpaces(RE_PROPERTY.matched(2));
-        //     var objcName = RE_PROPERTY.matched(3).trim();
-        //
-        //     var name = objcName;
-        //     var type = parseType(objcType);
-        //
-        //     if (ctx != null) {
-        //         ctx.i += RE_PROPERTY.matched(0).length;
-        //     }
-        //
-        //     return {
-        //         name: name,
-        //         type: type,
-        //         args: [],
-        //         instance: true,
-        //         description: null
-        //     };
-        //
-        //     //return null;
-        // } else {
-        //     trace('NO MATCH');
-        // }
+        if (name == null) return null;
 
-        return null;
+        return {
+            name: name,
+            instance: sign == '-',
+            description: null,
+            type: returnType,
+            args: args
+        };
 
     } //parseMethod
 
-    public static function parseArg(objcArg):bind.Arg {
+    public static function parseArg(objcArg):bind.Class.Arg {
 
-        if (RE_ARG.match(objcArg)) {
-            var objcType = removeSpaces(RE_ARG.matched(1));
-            var objcName = removeSpaces(RE_ARG.matched(2));
+        var ctx = {i: 0};
+        var type = parseType(objcArg, ctx);
+        if (type == null) return null;
 
-            var type = parseType(objcType);
-            var name = objcName;
-
-            return {
-                type: type,
-                name: name
-            };
+        var remaining = objcArg.substr(ctx.i);
+        var name = null;
+        if (RE_IDENTIFIER.match(remaining)) {
+            name = RE_IDENTIFIER.matched(0);
         }
+
+        return {
+            type: type,
+            name: name
+        };
 
         return null;
 
     } //parseArg
 
-    public static function parseType(objcType:String):bind.Type {
+    public static function parseType(objcType:String, ?ctx:{i:Int}):bind.Class.Type {
+
+        if (ctx != null && ctx.i > 0) {
+            objcType = objcType.substr(ctx.i);
+        }
 
         if (RE_TYPE.match(objcType)) {
-            trace('MATCH $objcType');
+            var type = null;
 
-            for (i in 0...5) {
-                trace('MT($i) = ' + RE_TYPE.matched(i));
+            if (ctx != null) ctx.i += RE_TYPE.matched(0).length;
+
+            //trace('PARSE TYPE: ' + RE_TYPE.matched(0));
+
+            if (RE_TYPE.matched(4) != null) {
+                // Block type
+                var objcReturnType = removeSpaces(RE_TYPE.matched(1));
+
+                var objcNullability = RE_TYPE.matched(2);
+                var objcArgs = RE_TYPE.matched(5) != null && RE_TYPE.matched(5).trim() != ''
+                    ? RE_TYPE.matched(5).split(',').map(function(s) return s.trim())
+                    : [];
+
+                var args = [];
+                for (objcArg in objcArgs) {
+                    args.push(parseArg(objcArg));
+                }
+
+                return bind.Type.Function(args, parseType(objcReturnType));
             }
+            else {
+                // Standard type
+                var objcType = removeSpaces(RE_TYPE.matched(1));
+                var objcNullability = RE_TYPE.matched(3);
 
+                return switch (objcType) {
+                    case 'void':
+                        Void({type: objcType, nullable: objcNullability == '_Nullable'});
+                    case 'int', 'NSInteger', 'long':
+                        Int({type: objcType, nullable: objcNullability == '_Nullable'});
+                    case 'float', 'double', 'CGFloat', 'NSTimeInterval':
+                        Float({type: objcType, nullable: objcNullability == '_Nullable'});
+                    case 'bool', 'BOOL':
+                        Bool({type: objcType, nullable: objcNullability == '_Nullable'});
+                    case 'NSNumber*':
+                        Float({type: objcType, nullable: objcNullability == '_Nonnull'});
+                    case 'NSString*', 'NSMutableString*':
+                        String({type: objcType, nullable: objcNullability != '_Nonnull'});
+                    case 'NSArray*', 'NSMutableArray*':
+                        Array({type: objcType, nullable: objcNullability != '_Nonnull'});
+                    case 'NSDictionary*', 'NSMutableDictionary*':
+                        Map({type: objcType, nullable: objcNullability != '_Nonnull'});
+                    default:
+                        Object({type: objcType});
+                }
+            }
         }
 
-        return switch (objcType) {
-            case 'int', 'NSInteger', 'long':
-                Int;
-            case 'float', 'double', 'CGFloat', 'NSTimeInterval':
-                Float;
-            case 'bool', 'BOOL':
-                Bool;
-            case 'NSString*', 'NSMutableString*':
-                String;
-            case 'NSArray*', 'NSMutableArray*':
-                Array;
-            case 'NSDictionary*', 'NSMutableDictionary*':
-                Map;
-            default:
-                // TODO block -> Function
-                Object;
-        }
+        return null;
 
     } //parseType
 

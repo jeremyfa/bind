@@ -12,6 +12,8 @@ typedef Class = {
 
     var description:String;
 
+    @:optional var orig:Dynamic;
+
 } //Class
 
 typedef Property = {
@@ -23,6 +25,8 @@ typedef Property = {
     var instance:Bool;
 
     var description:String;
+
+    @:optional var orig:Dynamic;
 
 } //Property
 
@@ -38,6 +42,8 @@ typedef Method = {
 
     var description:String;
 
+    @:optional var orig:Dynamic;
+
 } //Method
 
 typedef Arg = {
@@ -46,24 +52,28 @@ typedef Arg = {
 
     var type:bind.Type;
 
+    @:optional var orig:Dynamic;
+
 } //Arg
 
 enum Type {
 
-    Int;
+    Void(?orig:Dynamic);
 
-    Float;
+    Int(?orig:Dynamic);
 
-    Bool;
+    Float(?orig:Dynamic);
 
-    String;
+    Bool(?orig:Dynamic);
 
-    Array;
+    String(?orig:Dynamic);
 
-    Map;
+    Array(?orig:Dynamic);
 
-    Object;
+    Map(?orig:Dynamic);
 
-    Function(args:Array<bind.Arg>);
+    Object(?orig:Dynamic);
+
+    Function(args:Array<bind.Arg>, ret:bind.Type, ?orig:Dynamic);
 
 } //Type

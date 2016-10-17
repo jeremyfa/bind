@@ -17,7 +17,7 @@ _That's all you can do for now, but there is more to come (see roadmap below)._
 ## Roadmap
 
 * [x] Parse Objective-C classes, with methods, properties and comments in header files
-* [ ] Parse Objective-C blocks as functions in class methods and properties
+* [x] Parse Objective-C blocks as Haxe functions in class methods and properties
 * [ ] Parse Objective-C typedefs, including block types in typedefs
 * [ ] Generate Haxe (C++) to Objective-C bindings from parsed informations
 * [ ] Parse Java classes, with methods, properties and comments in java files

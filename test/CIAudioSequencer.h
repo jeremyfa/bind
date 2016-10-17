@@ -1,6 +1,5 @@
 //
 //  CIAudioManager.h
-//  CeramicIOS
 //
 //  Created by Jeremy FAIVRE on 28/09/2016.
 //  Copyright © 2016 Jeremy FAIVRE. All rights reserved.

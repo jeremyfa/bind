@@ -1,10 +1,10 @@
-package bind;
+package bind.objc;
 
 import Sys.println;
 
 using StringTools;
 
-class Objc {
+class Parse {
 
     // These regular expressions are madness. I am aware of it. But, hey, it works.
     //
@@ -581,4 +581,4 @@ class Objc {
 
     } //cleanComment
 
-} //ObjcBind
+} //Parse

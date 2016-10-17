@@ -1,17 +1,18 @@
 package;
 
-import Sys.println;
-import sys.io.File;
-import haxe.io.Path;
-
 class Main {
 
     public static function main():Void {
 
-        var objcHeader = File.getContent(Path.join([Sys.getCwd(), 'test/CIAudioSequencer.h']));
+        var args = Sys.args();
+        var cwd = args.pop();
 
-        var bindClass = bind.Objc.parseClass(objcHeader);
-        trace(bind.Json.stringify(bindClass, true));
+        new bind.Cli(args, cwd).run();
+
+        // var objcHeader = File.getContent(Path.join([Sys.getCwd(), 'test/CIAudioSequencer.h']));
+        //
+        // var bindClass = bind.Objc.parseClass(objcHeader);
+        // trace(bind.Json.stringify(bindClass, true));
 
         //bind.Objc.parseBlockArg('void (^_Nullable)(NSString *)');
 

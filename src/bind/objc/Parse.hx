@@ -29,6 +29,7 @@ class Parse {
 
         var inSingleLineComment = false;
         var inMultilineComment = false;
+        var inPreprocessorMacro = false;
         var inInterface = false;
 
         var comment = null;
@@ -52,7 +53,15 @@ class Parse {
             c = code.charAt(i);
             cc = code.substr(i, 2);
 
-            if (inSingleLineComment) {
+            if (inPreprocessorMacro) {
+
+                if (c == "\n") {
+                    inPreprocessorMacro = false;
+                }
+
+                i++;
+            }
+            else if (inSingleLineComment) {
 
                 if (c == "\n") {
                     inSingleLineComment = false;
@@ -78,7 +87,12 @@ class Parse {
                     i++;
                 }
             }
-            else if (cc == '//' || c == '#') { // Treat preprocessor as comment
+            else if (c == '#') {
+
+                inPreprocessorMacro = true;
+                i++;
+            }
+            else if (cc == '//') {
 
                 inSingleLineComment = true;
                 comment = '';

@@ -46,7 +46,6 @@ class Parse {
         var lastI = -1;
         while (i < len) {
 
-            // TODO remove this
             if (lastI == i) break;
             lastI = i;
 
@@ -388,8 +387,14 @@ class Parse {
                         }
                     }
                     return null;
+                } else {
+                    i++;
                 }
             }
+        }
+
+        if (ctx != null) {
+            ctx.i = i;
         }
 
         if (name == null) return null;
@@ -435,8 +440,6 @@ class Parse {
             var type = null;
 
             if (ctx != null) ctx.i += RE_TYPE.matched(0).length;
-
-            //trace('PARSE TYPE: ' + RE_TYPE.matched(0));
 
             if (RE_TYPE.matched(4) != null) {
                 // Block type
@@ -591,7 +594,7 @@ class Parse {
             lines.push(line);
         }
 
-        return lines.join("\n");
+        return lines.join("\n").trim();
 
     } //cleanComment
 

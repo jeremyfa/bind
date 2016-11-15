@@ -9,7 +9,7 @@ Warning: this library is in active development.
 #### Parse one or more header files and return result as JSON
 
 ```
-haxelib run bind objc SomeObjcHeader.h [SomeOtherObjcHeader.h ...] --json --parse --pretty
+haxelib run bind objc SomeObjcHeader.h [SomeOtherObjcHeader.h ...] --json --parse-only --pretty
 ```
 
 _That's all you can do for now, but there is more to come (see roadmap below)._

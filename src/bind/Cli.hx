@@ -54,7 +54,7 @@ class Cli {
             for (i in 0...fileArgs.length) {
                 var file = fileArgs[i];
 
-                var path = Path.join([cwd, file]);
+                var path = Path.isAbsolute(file) ? file : Path.join([cwd, file]);
                 var code = File.getContent(path);
 
                 var result = bind.objc.Parse.parseClass(code);

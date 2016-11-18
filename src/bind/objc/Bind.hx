@@ -1,4 +1,4 @@
-package objc;
+package bind.objc;
 
 class Bind {
 
@@ -7,6 +7,10 @@ class Bind {
         The files are returned as an array of bind.File objects.
         Nothing is written to disk at this stage. */
     public static function bindClass(objc:bind.Class):Array<bind.File> {
+
+        trace(bind.Json.stringify(objc, true));
+
+        //
 
         return null; // TODO
 

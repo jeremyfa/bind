@@ -4,24 +4,42 @@ import Sys.println;
 
 using StringTools;
 
+typedef ParseContext = {
+    var i:Int;
+    var types:Map<String,bind.Class.Type>;
+}
+
 class Parse {
 
     // These regular expressions are madness. I am aware of it. But, hey, it works.
     //
-    static var RE_ALL_SPACES = ~/\s*/g;
+    static var RE_ALL_SPACES = ~/\s+/g;
     static var RE_BEFORE_COMMENT_LINE = ~/^[\s\*]*/g;
     static var RE_AFTER_COMMENT_LINE = ~/[\s\*]*$/g;
+    static var RE_C_MODIFIERS = ~/^\s*(?:(?:signed|unsigned|short|long)\s+)*/;
+    static var RE_TYPEDEF_BLOCK_NAME = ~/(?:\(\s*\^\s*(?:[a-zA-Z_][a-zA-Z0-9_]*)\s*\))/;
+    static var RE_TYPEDEF_NAME = ~/\s+([a-zA-Z_][a-zA-Z0-9_]*)?\s*$/;
     //                       type                         protocol                                   block nullability                        nullability                           block arguments
-    static var RE_TYPE = ~/^([a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:\(\s*\^\s*(_Nullable|_Nonnull)?\s*\)|(_Nullable|_Nonnull)?)\s*(\(\s*((?:[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))?\s*/;
+    static var RE_TYPE = ~/^((?:(?:signed|unsigned|short|long)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:\(\s*\^\s*(_Nullable|_Nonnull)?\s*\)|(_Nullable|_Nonnull)?)\s*(\(\s*((?:(?:signed|unsigned|short|long)\s+)*(?:[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))?\s*/;
+    //                         type                         protocol                                   block type name                        type name                           block arguments                                                                                            type name
+    static var RE_TYPEDEF = ~/^typedef\s+(((?:(?:signed|unsigned|short|long)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:\(\s*\^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\))?\s*(\(\s*((?:[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))?)\s*([a-zA-Z_][a-zA-Z0-9_]*)?\s*;/;
     static var RE_IDENTIFIER = ~/^[a-zA-Z_][a-zA-Z0-9_]*/;
     //                                       modifiers                           type                                                                (  name                    |          name                                  block arguments                                                                 )
-    static var RE_PROPERTY = ~/^@property\s*(?:\((\s*(?:[a-z]+\s*,?\s*)*)\))?\s*([a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:([a-zA-Z_][a-zA-Z0-9_]*)|\(\s*\^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)\s*\(\s*((?:[a-zA-Z_][a-zA-Z0-9_<>\s\*]*[\s\*]?(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))\s*;/;
+    static var RE_PROPERTY = ~/^@property\s*(?:\((\s*(?:[a-z]+\s*,?\s*)*)\))?\s*((?:(?:signed|unsigned|short|long)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:([a-zA-Z_][a-zA-Z0-9_]*)|\(\s*\^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)\s*\(\s*((?:(?:signed|unsigned|short|long)\s+)*(?:[a-zA-Z_][a-zA-Z0-9_<>\s\*]*[\s\*]?(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))\s*;/;
     static var RE_INTERFACE = ~/^@interface\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*(?::\s*([a-zA-Z_][a-zA-Z0-9_]*))?\s*(?:\(\s*([a-zA-Z_][a-zA-Z0-9_]*)?\s*\))?\s*(?:<(\s*(?:[a-zA-Z_][a-zA-Z0-9_]*\s*,?\s*)*)>)?/;
 
-    /** Parse Objective-C header content to get class informations. */
-    public static function parseClass(code:String, ?ctx:{i:Int}):bind.Class {
+    public static function createContext():ParseContext {
+        return { i: 0, types: new Map() };
+    }
 
-        var i = ctx != null ? ctx.i : 0;
+    /** Parse Objective-C header content to get class informations. */
+    public static function parseClass(code:String, ?ctx:ParseContext):bind.Class {
+
+        if (ctx == null) ctx = createContext();
+
+        var i = ctx.i;
+        var types = ctx.types;
+        if (types == null) types = new Map();
         var c;
         var cc;
         var len = code.length;
@@ -114,7 +132,7 @@ class Parse {
 
                         if (after.startsWith('@property')) {
 
-                            if (ctx != null) ctx.i = i; else ctx = {i: i};
+                            ctx.i = i;
                             var property = parseProperty(cleanedCode, ctx);
                             i = ctx.i;
 
@@ -138,7 +156,7 @@ class Parse {
 
                         if (after.startsWith('@interface')) {
 
-                            if (ctx != null) ctx.i = i; else ctx = {i: i};
+                            ctx.i = i;
                             var className = parseClassName(cleanedCode, ctx);
                             i = ctx.i;
                             if (className == null) {
@@ -161,7 +179,7 @@ class Parse {
                 }
                 else if (inInterface && (c == '-' || c == '+')) {
 
-                    if (ctx != null) ctx.i = i; else ctx = {i: i};
+                    ctx.i = i;
                     var method = parseMethod(cleanedCode, ctx);
                     i = ctx.i;
 
@@ -175,6 +193,18 @@ class Parse {
                     }
                     comment = null;
                 }
+                else if (after.startsWith('typedef')) {
+
+                    ctx.i = i;
+                    var type = parseTypedef(cleanedCode, ctx);
+                    i = ctx.i;
+
+                    if (type == null) {
+                        println('invalid typedef: ' + code.substring(i, ctx.i));
+                    }
+                    comment = null;
+
+                }
                 else {
                     i++;
                 }
@@ -182,9 +212,7 @@ class Parse {
 
         }
 
-        if (ctx != null) {
-            ctx.i = i;
-        }
+        ctx.i = i;
 
         if (result.name != null) {
             return result;
@@ -194,9 +222,11 @@ class Parse {
 
     } //getClass
 
-    public static function parseProperty(code:String, ?ctx:{i:Int}):bind.Class.Property {
+    public static function parseProperty(code:String, ?ctx:ParseContext):bind.Class.Property {
 
-        var i = ctx != null ? ctx.i : 0;
+        if (ctx == null) ctx = createContext();
+
+        var i = ctx.i;
         var after = code.substr(i);
 
         if (RE_PROPERTY.match(after)) {
@@ -204,7 +234,7 @@ class Parse {
             var objcModifiers = RE_PROPERTY.matched(1) != null
                 ? RE_PROPERTY.matched(1).split(',').map(function(s) return s.trim())
                 : [];
-            var objcType = removeSpaces(RE_PROPERTY.matched(2));
+            var objcType = removeSpacesForType(RE_PROPERTY.matched(2));
             var objcName = RE_PROPERTY.matched(3).trim();
 
             var name = null;
@@ -217,21 +247,19 @@ class Parse {
                     ? RE_PROPERTY.matched(5).split(',').map(function(s) return s.trim())
                     : [];
 
-                var args = [];
+                var args:Array<bind.Class.Arg> = [];
                 for (objcArg in objcArgs) {
-                    args.push(parseArg(objcArg));
+                    args.push(parseArg(objcArg, ctx));
                 }
-                type = bind.Class.Type.Function(args, parseType(objcType));
+                type = bind.Class.Type.Function(args, parseType(objcType, {i: 0, types: ctx.types}));
             }
             else {
                 // Standard property
-                type = parseType(objcType);
+                type = parseType(objcType, {i: 0, types: ctx.types});
             }
             name = objcName;
 
-            if (ctx != null) {
-                ctx.i += RE_PROPERTY.matched(0).length;
-            }
+            ctx.i += RE_PROPERTY.matched(0).length;
 
             var nullable = switch (type) {
                 case Int(orig), Float(orig), Bool(orig):
@@ -252,13 +280,11 @@ class Parse {
         }
         else {
 
-            if (ctx != null) {
-                var semicolonIndex = after.indexOf(';');
-                if (semicolonIndex == -1) {
-                    ctx.i += after.length;
-                } else {
-                    ctx.i += semicolonIndex;
-                }
+            var semicolonIndex = after.indexOf(';');
+            if (semicolonIndex == -1) {
+                ctx.i += after.length;
+            } else {
+                ctx.i += semicolonIndex;
             }
 
             return null;
@@ -266,9 +292,11 @@ class Parse {
 
     } //parseProperty
 
-    public static function parseMethod(code:String, ?ctx:{i:Int}):bind.Class.Method {
+    public static function parseMethod(code:String, ?ctx:ParseContext):bind.Class.Method {
 
-        var i = ctx != null ? ctx.i : 0;
+        if (ctx == null) ctx = createContext();
+
+        var i = ctx.i;
         var after;
         var len = code.length;
         var c;
@@ -309,7 +337,7 @@ class Parse {
                     after = code.substr(i);
                     if (RE_TYPE.match(after)) {
                         var objcReturnType = RE_TYPE.matched(0);
-                        returnType = parseType(objcReturnType);
+                        returnType = parseType(objcReturnType, {i: 0, types: ctx.types});
                         i += objcReturnType.length;
                         while (code.charAt(i).trim() == '') i++;
                         if (code.charAt(i) == ')') {
@@ -358,7 +386,7 @@ class Parse {
 
                         if (RE_TYPE.match(after)) {
                             var objcType = RE_TYPE.matched(0);
-                            var argType = parseType(objcType);
+                            var argType = parseType(objcType, {i: 0, types: ctx.types});
                             i += objcType.length;
 
                             if (argType != null) {
@@ -393,9 +421,7 @@ class Parse {
             }
         }
 
-        if (ctx != null) {
-            ctx.i = i;
-        }
+        ctx.i = i;
 
         if (name == null) return null;
 
@@ -409,9 +435,11 @@ class Parse {
 
     } //parseMethod
 
-    public static function parseArg(objcArg):bind.Class.Arg {
+    public static function parseArg(objcArg:String, parentCtx:ParseContext):bind.Class.Arg {
 
-        var ctx = {i: 0};
+        if (parentCtx == null) parentCtx = createContext();
+
+        var ctx = {i: 0, types: parentCtx.types};
         var type = parseType(objcArg, ctx);
         if (type == null) return null;
 
@@ -430,20 +458,22 @@ class Parse {
 
     } //parseArg
 
-    public static function parseType(objcType:String, ?ctx:{i:Int}):bind.Class.Type {
+    public static function parseType(objcType:String, ?ctx:ParseContext):bind.Class.Type {
 
-        if (ctx != null && ctx.i > 0) {
+        if (ctx == null) ctx = createContext();
+
+        if (ctx.i > 0) {
             objcType = objcType.substr(ctx.i);
         }
 
         if (RE_TYPE.match(objcType)) {
             var type = null;
 
-            if (ctx != null) ctx.i += RE_TYPE.matched(0).length;
+            ctx.i += RE_TYPE.matched(0).length;
 
             if (RE_TYPE.matched(4) != null) {
                 // Block type
-                var objcReturnType = removeSpaces(RE_TYPE.matched(1));
+                var objcReturnType = removeSpacesForType(RE_TYPE.matched(1));
 
                 var objcNullability = RE_TYPE.matched(2);
                 var objcArgs = RE_TYPE.matched(5) != null && RE_TYPE.matched(5).trim() != ''
@@ -452,32 +482,66 @@ class Parse {
 
                 var args = [];
                 for (objcArg in objcArgs) {
-                    args.push(parseArg(objcArg));
+                    args.push(parseArg(objcArg, ctx));
                 }
 
-                return bind.Type.Function(args, parseType(objcReturnType));
+                return bind.Type.Function(args, parseType(objcReturnType, {i: 0, types: ctx.types}), {type: objcType, nullable: objcNullability != '_Nonnull'});
             }
             else {
                 // Standard type
-                var objcType = removeSpaces(RE_TYPE.matched(1));
+                var objcType = removeSpacesForType(RE_TYPE.matched(1));
                 var objcNullability = RE_TYPE.matched(3);
 
                 return switch (objcType) {
                     case 'void':
                         Void({type: objcType, nullable: objcNullability == '_Nullable'});
-                    case 'int', 'NSInteger', 'long':
+                    case 'NSInteger',
+                         'char',
+                         'signed char',
+                         'unsigned char',
+                         'short',
+                         'short int',
+                         'signed short',
+                         'signed short int',
+                         'unsigned short',
+                         'unsigned short int',
+                         'int',
+                         'signed',
+                         'signed int',
+                         'unsigned',
+                         'unsigned int',
+                         'long',
+                         'long int',
+                         'signed long',
+                         'signed long int',
+                         'unsigned long',
+                         'unsigned long int',
+                         'long long',
+                         'long long int',
+                         'signed long long',
+                         'signed long long int',
+                         'unsigned long long',
+                         'unsigned long long int':
                         Int({type: objcType, nullable: objcNullability == '_Nullable'});
-                    case 'float', 'double', 'CGFloat', 'NSTimeInterval':
+                    case 'float',
+                         'double',
+                         'long double',
+                         'CGFloat',
+                         'NSTimeInterval':
                         Float({type: objcType, nullable: objcNullability == '_Nullable'});
-                    case 'bool', 'BOOL':
+                    case 'bool',
+                         'BOOL':
                         Bool({type: objcType, nullable: objcNullability == '_Nullable'});
                     case 'NSNumber*':
                         Float({type: objcType, nullable: objcNullability == '_Nonnull'});
-                    case 'NSString*', 'NSMutableString*':
+                    case 'NSString*',
+                         'NSMutableString*':
                         String({type: objcType, nullable: objcNullability != '_Nonnull'});
-                    case 'NSArray*', 'NSMutableArray*':
+                    case 'NSArray*',
+                         'NSMutableArray*':
                         Array({type: objcType, nullable: objcNullability != '_Nonnull'});
-                    case 'NSDictionary*', 'NSMutableDictionary*':
+                    case 'NSDictionary*',
+                         'NSMutableDictionary*':
                         Map({type: objcType, nullable: objcNullability != '_Nonnull'});
                     default:
                         Object({type: objcType});
@@ -489,9 +553,59 @@ class Parse {
 
     } //parseType
 
-    public static function parseClassName(code:String, ?ctx:{i:Int}):String {
+    public static function parseTypedef(code:String, ?ctx:ParseContext):bind.Class.Type {
 
-        var i = ctx != null ? ctx.i : 0;
+        if (ctx == null) ctx = createContext();
+
+        var i = ctx.i;
+        var after;
+        var len = code.length;
+        var after = code.substr(i);
+
+        if (RE_TYPEDEF.match(after)) {
+
+            i += RE_TYPEDEF.matched(0).length;
+            if (ctx != null) ctx.i = i;
+
+            var nameFromBlock = RE_TYPEDEF.matched(3);
+            var nameAtEnd = RE_TYPEDEF.matched(6);
+            var objcType = RE_TYPEDEF.matched(1);
+
+            if (nameFromBlock == null && nameAtEnd == null) {
+                if (RE_TYPEDEF_NAME.match(objcType)) {
+                    nameAtEnd = RE_TYPEDEF_NAME.matched(0).trim();
+                    objcType = objcType.substring(0, objcType.length - nameAtEnd.length);
+                } else {
+                    return null;
+                }
+            }
+
+            if (nameFromBlock != null) {
+                objcType = RE_TYPEDEF_BLOCK_NAME.replace(objcType, '(^)');
+            }
+
+            var name = nameFromBlock;
+            if (name == null) name = nameAtEnd;
+
+            objcType = removeSpacesForType(objcType);
+
+            var type = parseType(objcType, {i: 0, types: ctx.types});
+
+            ctx.types.set(name, type);
+
+            return type;
+
+        }
+
+        return null;
+
+    } //parseTypedef
+
+    public static function parseClassName(code:String, ?ctx:ParseContext):String {
+
+        if (ctx == null) ctx = createContext();
+
+        var i = ctx.i;
         var after = code.substr(i);
 
         if (RE_INTERFACE.match(after)) {
@@ -503,9 +617,7 @@ class Parse {
                 ? RE_INTERFACE.matched(4).split(',').map(function(s) return s.trim())
                 : [];
 
-            if (ctx != null) {
-                ctx.i += RE_INTERFACE.matched(0).length;
-            }
+            ctx.i += RE_INTERFACE.matched(0).length;
 
             return name;
         }
@@ -522,6 +634,21 @@ class Parse {
         return RE_ALL_SPACES.replace(input, '');
 
     } //removeSpaces
+
+    static function removeSpacesForType(input:String):String {
+
+        if (input == null) return null;
+
+        if (RE_C_MODIFIERS.match(input)) {
+            var prefix = RE_C_MODIFIERS.matched(0);
+            var suffix = input.substr(prefix.length);
+            prefix = RE_ALL_SPACES.replace(prefix, ' ');
+            return prefix + RE_ALL_SPACES.replace(suffix, '');
+        }
+
+        return RE_ALL_SPACES.replace(input, '');
+
+    } //removeSpacesForType
 
     static function getCodeWithEmptyComments(input:String):String {
 

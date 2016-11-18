@@ -8,17 +8,23 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
+typedef unsigned      long
+  long SUPER_VALUE;
+typedef unsigned char SUPER_BYTE;
+typedef NSArray * bref;
+typedef NSArray* (^SomeSuperBlock)(NSString *, CGFloat *youpi3);
+
 /** Some audio sequencer */
 @interface CIAudioSequencer : NSObject
 
-// @property (nonatomic, readonly) NSString *name;
+@property (nonatomic, readonly) NSString *name;
 //
 // /** The duration of the loop */
 // @property (nonatomic) NSTimeInterval loopDuration;
 //
-// @property (nonatomic, copy, nullable) NSString * (^blockName)(NSString *, NSString *argsJson);
+@property (nonatomic, copy, nullable) NSString * (^blockName)(NSString *, NSString *argsJson);
 
-+ (void *(^_Nullable)(NSString *, CGFloat youpi))blockForName:(void(^_Nullable)(NSString *, CGFloat *youpi))name;
++ (void *(^_Nullable)(NSString *, CGFloat youpi))blockForName:(void(^_Nullable)(NSString *, CGFloat *youpi2))name;
 
 // // Some method
 // - (instancetype)initWithLoopDuration:(NSTimeInterval)loopDuration;

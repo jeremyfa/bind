@@ -57,10 +57,18 @@ class Cli {
                 var path = Path.isAbsolute(file) ? file : Path.join([cwd, file]);
                 var code = File.getContent(path);
 
-                var result = bind.objc.Parse.parseClass(code);
+                var ctx = {i: 0, types: new Map()};
+                var result = null;
+                while ((result = bind.objc.Parse.parseClass(code, ctx)) != null) {
+                    result.path = path;
 
-                if (options.json && options.parseOnly) {
-                    json.push(bind.Json.stringify(result, options.pretty));
+                    if (options.json && options.parseOnly) {
+                        json.push(bind.Json.stringify(result, options.pretty));
+                    }
+
+                    if (!options.parseOnly) {
+                        bind.objc.Bind.bindClass(result);
+                    }
                 }
             }
         }

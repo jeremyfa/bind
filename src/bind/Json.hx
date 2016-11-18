@@ -65,7 +65,9 @@ class Json {
 
     static function typeEnumToJson(value:bind.Class.Type):Dynamic {
 
-        return switch (value) {
+        if (value == null) return null;
+
+        var res:Dynamic = switch (value) {
             case Void(orig): { Void: {orig: toJson(orig)} };
             case Int(orig): { Int: {orig: toJson(orig)} };
             case Float(orig): { Float: {orig: toJson(orig)} };
@@ -76,6 +78,8 @@ class Json {
             case Object(orig): { Object: {orig: toJson(orig)} };
             case Function(args, ret, orig): { Function: {args: toJson(args), ret: typeEnumToJson(ret), orig: toJson(orig)} };
         }
+
+        return res;
 
     } //typeEnumToJson
 

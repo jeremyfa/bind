@@ -14,7 +14,7 @@ class Parse {
     // These regular expressions are madness. I am aware of it. But, hey, it works.
     //
     static var RE_ALL_SPACES = ~/\s+/g;
-    static var RE_BEFORE_COMMENT_LINE = ~/^[\s\*]*/g;
+    static var RE_BEFORE_COMMENT_LINE = ~/^[\s\*]*(\/\/)?\s*/g;
     static var RE_AFTER_COMMENT_LINE = ~/[\s\*]*$/g;
     static var RE_C_MODIFIERS = ~/^\s*(?:(?:const|signed|unsigned|short|long)\s+)*/;
     static var RE_TYPEDEF_BLOCK_NAME = ~/(?:\(\s*\^\s*(?:[a-zA-Z_][a-zA-Z0-9_]*)\s*\))/;

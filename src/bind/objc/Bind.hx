@@ -87,17 +87,16 @@ class Bind {
             // Method name
             var name = method.name;
 
-            // Method args
             var args = [];
 
+            // Instance handle as first argument
             if (method.instance) {
                 args.push(ctx.objcHandleType + ' _instance');
             }
 
+            // Method args
             for (arg in method.args) {
-
                 args.push(toHXCPPType(arg.type, ctx) + ' ' + arg.name);
-
             }
 
             // Method comment
@@ -105,6 +104,7 @@ class Bind {
                 writeComment(method.description, ctx);
             }
 
+            // Whole method
             writeIndent(ctx);
             write(ret + ' ' + ctx.objcClass.name + '_' + name + '(' + args.join(', ') + ')', ctx);
             if (header) {
@@ -114,6 +114,9 @@ class Bind {
                 write(' {', ctx);
                 writeLineBreak(ctx);
                 ctx.indent++;
+
+                // Method body
+
                 ctx.indent--;
                 writeIndent(ctx);
                 write('}', ctx);

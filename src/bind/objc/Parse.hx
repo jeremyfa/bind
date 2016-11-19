@@ -492,6 +492,23 @@ class Parse {
                 var objcType = removeSpacesForType(RE_TYPE.matched(1));
                 var objcNullability = RE_TYPE.matched(3);
 
+                // Check if the type matches an existing typedef
+                var matchedType = ctx.types.get(objcType);
+                if (matchedType != null) {
+                    return switch (matchedType) {
+                        case Void(orig): Void({orig: orig, type: objcType, nullable: (objcNullability == '_Nullable' || orig.nullable)});
+                        case Int(orig): Int({orig: orig, type: objcType, nullable: (objcNullability == '_Nullable' || orig.nullable)});
+                        case Float(orig): Float({orig: orig, type: objcType, nullable: (objcNullability == '_Nullable' || orig.nullable)});
+                        case Bool(orig): Bool({orig: orig, type: objcType, nullable: (objcNullability == '_Nullable' || orig.nullable)});
+                        case String(orig): String({orig: orig, type: objcType, nullable: (objcNullability != '_Nonnull' || orig.nullable)});
+                        case Array(orig): Array({orig: orig, type: objcType, nullable: (objcNullability != '_Nonnull' || orig.nullable)});
+                        case Map(orig): Map({orig: orig, type: objcType, nullable: (objcNullability != '_Nonnull' || orig.nullable)});
+                        case Object(orig): Object({orig: orig, type: objcType, nullable: (objcNullability != '_Nonnull' || orig.nullable)});
+                        case Function(args, ret, orig): Function(args, ret, {orig: orig, type: objcType, nullable: (objcNullability != '_Nonnull' || orig.nullable)});
+                    }
+                }
+
+                // Otherwise, convert ObjC type to Haxe type
                 return switch (objcType) {
                     case 'void':
                         Void({type: objcType, nullable: objcNullability == '_Nullable'});
@@ -544,7 +561,7 @@ class Parse {
                          'NSMutableDictionary*':
                         Map({type: objcType, nullable: objcNullability != '_Nonnull'});
                     default:
-                        Object({type: objcType});
+                        Object({type: objcType, nullable: objcNullability != '_Nonnull'});
                 }
             }
         }

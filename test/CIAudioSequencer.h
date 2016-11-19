@@ -22,7 +22,7 @@ typedef NSArray* (^SomeSuperBlock)(NSString *, CGFloat *youpi3);
 // /** The duration of the loop */
 // @property (nonatomic) NSTimeInterval loopDuration;
 //
-@property (nonatomic, copy, nullable) NSString * (^blockName)(NSString *, NSString *argsJson);
+@property (nonatomic, copy, nullable) NSString * (^blockName)(NSString *, NSString *argsJson, SUPER_BYTE aByte);
 
 + (void *(^_Nullable)(NSString *, CGFloat youpi))blockForName:(void(^_Nullable)(NSString *, CGFloat *youpi2))name;
 

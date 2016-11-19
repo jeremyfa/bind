@@ -90,7 +90,7 @@ class Cli {
                         else {
                             for (entry in bind.objc.Bind.bindClass(result, bindClassOptions)) {
                                 output += '-- BEGIN ' + entry.path + " --\n";
-                                output += entry.content + "\n";
+                                output += entry.content.rtrim() + "\n\n";
                                 output += '-- END ' + entry.path + " --\n";
                             }
                         }

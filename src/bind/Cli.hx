@@ -32,21 +32,32 @@ class Cli {
             parseOnly: false,
             pretty: false
         };
+        var bindClassOptions:Dynamic = {};
         var fileArgs = [];
-        for (i in 1...args.length) {
+        var i = 1;
+        while (i < args.length) {
+
             var arg = args[i];
+
             if (arg.startsWith('--')) {
                 if (arg == '--json') options.json = true;
                 if (arg == '--parse-only') options.parseOnly = true;
                 if (arg == '--pretty') options.pretty = true;
+                if (arg == '--namespace') {
+                    i++;
+                    bindClassOptions.namespace = args[i];
+                }
             }
             else {
                 fileArgs.push(arg);
             }
+
+            i++;
         }
 
         var kind = args[0];
         var json = [];
+        var output = '';
 
         // Parse
         if (kind == 'objc') {
@@ -62,12 +73,27 @@ class Cli {
                 while ((result = bind.objc.Parse.parseClass(code, ctx)) != null) {
                     result.path = path;
 
-                    if (options.json && options.parseOnly) {
-                        json.push(bind.Json.stringify(result, options.pretty));
+                    if (options.json) {
+                        if (options.parseOnly) {
+                            json.push(bind.Json.stringify(result, options.pretty));
+                        }
+                        else {
+                            for (entry in bind.objc.Bind.bindClass(result)) {
+                                json.push(bind.Json.stringify(entry, options.pretty));
+                            }
+                        }
                     }
-
-                    if (!options.parseOnly) {
-                        bind.objc.Bind.bindClass(result);
+                    else {
+                        if (options.parseOnly) {
+                            output += '' + result;
+                        }
+                        else {
+                            for (entry in bind.objc.Bind.bindClass(result, bindClassOptions)) {
+                                output += '-- BEGIN ' + entry.path + " --\n";
+                                output += entry.content + "\n";
+                                output += '-- END ' + entry.path + " --\n";
+                            }
+                        }
                     }
                 }
             }
@@ -78,6 +104,11 @@ class Cli {
                 println('['+json.join(',\n')+']');
             } else {
                 println('['+json.join(',')+']');
+            }
+        }
+        else {
+            if (output.trim() != '') {
+                println(output.rtrim());
             }
         }
 

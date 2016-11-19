@@ -31,7 +31,9 @@ typedef NSArray* (^SomeSuperBlock)(NSString *, CGFloat *youpi3);
 //
 // - (void)dispose;
 //
-// - (void)pause;
+- (void)pause;
+- (NSString *)name;
+- (CGFloat)volume;
 //
 // - (void)pauseSynchronized:(BOOL)runSync;
 //
@@ -47,15 +49,15 @@ typedef NSArray* (^SomeSuperBlock)(NSString *, CGFloat *youpi3);
 //
 // /// Some comment
 // // Some other comment (and testing a method written on several lines)
-// - (void)putLoopSound:
-// (NSString *)path
-// atChannel:  (NSInteger) channel;
+- (void)putLoopSound:
+(NSString *)path
+atChannel:  (NSInteger) channel;
 //
-// - (void)removeLoopSoundAtChannel:(NSInteger)channel;
+- (void)removeLoopSoundAtChannel:(NSInteger)channel;
 //
-// - (void)setVolume:(CGFloat)volume atChannel:(NSInteger)channel;
+- (void)setVolume:(CGFloat)volume atChannel:(NSInteger)channel;
 //
-// - (CGFloat)volumeAtChannel:(NSInteger)channel;
+- (CGFloat)volumeAtChannel:(NSInteger)channel;
 
 
 @end

@@ -16,16 +16,16 @@ class Parse {
     static var RE_ALL_SPACES = ~/\s+/g;
     static var RE_BEFORE_COMMENT_LINE = ~/^[\s\*]*/g;
     static var RE_AFTER_COMMENT_LINE = ~/[\s\*]*$/g;
-    static var RE_C_MODIFIERS = ~/^\s*(?:(?:signed|unsigned|short|long)\s+)*/;
+    static var RE_C_MODIFIERS = ~/^\s*(?:(?:const|signed|unsigned|short|long)\s+)*/;
     static var RE_TYPEDEF_BLOCK_NAME = ~/(?:\(\s*\^\s*(?:[a-zA-Z_][a-zA-Z0-9_]*)\s*\))/;
     static var RE_TYPEDEF_NAME = ~/\s+([a-zA-Z_][a-zA-Z0-9_]*)?\s*$/;
     //                       type                         protocol                                   block nullability                        nullability                           block arguments
-    static var RE_TYPE = ~/^((?:(?:signed|unsigned|short|long)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:\(\s*\^\s*(_Nullable|_Nonnull)?\s*\)|(_Nullable|_Nonnull)?)\s*(\(\s*((?:(?:signed|unsigned|short|long)\s+)*(?:[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))?\s*/;
+    static var RE_TYPE = ~/^((?:(?:const|signed|unsigned|short|long)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:\(\s*\^\s*(_Nullable|_Nonnull)?\s*\)|(_Nullable|_Nonnull)?)\s*(\(\s*((?:(?:const|signed|unsigned|short|long)\s+)*(?:[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))?\s*/;
     //                         type                         protocol                                   block type name                        type name                           block arguments                                                                                            type name
-    static var RE_TYPEDEF = ~/^typedef\s+(((?:(?:signed|unsigned|short|long)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:\(\s*\^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\))?\s*(\(\s*((?:[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))?)\s*([a-zA-Z_][a-zA-Z0-9_]*)?\s*;/;
+    static var RE_TYPEDEF = ~/^typedef\s+(((?:(?:const|signed|unsigned|short|long)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:\(\s*\^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\))?\s*(\(\s*((?:[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))?)\s*([a-zA-Z_][a-zA-Z0-9_]*)?\s*;/;
     static var RE_IDENTIFIER = ~/^[a-zA-Z_][a-zA-Z0-9_]*/;
     //                                       modifiers                           type                                                                (  name                    |          name                                  block arguments                                                                 )
-    static var RE_PROPERTY = ~/^@property\s*(?:\((\s*(?:[a-z]+\s*,?\s*)*)\))?\s*((?:(?:signed|unsigned|short|long)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:([a-zA-Z_][a-zA-Z0-9_]*)|\(\s*\^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)\s*\(\s*((?:(?:signed|unsigned|short|long)\s+)*(?:[a-zA-Z_][a-zA-Z0-9_<>\s\*]*[\s\*]?(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))\s*;/;
+    static var RE_PROPERTY = ~/^@property\s*(?:\((\s*(?:[a-z]+\s*,?\s*)*)\))?\s*((?:(?:const|signed|unsigned|short|long)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:([a-zA-Z_][a-zA-Z0-9_]*)|\(\s*\^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)\s*\(\s*((?:(?:const|signed|unsigned|short|long)\s+)*(?:[a-zA-Z_][a-zA-Z0-9_<>\s\*]*[\s\*]?(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))\s*;/;
     static var RE_INTERFACE = ~/^@interface\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*(?::\s*([a-zA-Z_][a-zA-Z0-9_]*))?\s*(?:\(\s*([a-zA-Z_][a-zA-Z0-9_]*)?\s*\))?\s*(?:<(\s*(?:[a-zA-Z_][a-zA-Z0-9_]*\s*,?\s*)*)>)?/;
 
     public static function createContext():ParseContext {
@@ -552,7 +552,9 @@ class Parse {
                     case 'NSNumber*':
                         Float({type: objcType, nullable: objcNullability == '_Nonnull'});
                     case 'NSString*',
-                         'NSMutableString*':
+                         'NSMutableString*',
+                         'char*',
+                         'const char*':
                         String({type: objcType, nullable: objcNullability != '_Nonnull'});
                     case 'NSArray*',
                          'NSMutableArray*':

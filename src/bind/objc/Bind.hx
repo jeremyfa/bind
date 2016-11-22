@@ -61,7 +61,7 @@ class Bind {
         }
 
         ctx.objcHandleType = 'ObjcHandle';
-        if (ctx.namespace != 'bind') ctx.objcHandleType = 'bind::' + ctx.objcHandleType;
+        if (ctx.namespace != 'bind') ctx.objcHandleType = '::bind::' + ctx.objcHandleType;
 
         // Class comment
         if (ctx.objcClass.description != null && ctx.objcClass.description.trim() != '') {
@@ -82,7 +82,7 @@ class Bind {
         for (method in ctx.objcClass.methods) {
 
             // Method return type
-            var ret = toHXCPPType(method.type, ctx);
+            var ret = toHxcppType(method.type, ctx);
 
             // Method name
             var name = method.name;
@@ -91,12 +91,12 @@ class Bind {
 
             // Instance handle as first argument
             if (method.instance) {
-                args.push(ctx.objcHandleType + ' _instance');
+                args.push(ctx.objcHandleType + ' instance_');
             }
 
             // Method args
             for (arg in method.args) {
-                args.push(toHXCPPType(arg.type, ctx) + ' ' + arg.name);
+                args.push(toHxcppType(arg.type, ctx) + ' ' + arg.name);
             }
 
             // Method comment
@@ -116,6 +116,17 @@ class Bind {
                 ctx.indent++;
 
                 // Method body
+                //
+                // Convert args to Objc
+                var toObjc = [];
+                var i = 0;
+                for (arg in method.args) {
+
+                    writeObjcArgAssign(arg, i, ctx);
+
+                    i++;
+
+                }
 
                 ctx.indent--;
                 writeIndent(ctx);
@@ -138,7 +149,9 @@ class Bind {
 
     } //generateObjCPPFile
 
-    static function toHXCPPType(type:bind.Class.Type, ctx:BindContext):String {
+/// Objective-C -> HXCPP
+
+    static function toHxcppType(type:bind.Class.Type, ctx:BindContext):String {
 
         var result = switch (type) {
             case Void(orig): 'void';
@@ -146,41 +159,214 @@ class Bind {
             case Float(orig): 'double';
             case Bool(orig): 'bool';
             case String(orig): '::String';
-            case Array(orig): toHXCPPArrayType(type, ctx);
-            case Map(orig): toHXCPPMapType(type, ctx);
-            case Object(orig): toHXCPPObjectType(type, ctx);
-            case Function(args, ret, orig): toHXCPPFunctionType(type, ctx);
+            case Array(orig): toHxcppArrayType(type, ctx);
+            case Map(orig): toHxcppMapType(type, ctx);
+            case Object(orig): toHxcppObjectType(type, ctx);
+            case Function(args, ret, orig): toHxcppFunctionType(type, ctx);
         }
 
         return result;
 
     } //toCPPType
 
-    static function toHXCPPArrayType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHxcppArrayType(type:bind.Class.Type, ctx:BindContext):String {
 
-        return 'void*'; // TODO implement
+        return '::Dynamic';
 
-    } //toHXCPPArrayType
+    } //toHxcppArrayType
 
-    static function toHXCPPMapType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHxcppMapType(type:bind.Class.Type, ctx:BindContext):String {
 
-        return 'void*'; // TODO implement
+        return '::Dynamic';
 
-    } //toHXCPPMapType
+    } //toHxcppMapType
 
-    static function toHXCPPObjectType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHxcppObjectType(type:bind.Class.Type, ctx:BindContext):String {
 
-        return ctx.objcHandleType;
+        return '::Dynamic';
 
-    } //toHXCPPObjectType
+    } //toHxcppObjectType
 
-    static function toHXCPPFunctionType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHxcppFunctionType(type:bind.Class.Type, ctx:BindContext):String {
 
-        return 'void*'; // TODO implement
+        return '::Dynamic';
 
-    } //toHXCPPFunctionType
+    } //toHxcppFunctionType
 
-/// Write utils
+/// HXCPP -> Objective-C
+
+    static function toObjcType(type:bind.Class.Type, ctx:BindContext):String {
+
+        var orig:Dynamic = null;
+
+        switch (type) {
+            case Void(orig_): orig = orig_;
+            case Int(orig_): orig = orig_;
+            case Float(orig_): orig = orig_;
+            case Bool(orig_): orig = orig_;
+            case String(orig_): orig = orig_;
+            case Array(orig_): orig = orig_;
+            case Map(orig_): orig = orig_;
+            case Object(orig_): orig = orig_;
+            case Function(args, ret, orig_): orig = orig_;
+        }
+
+        while (orig.orig != null) {
+            orig = orig.orig;
+        }
+
+        return orig.type;
+
+    } //toObjcArg
+
+/// Write utils (specific)
+
+    static function writeHxcppArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+
+        writeIndent(ctx);
+
+        var type = toHxcppType(arg.type, ctx);
+        var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_objc_';
+        var value = (arg.name != null ? arg.name : 'arg' + (index + 1));
+
+        switch (arg.type) {
+
+            case Function(args, ret, orig):
+                var funcType = toHxcppType(arg.type, ctx);
+                write(funcType + ' = NULL; // TODO implement', ctx);
+
+            case String(orig):
+                var objcType = toObjcType(arg.type, ctx);
+                switch (objcType) {
+                    case 'NSString*', 'NSMutableString*':
+                        write('$type $name = ::bind::objc::NSStringToHxcpp($value);', ctx);
+                    case 'char*':
+                        write('$type $name = ::bind::objc::CharStringToHxcpp($value);', ctx);
+                    case 'const char*':
+                        write('$type $name = ::bind::objc::ConstCharStringToHxcpp($value);', ctx);
+                }
+                writeLineBreak(ctx);
+
+            default:
+                write('$type $name = ($type) $value;', ctx);
+                writeLineBreak(ctx);
+        }
+
+    } //writeHxcppArgAssign
+
+    static function writeObjcArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+
+        writeIndent(ctx);
+
+        var type = toObjcType(arg.type, ctx);
+        var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_objc_';
+        var value = (arg.name != null ? arg.name : 'arg' + (index + 1));
+
+        switch (arg.type) {
+
+            case Function(args, ret, orig):
+                var blockReturnType = toObjcType(ret, ctx);
+                write(blockReturnType + ' ', ctx);
+                write('(^' + name + ')(', ctx);
+                var i = 0;
+                for (blockArg in args) {
+                    if (i++ > 0) write(', ', ctx);
+
+                    var argName = blockArg.name;
+                    if (argName == null) argName = 'arg' + i;
+                    write(toObjcType(blockArg.type, ctx) + ' ' + argName, ctx);
+                }
+                write(') = ^' + (blockReturnType != 'void' ? blockReturnType : '') + '(', ctx);
+                i = 0;
+                for (blockArg in args) {
+                    if (i > 0) write(', ', ctx);
+
+                    var argName = blockArg.name;
+                    if (argName == null) argName = 'arg' + (i + 1);
+
+                    write(toObjcType(blockArg.type, ctx) + ' ' + argName, ctx);
+
+                    i++;
+                }
+                write(') {', ctx);
+                ctx.indent++;
+                writeLineBreak(ctx);
+
+                i = 0;
+                for (blockArg in args) {
+
+                    var argName = blockArg.name;
+                    if (argName == null) argName = 'arg' + (i + 1);
+                    var hxcppName = argName + '_hxcpp_';
+
+                    writeHxcppArgAssign(blockArg, i, ctx);
+
+                    i++;
+                }
+
+                writeIndent(ctx);
+                if (blockReturnType != 'void') write('return ', ctx);
+                write(arg.name + '(', ctx);
+
+                i = 0;
+                for (blockArg in args) {
+                    if (i > 0) write(', ', ctx);
+
+                    var argName = blockArg.name;
+                    if (argName == null) argName = 'arg' + (i + 1);
+                    var hxcppName = argName + '_hxcpp_';
+
+                    write(hxcppName, ctx);
+
+                    i++;
+                }
+
+                write(');', ctx);
+                writeLineBreak(ctx);
+
+                ctx.indent--;
+                writeIndent(ctx);
+                write('};', ctx);
+                writeLineBreak(ctx);
+
+            case String(orig):
+                switch (type) {
+                    case 'NSString*':
+                        write('$type $name = ::bind::objc::HxcppToNSString($value);', ctx);
+                    case 'NSMutableString*':
+                        write('$type $name = ::bind::objc::HxcppToNSMutableString($value);', ctx);
+                    case 'char*':
+                        write('$type $name = ::bind::objc::HxcppToCharString($value);', ctx);
+                    case 'const char*':
+                        write('$type $name = ::bind::objc::HxcppToConstCharString($value);', ctx);
+                }
+                writeLineBreak(ctx);
+
+            case Array(orig):
+                switch (type) {
+                    case 'NSArray*':
+                        write('$type $name = ::bind::objc::HxcppToNSArray($value);', ctx);
+                    case 'NSMutableArray*':
+                        write('$type $name = ::bind::objc::HxcppToNSMutableArray($value);', ctx);
+                }
+                writeLineBreak(ctx);
+
+            case Object(orig):
+                if (type.endsWith('*')) {
+                    write('$type $name = ::bind::objc::HxcppToObjcId((Dynamic)$value);', ctx);
+                } else {
+                    write('$type $name = ($type) $value;', ctx);
+                }
+                writeLineBreak(ctx);
+
+            default:
+                write('$type $name = ($type) $value;', ctx);
+                writeLineBreak(ctx);
+        }
+
+    } //writeObjcArgAssign
+
+/// Write utils (generic)
 
     static function writeComment(comment:String, ctx:BindContext):Void {
 

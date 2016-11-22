@@ -235,7 +235,7 @@ class Parse {
                 ? RE_PROPERTY.matched(1).split(',').map(function(s) return s.trim())
                 : [];
             var objcType = removeSpacesForType(RE_PROPERTY.matched(2));
-            var objcName = RE_PROPERTY.matched(3).trim();
+            var objcName = RE_PROPERTY.matched(3) != null ? RE_PROPERTY.matched(3).trim() : null;
 
             var name = null;
             var type = null;

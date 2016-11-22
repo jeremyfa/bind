@@ -24,7 +24,9 @@ typedef NSArray* (^SomeSuperBlock)(NSString *, CGFloat *youpi3);
 //
 @property (nonatomic, copy, nullable) NSString * (^blockName)(NSString *, NSString *argsJson, SUPER_BYTE aByte);
 
-+ (void *(^_Nullable)(NSString *, CGFloat youpi))blockForName:(void(^_Nullable)(NSString *, CGFloat *youpi2))name;
++ (void *(^_Nullable)(NSString *, CGFloat youpi))blockForName:(NSString *)name;
+
++ (void)setBlock:(void(^_Nullable)(NSString *, CGFloat *youpi2))block forName:(NSString *)name;
 
 // // Some method
 // - (instancetype)initWithLoopDuration:(NSTimeInterval)loopDuration;

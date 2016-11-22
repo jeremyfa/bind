@@ -1,0 +1,25 @@
+{
+  "name": "bind",
+  "version": "0.1.0",
+  "description": "Bind Objective-C and Java (JNI) code to Haxe without writing glue code manually.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeremyfa/bind.git"
+  },
+  "author": "Jeremy Faivre <contact@jeremyfa.com>",
+  "private": true,
+  "bugs": {
+    "url": "https://github.com/jeremyfa/bind/issues"
+  },
+  "homepage": "https://github.com/jeremyfa/bind#readme",
+  "dependencies": {
+    "source-map-support": "^0.4.6"
+  }
+}

@@ -127,7 +127,7 @@ namespace bind {
 
         id HxcppToUnwrappedObjcId(const id inVal)
         {
-            return (id)(((BindHaxeObjcData)instance_)->mValue);
+            return ((BindHaxeObjcData)instance_)->mValue;
         }
 
         ::Dynamic NSDictionaryToHxcpp(NSDictionary *inDictionary)

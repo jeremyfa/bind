@@ -125,6 +125,11 @@ namespace bind {
             return [HxcppToNSDictionary(d) mutableCopy];
         }
 
+        id HxcppToUnwrappedObjcId(const id inVal)
+        {
+            return (id)(((BindHaxeObjcData)instance_)->mValue);
+        }
+
         ::Dynamic NSDictionaryToHxcpp(NSDictionary *inDictionary)
         {
            if (!inDictionary)
@@ -252,8 +257,6 @@ namespace bind {
            }
            return nil;
         }
-
-        Dynamic ObjcIdToHxcpp()
 
         extern hx::Class __BindHaxeObjcClass;
 

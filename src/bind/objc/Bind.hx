@@ -7,7 +7,6 @@ typedef BindContext = {
     var indent:Int;
     var files:Array<bind.File>;
     var namespace:String;
-    var objcHandleType:String;
     var currentFile:bind.File;
 }
 
@@ -21,7 +20,6 @@ class Bind {
             files: [],
             namespace: null,
             currentFile: null,
-            objcHandleType: null,
         };
 
     } //createContext
@@ -60,9 +58,6 @@ class Bind {
             namespaceEntries = ctx.namespace.split('::');
         }
 
-        ctx.objcHandleType = 'ObjcHandle';
-        if (ctx.namespace != 'bind') ctx.objcHandleType = '::bind::' + ctx.objcHandleType;
-
         // Class comment
         if (ctx.objcClass.description != null && ctx.objcClass.description.trim() != '') {
             writeComment(ctx.objcClass.description, ctx);
@@ -91,7 +86,7 @@ class Bind {
 
             // Instance handle as first argument
             if (method.instance) {
-                args.push(ctx.objcHandleType + ' instance_');
+                args.push('::Dynamic instance_');
             }
 
             // Method args
@@ -121,12 +116,11 @@ class Bind {
                 var toObjc = [];
                 var i = 0;
                 for (arg in method.args) {
-
                     writeObjcArgAssign(arg, i, ctx);
-
                     i++;
-
                 }
+                // Call Objc
+                writeObjcCall(method, ctx);
 
                 ctx.indent--;
                 writeIndent(ctx);
@@ -223,19 +217,18 @@ class Bind {
 
     static function writeHxcppArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
 
-        writeIndent(ctx);
-
         var type = toHxcppType(arg.type, ctx);
-        var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_objc_';
-        var value = (arg.name != null ? arg.name : 'arg' + (index + 1));
+        var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_hxcpp_';
+        var value = (arg.name != null ? arg.name : 'arg' + (index + 1)) + (index == -1 ? '_objc_' : '');
 
         switch (arg.type) {
 
             case Function(args, ret, orig):
                 var funcType = toHxcppType(arg.type, ctx);
-                write(funcType + ' = NULL; // TODO implement', ctx);
+                writeLine(funcType + ' ' + name + ' = null(); // Not implemented, yet', ctx);
 
             case String(orig):
+                writeIndent(ctx);
                 var objcType = toObjcType(arg.type, ctx);
                 switch (objcType) {
                     case 'NSString*', 'NSMutableString*':
@@ -247,8 +240,30 @@ class Bind {
                 }
                 writeLineBreak(ctx);
 
-            default:
+            case Int(orig):
+                writeIndent(ctx);
                 write('$type $name = ($type) $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Float(orig):
+                writeIndent(ctx);
+                var objcType = toObjcType(arg.type, ctx);
+                switch (objcType) {
+                    case 'NSNumber*':
+                        write('$type $name = ($type) ::bind::objc::ObjcIdToHxcpp($value);', ctx);
+                    default:
+                        write('$type $name = ($type) $value;', ctx);
+                }
+                writeLineBreak(ctx);
+
+            case Bool(orig):
+                writeIndent(ctx);
+                write('$type $name = ($type) $value;', ctx);
+                writeLineBreak(ctx);
+
+            default:
+                writeIndent(ctx);
+                write('$type $name = ::bind::objc::ObjcIdToHxcpp($value);', ctx);
                 writeLineBreak(ctx);
         }
 
@@ -260,11 +275,16 @@ class Bind {
 
         var type = toObjcType(arg.type, ctx);
         var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_objc_';
-        var value = (arg.name != null ? arg.name : 'arg' + (index + 1));
+        var value = (arg.name != null ? arg.name : 'arg' + (index + 1)) + (index == -1 ? '_hxcpp_' : '');
 
         switch (arg.type) {
 
             case Function(args, ret, orig):
+                // Keep track of haxe instance on objc side
+                write('NSHaxeWrapperClass *' + name + 'wrapper_ = [[BindObjcHaxeWrapperClass alloc] init:' + arg.name + '.mPtr];', ctx);
+                writeLineBreak(ctx);
+                writeIndent(ctx);
+                // Assign objc block from haxe function
                 var blockReturnType = toObjcType(ret, ctx);
                 write(blockReturnType + ' ', ctx);
                 write('(^' + name + ')(', ctx);
@@ -292,6 +312,7 @@ class Bind {
                 ctx.indent++;
                 writeLineBreak(ctx);
 
+                // Convert objc args into haxe args
                 i = 0;
                 for (blockArg in args) {
 
@@ -304,9 +325,10 @@ class Bind {
                     i++;
                 }
 
+                // Call block
                 writeIndent(ctx);
                 if (blockReturnType != 'void') write('return ', ctx);
-                write(arg.name + '(', ctx);
+                write(name + 'wrapper_->haxeObject->__run(', ctx);
 
                 i = 0;
                 for (blockArg in args) {
@@ -360,11 +382,62 @@ class Bind {
                 writeLineBreak(ctx);
 
             default:
-                write('$type $name = ($type) $value;', ctx);
+                if (type.endsWith('*')) {
+                    write('$type $name = ::bind::objc::HxcppToObjcId((Dynamic)$value);', ctx);
+                } else {
+                    write('$type $name = ($type) $value;', ctx);
+                }
                 writeLineBreak(ctx);
         }
 
     } //writeObjcArgAssign
+
+    static function writeObjcCall(method:bind.Class.Method, ctx:BindContext):Void {
+
+        var hasReturn = false;
+        var hasParenClose = false;
+
+        writeIndent(ctx);
+        switch (method.type) {
+            case Void(orig):
+            default:
+                hasReturn = true;
+        }
+        if (hasReturn) {
+            switch (method.type) {
+                case Function(args, ret, orig):
+                    write('id return_objc_ = ', ctx);
+                default:
+                    var objcType = toObjcType(method.type, ctx);
+                    if (objcType == 'instancetype') objcType = ctx.objcClass.name + '*';
+                    write(objcType + ' return_objc_ = ', ctx);
+            }
+        }
+        if (method.instance) {
+            write('[::bind::objc::HxcppToUnwrappedObjcId(instance_)', ctx);
+        } else {
+            write('[' + ctx.objcClass.name, ctx);
+        }
+        if (method.args.length > 0) {
+            for (arg in method.args) {
+                var nameSection = arg.orig.nameSection;
+                write(' ' + nameSection + ':', ctx);
+                write(arg.name + '_objc_', ctx);
+            }
+        } else {
+            write(' ' + method.name, ctx);
+        }
+        write('];', ctx);
+        writeLineBreak(ctx);
+        if (hasReturn) {
+            writeHxcppArgAssign({
+                name: 'return',
+                type: method.type
+            }, -1, ctx);
+            writeLine('return return_hxcpp_;', ctx);
+        }
+
+    } //writeObjcCall
 
 /// Write utils (generic)
 

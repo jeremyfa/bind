@@ -1,5 +1,7 @@
 #include <hxcpp.h>
 
+// Substantial portions of this code taken from HaxeFoundation/HXCPP repository Objc helpers code.
+
 // Objective-C class that wraps a Haxe class
 @interface BindObjcHaxeWrapperClass : NSObject {
 
@@ -35,6 +37,8 @@ namespace bind {
         NSMutableDictionary* HxcppToNSMutableDictionary(::Dynamic d);
 
         id HxcppToObjcId(::Dynamic value);
+
+        id HxcppToUnwrappedObjcId(const id inVal);
 
 
         ::String NSStringtoHxcpp(NSString* str);

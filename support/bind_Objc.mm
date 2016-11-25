@@ -130,18 +130,18 @@ namespace bind {
             return (char*) str.c_str();
         }
 
-        ::String NSStringtoHxcpp(NSString* str) {
+        ::String NSStringToHxcpp(NSString* str) {
             if (str == nil) return null();
             const char* val = [str UTF8String];
             return ::String(val);
         }
 
-        ::String CharStringtoHxcpp(char* str) {
+        ::String CharStringToHxcpp(char* str) {
             const char* val = (const char*) str;
             return ::String(val);
         }
 
-        ::String ConstCharStringtoHxcpp(const char* str) {
+        ::String ConstCharStringToHxcpp(const char* str) {
             return ::String(str);
         }
 

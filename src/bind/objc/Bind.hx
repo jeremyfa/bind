@@ -614,7 +614,7 @@ class Bind {
 
             case Function(args, ret, orig):
                 // Keep track of haxe instance on objc side
-                write('NSHaxeWrapperClass *' + name + 'wrapper_ = [[BindObjcHaxeWrapperClass alloc] init:' + arg.name + '.mPtr];', ctx);
+                write('BindObjcHaxeWrapperClass *' + name + 'wrapper_ = [[BindObjcHaxeWrapperClass alloc] init:' + arg.name + '.mPtr];', ctx);
                 writeLineBreak(ctx);
                 writeIndent(ctx);
                 // Assign objc block from haxe function

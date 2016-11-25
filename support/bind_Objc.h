@@ -41,11 +41,11 @@ namespace bind {
         id HxcppToUnwrappedObjcId(::Dynamic inVal);
 
 
-        ::String NSStringtoHxcpp(NSString* str);
+        ::String NSStringToHxcpp(NSString* str);
 
-        ::String CharStringtoHxcpp(char* str);
+        ::String CharStringToHxcpp(char* str);
 
-        ::String ConstCharStringtoHxcpp(const char* str);
+        ::String ConstCharStringToHxcpp(const char* str);
 
         ::Dynamic NSArrayToHxcpp(NSArray* nsArray);
 

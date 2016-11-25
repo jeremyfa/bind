@@ -465,12 +465,16 @@ class Bind {
         switch (type) {
             case Function(args, ret, orig):
                 var resArgs = [];
-                for (arg in args) {
-                    var haxeType = toHaxeType(arg.type, ctx);
-                    if (haxeType.indexOf('->') != -1) {
-                        haxeType = '(' + haxeType + ')';
+                if (args.length == 0) {
+                    resArgs.push('Void');
+                } else {
+                    for (arg in args) {
+                        var haxeType = toHaxeType(arg.type, ctx);
+                        if (haxeType.indexOf('->') != -1) {
+                            haxeType = '(' + haxeType + ')';
+                        }
+                        resArgs.push(haxeType);
                     }
-                    resArgs.push(haxeType);
                 }
                 var haxeType = toHaxeType(ret, ctx);
                 if (haxeType.indexOf('->') != -1) {

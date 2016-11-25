@@ -18,10 +18,10 @@ haxelib run bind objc SomeObjcHeader.h [SomeOtherObjcHeader.h ...] --json --pars
 haxelib run bind objc NSSomeObjcHeader.h --namespace some::namespace --package some.haxe.pack --objc-prefix NS
 ```
 
-Nothing is written to disk. The output is simple returned by the command. You can add a ``--json`` argument to get output as JSON (file paths and contents), in order to integrate this into your own tool.
+Nothing is written to disk. The output is simply returned by the command. You can add a ``--json`` argument to get output as JSON (file paths and contents), in order to integrate this into your own tool.
 
 The generated code exposes one ore more classes to Haxe from the parsed Objective-C header.
-For now, you must define yourself header include paths or copy support files (from bind's `support/` directory) build it.
+For now, you must define yourself header include paths or copy support files (from bind's `support/` directory) to build it.
 
 An option to generate fully standalone classes that add correct build config flags to hxcpp is planned.
 

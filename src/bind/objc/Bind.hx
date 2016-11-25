@@ -32,8 +32,6 @@ class Bind {
         Nothing is written to disk at this stage. */
     public static function bindClass(objcClass:bind.Class, ?options:{?namespace:String, ?pack:String}):Array<bind.File> {
 
-        trace(bind.Json.stringify(objcClass, true));
-
         var ctx = createContext();
         ctx.objcClass = objcClass;
 
@@ -43,6 +41,7 @@ class Bind {
         }
 
         // Generate Objective C++ file
+        generateObjCPPFile(ctx, true);
         generateObjCPPFile(ctx);
 
         // Generate Haxe file
@@ -54,10 +53,10 @@ class Bind {
 
     public static function generateObjCPPFile(ctx:BindContext, header:Bool = false):Void {
 
-        ctx.currentFile = { path: 'bind_' + ctx.objcClass.name + '.mm', content: '' };
+        ctx.currentFile = { path: 'bind_' + ctx.objcClass.name + (header ? '.h' : '.mm'), content: '' };
 
         writeLine('#import "hxcpp.h"', ctx);
-        writeLine('#import <Foundation/Foundation.h>', ctx);
+        if (!header) writeLine('#import <Foundation/Foundation.h>', ctx);
 
         writeLineBreak(ctx);
 

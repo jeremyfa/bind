@@ -15,9 +15,6 @@ class Main {
         var args:Array<String> = args();
         var cwd = args.pop();
 
-        trace('args: ' + args.join("\n"));
-        trace('cwd: ' + cwd);
-
         new bind.Cli(cast args, cwd).run();
 
     } //main

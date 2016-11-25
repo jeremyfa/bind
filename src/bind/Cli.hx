@@ -51,6 +51,10 @@ class Cli {
                     i++;
                     bindClassOptions.pack = args[i];
                 }
+                if (arg == '--objc-prefix') {
+                    i++;
+                    bindClassOptions.objcPrefix = args[i];
+                }
             }
             else {
                 fileArgs.push(arg);

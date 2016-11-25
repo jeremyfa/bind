@@ -8,6 +8,7 @@ typedef BindContext = {
     var files:Array<bind.File>;
     var namespace:String;
     var pack:String;
+    var objcPrefix:String;
     var currentFile:bind.File;
 }
 
@@ -20,6 +21,7 @@ class Bind {
             indent: 0,
             files: [],
             namespace: null,
+            objcPrefix: null,
             pack: null,
             currentFile: null,
         };
@@ -30,7 +32,7 @@ class Bind {
         To bind the related Objective-C class to Haxe.
         The files are returned as an array of bind.File objects.
         Nothing is written to disk at this stage. */
-    public static function bindClass(objcClass:bind.Class, ?options:{?namespace:String, ?pack:String}):Array<bind.File> {
+    public static function bindClass(objcClass:bind.Class, ?options:{?namespace:String, ?pack:String, ?objcPrefix:String}):Array<bind.File> {
 
         var ctx = createContext();
         ctx.objcClass = objcClass;
@@ -38,6 +40,7 @@ class Bind {
         if (options != null) {
             if (options.namespace != null) ctx.namespace = options.namespace;
             if (options.pack != null) ctx.pack = options.pack;
+            if (options.objcPrefix != null) ctx.objcPrefix = options.objcPrefix;
         }
 
         // Generate Objective C++ file
@@ -170,7 +173,14 @@ class Bind {
             dir = ctx.pack.replace('.', '/') + '/';
         }
 
-        ctx.currentFile = { path: dir + ctx.objcClass.name + '.hx', content: '' };
+        var haxeName = ctx.objcClass.name;
+        if (ctx.objcPrefix != null && ctx.objcPrefix.trim() != '') {
+            if (haxeName.startsWith(ctx.objcPrefix.trim())) {
+                haxeName = haxeName.substring(ctx.objcPrefix.trim().length);
+            }
+        }
+
+        ctx.currentFile = { path: dir + haxeName + '.hx', content: '' };
 
         var packPrefix = '';
         if (ctx.pack != null && ctx.pack.trim() != '') {
@@ -187,7 +197,7 @@ class Bind {
             writeComment(ctx.objcClass.description, ctx);
         }
 
-        writeLine('class ' + ctx.objcClass.name + ' {', ctx);
+        writeLine('class ' + haxeName + ' {', ctx);
         ctx.indent++;
         writeLineBreak(ctx);
 
@@ -209,6 +219,9 @@ class Bind {
 
             // Constructor?
             var isObjcConstructor = isObjcConstructor(method, ctx);
+
+            // Factory?
+            var isObjcFactory = isObjcFactory(method, ctx);
 
             // Method return type
             var ret = toHaxeType(method.type, ctx);
@@ -241,7 +254,7 @@ class Bind {
             // Whole method
             write('function ' + name + '(' + args.join(', ') + '):', ctx);
             if (isObjcConstructor) {
-                write(ctx.objcClass.name, ctx);
+                write(haxeName, ctx);
             } else {
                 write(ret, ctx);
             }
@@ -252,6 +265,11 @@ class Bind {
             writeIndent(ctx);
             if (isObjcConstructor) {
                 write('_instance = ', ctx);
+            } else if (isObjcFactory) {
+                write('var ret = new ' + haxeName + '();', ctx);
+                writeLineBreak(ctx);
+                writeIndent(ctx);
+                write('ret._instance = ', ctx);
             } else {
                 switch (method.type) {
                     case Void(orig):
@@ -274,6 +292,8 @@ class Bind {
             writeLineBreak(ctx);
             if (isObjcConstructor) {
                 writeLine('return this;', ctx);
+            } else if (isObjcFactory) {
+                writeLine('return ret;', ctx);
             }
 
             ctx.indent--;
@@ -294,8 +314,8 @@ class Bind {
         writeLine('@:build(bind.Linc.touch())', ctx);
         writeLine('@:build(bind.Linc.xml(\'' + ctx.objcClass.name + '\', \'./\'))', ctx);
         writeLine('#end', ctx);
-        writeLine('@:allow(' + packPrefix + ctx.objcClass.name + ')', ctx);
-        writeLine('private extern class ' + ctx.objcClass.name + '_Extern {', ctx);
+        writeLine('@:allow(' + packPrefix + haxeName + ')', ctx);
+        writeLine('private extern class ' + haxeName + '_Extern {', ctx);
         ctx.indent++;
         writeLineBreak(ctx);
 
@@ -393,6 +413,18 @@ class Bind {
         }
 
         return isObjcConstructor;
+
+    } //isObjcConstructor
+
+    static function isObjcFactory(method:bind.Class.Method, ctx:BindContext):Bool {
+
+        var isObjcFactory = false;
+        var objcType = toObjcType(method.type, ctx);
+        if (!method.instance && (objcType == 'instancetype' || objcType == ctx.objcClass.name + '*')) {
+            isObjcFactory = true;
+        }
+
+        return isObjcFactory;
 
     } //isObjcConstructor
 
@@ -549,7 +581,12 @@ class Bind {
 
             default:
                 writeIndent(ctx);
-                write('$type $name = ::bind::objc::ObjcIdToHxcpp($value);', ctx);
+                var objcType = toObjcType(arg.type, ctx);
+                if (objcType == 'instancetype' || objcType == ctx.objcClass.name + '*') {
+                    write('::Dynamic $name = ::bind::objc::WrappedObjcIdToHxcpp($value);', ctx);
+                } else {
+                    write('$type $name = ::bind::objc::ObjcIdToHxcpp($value);', ctx);
+                }
                 writeLineBreak(ctx);
         }
 
@@ -660,7 +697,9 @@ class Bind {
                 writeLineBreak(ctx);
 
             case Object(orig):
-                if (type.endsWith('*')) {
+                if (type == 'instancetype' || type == ctx.objcClass.name + '*') {
+                    write(ctx.objcClass.name + '* $name = ::bind::objc::HxcppToUnwrappedObjcId($value);', ctx);
+                } else if (type.endsWith('*')) {
                     write('$type $name = ::bind::objc::HxcppToObjcId((Dynamic)$value);', ctx);
                 } else {
                     write('$type $name = ($type) $value;', ctx);

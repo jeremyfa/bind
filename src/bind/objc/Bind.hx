@@ -214,13 +214,6 @@ class Bind {
         writeLine('public function new() {}', ctx);
         writeLineBreak(ctx);
 
-        writeLine('public function destroy() {', ctx);
-        ctx.indent++;
-        writeLine('_instance = null;', ctx);
-        ctx.indent--;
-        writeLine('}', ctx);
-        writeLineBreak(ctx);
-
         // Add methods
         for (method in ctx.objcClass.methods) {
 

@@ -463,7 +463,21 @@ class Bind {
         var result = 'Dynamic';
 
         switch (type) {
-            case Function(args, ret, orig): toHaxeFunctionType(type, ctx);
+            case Function(args, ret, orig):
+                var resArgs = [];
+                for (arg in args) {
+                    var haxeType = toHaxeType(arg.type, ctx);
+                    if (haxeType.indexOf('->') != -1) {
+                        haxeType = '(' + haxeType + ')';
+                    }
+                    resArgs.push(haxeType);
+                }
+                var haxeType = toHaxeType(ret, ctx);
+                if (haxeType.indexOf('->') != -1) {
+                    haxeType = '(' + haxeType + ')';
+                }
+                resArgs.push(haxeType);
+                result = resArgs.join('->');
             default:
         }
 

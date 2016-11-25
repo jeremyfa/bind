@@ -4,7 +4,7 @@
   "license": "MIT",
   "tags": ["cross", "bindings"],
   "description": "Bind Objective-C and Java (JNI) code to Haxe without writing glue code manually.",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "classPath": "src/",
   "releasenote": "Active development.",
   "contributors": ["jeremyfa"],

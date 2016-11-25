@@ -86,7 +86,7 @@ class Cli {
                             json.push(bind.Json.stringify(result, options.pretty));
                         }
                         else {
-                            for (entry in bind.objc.Bind.bindClass(result)) {
+                            for (entry in bind.objc.Bind.bindClass(result, bindClassOptions)) {
                                 json.push(bind.Json.stringify(entry, options.pretty));
                             }
                         }

@@ -64,10 +64,17 @@ class Bind {
             dir = ctx.pack.replace('.', '/') + '/';
         }
 
-        ctx.currentFile = { path: dir + 'bind_' + ctx.objcClass.name + (header ? '.h' : '.mm'), content: '' };
+        ctx.currentFile = { path: dir + 'linc/linc_' + ctx.objcClass.name + (header ? '.h' : '.mm'), content: '' };
 
         writeLine('#import "hxcpp.h"', ctx);
-        if (!header) writeLine('#import <Foundation/Foundation.h>', ctx);
+        if (header) {
+            //
+        } else {
+            writeLine('#import "bind_Objc.h"', ctx);
+            writeLine('#import <Foundation/Foundation.h>', ctx);
+            writeLine('#import "linc_' + ctx.objcClass.name + '.h"', ctx);
+            writeLine('#import "' + ctx.objcClass.name + '.h"', ctx);
+        }
 
         writeLineBreak(ctx);
 
@@ -245,6 +252,7 @@ class Bind {
             }
 
             writeIndent(ctx);
+            write('public ', ctx);
 
             // Static method?
             if (!method.instance) {
@@ -254,6 +262,8 @@ class Bind {
             // Whole method
             write('function ' + name + '(' + args.join(', ') + '):', ctx);
             if (isObjcConstructor) {
+                write(haxeName, ctx);
+            } else if (isObjcFactory) {
                 write(haxeName, ctx);
             } else {
                 write(ret, ctx);
@@ -309,7 +319,7 @@ class Bind {
 
         // Extern class declaration
         writeLine('@:keep', ctx);
-        writeLine('@:include(\'bind_' + ctx.objcClass.name + '.h\')', ctx);
+        writeLine('@:include(\'linc_' + ctx.objcClass.name + '.h\')', ctx);
         writeLine('#if (!display && !lint)', ctx);
         writeLine('@:build(bind.Linc.touch())', ctx);
         writeLine('@:build(bind.Linc.xml(\'' + ctx.objcClass.name + '\', \'./\'))', ctx);
@@ -390,8 +400,8 @@ class Bind {
         ctx.indent++;
         writeLine('<files id="haxe">', ctx);
         ctx.indent++;
-        writeLine('<compilerflag value="-I$'+'{LINC_' + ctx.objcClass.name.toUpperCase() + '_PATH}" />', ctx);
-        writeLine('<file name="$'+'{LINC_' + ctx.objcClass.name.toUpperCase() + '_PATH}bind_' + ctx.objcClass.name + '.mm" />', ctx);
+        writeLine('<compilerflag value="-I$'+'{LINC_' + ctx.objcClass.name.toUpperCase() + '_PATH}linc/" />', ctx);
+        writeLine('<file name="$'+'{LINC_' + ctx.objcClass.name.toUpperCase() + '_PATH}linc/linc_' + ctx.objcClass.name + '.mm" />', ctx);
         ctx.indent--;
         writeLine('</files>', ctx);
         writeLine('<target id="haxe">', ctx);

@@ -1,6 +1,5 @@
-
-#import "hxcpp.h"
 #import <Foundation/Foundation.h>
+#import "bind_Objc.h"
 
 // Substantial portions of this code taken from HaxeFoundation/HXCPP repository Objc helpers code.
 
@@ -28,6 +27,89 @@ namespace bind {
 
     namespace objc {
 
+        //extern hx::Class __PointerClass;
+
+        class BindHaxeObjcData : public hx::Object
+        {
+        public:
+            inline void *operator new( size_t inSize, hx::NewObjectType inAlloc=hx::NewObjAlloc,const char *inName="bind.objc.BoxedType")
+            { return hx::Object::operator new(inSize,inAlloc,inName); }
+
+            BindHaxeObjcData(const id inValue) : mValue(inValue)
+            {
+#ifndef OBJC_ARC
+                [ inValue retain ];
+#endif
+                mFinalizer = new hx::InternalFinalizer(this,clean);
+            };
+
+            static void clean(hx::Object *inObj)
+            {
+                BindHaxeObjcData *m = dynamic_cast<BindHaxeObjcData *>(inObj);
+                if (m)
+                {
+#ifndef OBJC_ARC
+                    [m->mValue release];
+#else
+                    m->mValue = nil;
+#endif
+                }
+            }
+
+            void __Mark(hx::MarkContext *__inCtx) { mFinalizer->Mark(); }
+
+#ifdef HXCPP_VISIT_ALLOCS
+            void __Visit(hx::VisitContext *__inCtx) { mFinalizer->Visit(__inCtx); }
+#endif
+
+            hx::Class __GetClass() const { return NULL; /*__PointerClass;*/ }
+            bool __Is(hx::Object *inClass) const { return dynamic_cast< BindHaxeObjcData *>(inClass); }
+
+            // k_cpp_objc
+            int __GetType() const { return vtAbstractBase + 4; }
+#ifdef OBJC_ARC
+            void * __GetHandle() const { return (__bridge void *) mValue; }
+#else
+            void * __GetHandle() const { return (void *) mValue; }
+#endif
+            String toString()
+            {
+                return String(!mValue ? "null" : [[mValue description] UTF8String]);
+            }
+            String __ToString() const { return String(!mValue ? "null" : [[mValue description] UTF8String]); }
+
+            int __Compare(const hx::Object *inRHS) const
+            {
+                if (!inRHS)
+                    return mValue == 0 ? 0 : 1;
+                const BindHaxeObjcData *data = dynamic_cast< const BindHaxeObjcData *>(inRHS);
+                if (data)
+                {
+                    return [data->mValue isEqual:mValue] ? 0 : mValue < data->mValue ? -1 : 1;
+                }
+                else
+                {
+                    void *r = inRHS->__GetHandle();
+
+#ifdef OBJC_ARC
+                    void * ptr = (__bridge void *) mValue;
+#else
+                    void * ptr = (void *) mValue;
+#endif
+
+                    return ptr < r ? -1 : ptr==r ? 0 : 1;
+                }
+            }
+
+#ifdef OBJC_ARC
+            id mValue;
+#else
+            const id mValue;
+#endif
+            hx::InternalFinalizer *mFinalizer;
+        };
+
+
         NSString* HxcppToNSString(::String str) {
             if (hx::IsNull(str)) return nil;
             return @(str.c_str());
@@ -45,7 +127,7 @@ namespace bind {
 
         char* HxcppToCharString(::String str) {
             if (hx::IsNull(str)) return NULL;
-            return str.c_str();
+            return (char*) str.c_str();
         }
 
         ::String NSStringtoHxcpp(NSString* str) {
@@ -125,9 +207,9 @@ namespace bind {
             return [HxcppToNSDictionary(d) mutableCopy];
         }
 
-        id HxcppToUnwrappedObjcId(const id inVal)
+        id HxcppToUnwrappedObjcId(::Dynamic inVal)
         {
-            return ((BindHaxeObjcData)instance_)->mValue;
+            return ((BindHaxeObjcData*)inVal.mPtr)->mValue;
         }
 
         ::Dynamic NSDictionaryToHxcpp(NSDictionary *inDictionary)
@@ -151,7 +233,7 @@ namespace bind {
 
         ::hx::Val ObjcIdToHxcppVal(id value)
         {
-           if (value==nil || value==[NSNull null])
+           if (value==nil || value==[NSNull null])
               return null();
 
            else if ([value isKindOfClass:[NSNumber class]])
@@ -193,7 +275,7 @@ namespace bind {
              return Array_obj<unsigned char>::fromData((const unsigned char *)data.bytes, data.length);
         }
 
-        id HxcppToObjcId(::Dynamic value) {
+        id HxcppToObjcId(::Dynamic d) {
 
            if (!d.mPtr)
               return nil;
@@ -257,88 +339,6 @@ namespace bind {
            }
            return nil;
         }
-
-        extern hx::Class __BindHaxeObjcClass;
-
-        class BindHaxeObjcData : public hx::Object
-        {
-        public:
-           inline void *operator new( size_t inSize, hx::NewObjectType inAlloc=NewObjAlloc,const char *inName="bind.objc.BoxedType")
-              { return hx::Object::operator new(inSize,inAlloc,inName); }
-
-           BindHaxeObjcData(const id inValue) : mValue(inValue)
-           {
-              #ifndef OBJC_ARC
-              [ inValue retain ];
-              #endif
-        		mFinalizer = new hx::InternalFinalizer(this,clean);
-           };
-
-        	static void clean(hx::Object *inObj)
-        	{
-        		BindHaxeObjcData *m = dynamic_cast<BindHaxeObjcData *>(inObj);
-              if (m)
-              {
-                 #ifndef OBJC_ARC
-                 [m->mValue release];
-                 #else
-                 m->mValue = nil;
-                 #endif
-              }
-        	}
-
-        	void __Mark(hx::MarkContext *__inCtx) { mFinalizer->Mark(); }
-
-           #ifdef HXCPP_VISIT_ALLOCS
-        	void __Visit(hx::VisitContext *__inCtx) { mFinalizer->Visit(__inCtx); }
-           #endif
-
-           hx::Class __GetClass() const { return __BindHaxeObjcClass; }
-           bool __Is(hx::Object *inClass) const { return dynamic_cast< BindHaxeObjcData *>(inClass); }
-
-           // k_cpp_objc
-           int __GetType() const { return vtAbstractBase + 4; }
-           #ifdef OBJC_ARC
-           void * __GetHandle() const { return (__bridge void *) mValue; }
-           #else
-           void * __GetHandle() const { return (void *) mValue; }
-           #endif
-           String toString()
-           {
-              return String(!mValue ? "null" : [[mValue description] UTF8String]);
-           }
-           String __ToString() const { return String(!mValue ? "null" : [[mValue description] UTF8String]); }
-
-           int __Compare(const hx::Object *inRHS) const
-           {
-              if (!inRHS)
-                return mValue == 0 ? 0 : 1;
-              const BindHaxeObjcData *data = dynamic_cast< const BindHaxeObjcData *>(inRHS);
-              if (data)
-              {
-                 return [data->mValue isEqual:mValue] ? 0 : mValue < data->mValue ? -1 : 1;
-              }
-              else
-              {
-                void *r = inRHS->__GetHandle();
-
-                #ifdef OBJC_ARC
-                void * ptr = (__bridge void *) mValue;
-                #else
-                void * ptr = (void *) mValue;
-                #endif
-
-                return ptr < r ? -1 : ptr==r ? 0 : 1;
-              }
-           }
-
-           #ifdef OBJC_ARC
-           id mValue;
-           #else
-           const id mValue;
-           #endif
-           hx::InternalFinalizer *mFinalizer;
-        };
 
     }
 

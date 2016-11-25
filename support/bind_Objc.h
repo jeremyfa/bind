@@ -38,7 +38,7 @@ namespace bind {
 
         id HxcppToObjcId(::Dynamic value);
 
-        id HxcppToUnwrappedObjcId(const id inVal);
+        id HxcppToUnwrappedObjcId(::Dynamic inVal);
 
 
         ::String NSStringtoHxcpp(NSString* str);

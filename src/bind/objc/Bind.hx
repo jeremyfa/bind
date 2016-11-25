@@ -47,13 +47,21 @@ class Bind {
         // Generate Haxe file
         generateHaxeFile(ctx);
 
+        // Generate Linc (XML) file
+        generateLincFile(ctx);
+
         return ctx.files;
 
     } //bindClass
 
     public static function generateObjCPPFile(ctx:BindContext, header:Bool = false):Void {
 
-        ctx.currentFile = { path: 'bind_' + ctx.objcClass.name + (header ? '.h' : '.mm'), content: '' };
+        var dir = '';
+        if (ctx.pack != null && ctx.pack.trim() != '') {
+            dir = ctx.pack.replace('.', '/') + '/';
+        }
+
+        ctx.currentFile = { path: dir + 'bind_' + ctx.objcClass.name + (header ? '.h' : '.mm'), content: '' };
 
         writeLine('#import "hxcpp.h"', ctx);
         if (!header) writeLine('#import <Foundation/Foundation.h>', ctx);
@@ -348,6 +356,33 @@ class Bind {
         ctx.currentFile = null;
 
     } //generateHaxeFile
+
+    public static function generateLincFile(ctx:BindContext, header:Bool = false):Void {
+
+        var dir = '';
+        if (ctx.pack != null && ctx.pack.trim() != '') {
+            dir = ctx.pack.replace('.', '/') + '/';
+        }
+
+        ctx.currentFile = { path: dir + 'linc/linc_' + ctx.objcClass.name + '.xml', content: '' };
+
+        writeLine('<xml>', ctx);
+        ctx.indent++;
+        writeLine('<files id="haxe">', ctx);
+        ctx.indent++;
+        writeLine('<compilerflag value="-I$'+'{LINC_' + ctx.objcClass.name.toUpperCase() + '_PATH}" />', ctx);
+        writeLine('<file name="$'+'{LINC_' + ctx.objcClass.name.toUpperCase() + '_PATH}bind_' + ctx.objcClass.name + '.mm" />', ctx);
+        ctx.indent--;
+        writeLine('</files>', ctx);
+        writeLine('<target id="haxe">', ctx);
+        writeLine('</target>', ctx);
+        ctx.indent--;
+        writeLine('</xml>', ctx);
+
+        ctx.files.push(ctx.currentFile);
+        ctx.currentFile = null;
+
+    }
 
     static function isObjcConstructor(method:bind.Class.Method, ctx:BindContext):Bool {
 

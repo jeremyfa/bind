@@ -47,6 +47,10 @@ class Cli {
                     i++;
                     bindClassOptions.namespace = args[i];
                 }
+                if (arg == '--package') {
+                    i++;
+                    bindClassOptions.pack = args[i];
+                }
             }
             else {
                 fileArgs.push(arg);

@@ -34,6 +34,7 @@ _That's all you can do for now, but there is more to come (see roadmap below)._
 * [x] Parse Objective-C typedefs, including block types in typedefs
 * [x] Generate Haxe (C++) to Objective-C bindings from parsed informations
 * [ ] Add tests and examples of some Objective-C bindings
+* [ ] Add similar tests and examples for Swift (through Objective-C compatible dynamic frameworks)
 * [ ] Add an option to write generated and support files to disk at a target directory to make them _ready to use_
 * [ ] Parse Java classes, with methods, properties and comments in java files
 * [ ] Generate Haxe (C++) to Java (JNI) bindings from parsed informations

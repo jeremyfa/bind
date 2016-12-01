@@ -671,7 +671,9 @@ class Bind {
 
                 // Call block
                 writeIndent(ctx);
-                if (blockReturnType != 'void') write('return ', ctx);
+                if (blockReturnType != 'void') {
+                    write(toHxcppType(ret, ctx) + ' return_hxcpp_ = ', ctx);
+                }
                 write(name + 'wrapper_->haxeObject->__run(', ctx);
 
                 i = 0;
@@ -689,6 +691,14 @@ class Bind {
 
                 write(');', ctx);
                 writeLineBreak(ctx);
+
+                if (blockReturnType != 'void') {
+                    writeObjcArgAssign({
+                        name: 'return',
+                        type: ret
+                    }, -1, ctx);
+                    writeLine('return return_objc_;', ctx);
+                }
 
                 ctx.indent--;
                 writeIndent(ctx);

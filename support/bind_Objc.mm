@@ -45,14 +45,15 @@ namespace bind {
 
             static void clean(hx::Object *inObj)
             {
+                // WARNING: only works with ARC enabled
+
                 BindHaxeObjcData *m = dynamic_cast<BindHaxeObjcData *>(inObj);
                 if (m)
                 {
 #ifndef OBJC_ARC
                     [m->mValue release];
-#else
-                    m->mValue = nil;
 #endif
+                    //m->mValue = nil;
                 }
             }
 

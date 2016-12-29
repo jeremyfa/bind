@@ -56,10 +56,12 @@ typedef NSArray* (^SomeSuperBlock)(NSString *, CGFloat *youpi3);
 atChannel:  (NSInteger) channel;
 //
 - (void)removeLoopSoundAtChannel:(NSInteger)channel;
-//
+// Set volume
 - (void)setVolume:(CGFloat)volume atChannel:(NSInteger)channel;
 //
 - (CGFloat)volumeAtChannel:(NSInteger)channel;
+
+- (instancetype)initWithName:(NSString *)name;
 
 
 @end

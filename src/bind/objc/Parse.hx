@@ -16,16 +16,16 @@ class Parse {
     static var RE_ALL_SPACES = ~/\s+/g;
     static var RE_BEFORE_COMMENT_LINE = ~/^[\s\*]*(\/\/)?\s*/g;
     static var RE_AFTER_COMMENT_LINE = ~/[\s\*]*$/g;
-    static var RE_C_MODIFIERS = ~/^\s*(?:(?:const|signed|unsigned|short|long)\s+)*/;
+    static var RE_C_MODIFIERS = ~/^\s*(?:(?:const|signed|unsigned|short|long|nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s+)*/;
     static var RE_TYPEDEF_BLOCK_NAME = ~/(?:\(\s*\^\s*(?:[a-zA-Z_][a-zA-Z0-9_]*)\s*\))/;
     static var RE_TYPEDEF_NAME = ~/\s+([a-zA-Z_][a-zA-Z0-9_]*)?\s*$/;
     //                       type                         protocol                                   block nullability                        nullability                           block arguments
-    static var RE_TYPE = ~/^((?:(?:const|signed|unsigned|short|long)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:\(\s*\^\s*(_Nullable|_Nonnull)?\s*\)|(_Nullable|_Nonnull)?)\s*(\(\s*((?:(?:const|signed|unsigned|short|long)\s+)*(?:[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))?\s*/;
+    static var RE_TYPE = ~/^((?:(const|signed|unsigned|short|long|nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:\(\s*\^\s*(_Nullable|_Nonnull|nullable|nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)?\s*\)|(_Nullable|_Nonnull|nullable|nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)?)\s*(\(\s*((?:(?:const|signed|unsigned|short|long|nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s+)*(?:[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))?\s*/;
     //                         type                         protocol                                   block type name                        type name                           block arguments                                                                                            type name
-    static var RE_TYPEDEF = ~/^typedef\s+(((?:(?:const|signed|unsigned|short|long)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:\(\s*\^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\))?\s*(\(\s*((?:[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))?)\s*([a-zA-Z_][a-zA-Z0-9_]*)?\s*;/;
+    static var RE_TYPEDEF = ~/^typedef\s+(((?:(?:const|signed|unsigned|short|long|nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:\(\s*\^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\))?\s*(\(\s*((?:[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))?)\s*([a-zA-Z_][a-zA-Z0-9_]*)?\s*;/;
     static var RE_IDENTIFIER = ~/^[a-zA-Z_][a-zA-Z0-9_]*/;
     //                                       modifiers                           type                                                                (  name                    |          name                                  block arguments                                                                 )
-    static var RE_PROPERTY = ~/^@property\s*(?:\((\s*(?:[a-z]+\s*,?\s*)*)\))?\s*((?:(?:const|signed|unsigned|short|long)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:([a-zA-Z_][a-zA-Z0-9_]*)|\(\s*\^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)\s*\(\s*((?:(?:const|signed|unsigned|short|long)\s+)*(?:[a-zA-Z_][a-zA-Z0-9_<>\s\*]*[\s\*]?(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))\s*;/;
+    static var RE_PROPERTY = ~/^@property\s*(?:\((\s*(?:[a-z]+\s*,?\s*)*)\))?\s*((?:(?:const|signed|unsigned|short|long|nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:([a-zA-Z_][a-zA-Z0-9_]*)|\(\s*\^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)\s*\(\s*((?:(?:const|signed|unsigned|short|long|nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s+)*(?:[a-zA-Z_][a-zA-Z0-9_<>\s\*]*[\s\*]?(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))\s*;/;
     static var RE_INTERFACE = ~/^@interface\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*(?::\s*([a-zA-Z_][a-zA-Z0-9_]*))?\s*(?:\(\s*([a-zA-Z_][a-zA-Z0-9_]*)?\s*\))?\s*(?:<(\s*(?:[a-zA-Z_][a-zA-Z0-9_]*\s*,?\s*)*)>)?/;
 
     public static function createContext():ParseContext {
@@ -263,9 +263,9 @@ class Parse {
 
             var nullable = switch (type) {
                 case Int(orig), Float(orig), Bool(orig):
-                    objcModifiers.indexOf('nullable') != -1;
+                    objcModifiers.indexOf('nullable') != -1 || objcModifiers.indexOf('_Nullable') != -1 || objcModifiers.indexOf('__nullable') != -1;
                 case _:
-                    objcModifiers.indexOf('nonnull') == -1;
+                    objcModifiers.indexOf('nonnull') == -1 && objcModifiers.indexOf('_Nullable') == -1 && objcModifiers.indexOf('__nullable') == -1;
             }
 
             return {
@@ -471,13 +471,27 @@ class Parse {
 
             ctx.i += RE_TYPE.matched(0).length;
 
-            if (RE_TYPE.matched(4) != null) {
+            if (RE_TYPE.matched(5) != null) {
                 // Block type
-                var objcReturnType = removeSpacesForType(RE_TYPE.matched(1));
+                var objcReturnType = removeSpacesForType(removeNullabilityForType(RE_TYPE.matched(1)));
 
-                var objcNullability = RE_TYPE.matched(2);
-                var objcArgs = RE_TYPE.matched(5) != null && RE_TYPE.matched(5).trim() != ''
-                    ? RE_TYPE.matched(5).split(',').map(function(s) return s.trim())
+                var objcNullability = RE_TYPE.matched(3);
+
+                var objcModifiers = [];
+                if (RE_TYPE.matched(2) != null) {
+                    for (part in RE_TYPE.matched(2).replace("\t", ' ').split(' ')) {
+                        objcModifiers.push(part.trim());
+                    }
+                }
+
+                if (objcNullability == null || objcNullability.trim() == '') {
+                    if (objcModifiers.indexOf('_Nonnull') != -1) objcNullability = '_Nonnull';
+                    else if (objcModifiers.indexOf('nonnull') != -1) objcNullability = 'nonnull';
+                    else if (objcModifiers.indexOf('__nonnull') != -1) objcNullability = '__nonnull';
+                }
+
+                var objcArgs = RE_TYPE.matched(6) != null && RE_TYPE.matched(6).trim() != ''
+                    ? RE_TYPE.matched(6).split(',').map(function(s) return s.trim())
                     : [];
 
                 var args = [];
@@ -485,33 +499,49 @@ class Parse {
                     args.push(parseArg(objcArg, ctx));
                 }
 
-                return bind.Type.Function(args, parseType(objcReturnType, {i: 0, types: ctx.types}), {type: objcType, nullable: objcNullability != '_Nonnull'});
+                return bind.Type.Function(args, parseType(objcReturnType, {i: 0, types: ctx.types}), {type: objcType, nullable: objcNullability != '_Nonnull' && objcNullability != 'nonnull' && objcNullability != '__nonnull'});
             }
             else {
                 // Standard type
-                var objcType = removeSpacesForType(RE_TYPE.matched(1));
-                var objcNullability = RE_TYPE.matched(3);
+                var objcType = removeSpacesForType(removeNullabilityForType(RE_TYPE.matched(1)));
+                var objcNullability = RE_TYPE.matched(4);
+                
+                var objcModifiers = [];
+                if (RE_TYPE.matched(2) != null) {
+                    for (part in RE_TYPE.matched(2).replace("\t", ' ').split(' ')) {
+                        objcModifiers.push(part.trim());
+                    }
+                }
+
+                if (objcNullability == null || objcNullability.trim() == '') {
+                    if (objcModifiers.indexOf('_Nonnull') != -1) objcNullability = '_Nonnull';
+                    else if (objcModifiers.indexOf('nonnull') != -1) objcNullability = 'nonnull';
+                    else if (objcModifiers.indexOf('__nonnull') != -1) objcNullability = '__nonnull';
+                }
+                
+                var notNonNull = objcNullability != '_Nonnull' && objcNullability != 'nonnull' && objcNullability != '__nonnull';
+                var hasNullable = objcNullability == '_Nonnull' || objcNullability == 'nonnull' || objcNullability == '__nonnull';
 
                 // Check if the type matches an existing typedef
                 var matchedType = ctx.types.get(objcType);
                 if (matchedType != null) {
                     return switch (matchedType) {
-                        case Void(orig): Void({orig: orig, type: objcType, nullable: (objcNullability == '_Nullable' || orig.nullable)});
-                        case Int(orig): Int({orig: orig, type: objcType, nullable: (objcNullability == '_Nullable' || orig.nullable)});
-                        case Float(orig): Float({orig: orig, type: objcType, nullable: (objcNullability == '_Nullable' || orig.nullable)});
-                        case Bool(orig): Bool({orig: orig, type: objcType, nullable: (objcNullability == '_Nullable' || orig.nullable)});
-                        case String(orig): String({orig: orig, type: objcType, nullable: (objcNullability != '_Nonnull' || orig.nullable)});
-                        case Array(orig): Array({orig: orig, type: objcType, nullable: (objcNullability != '_Nonnull' || orig.nullable)});
-                        case Map(orig): Map({orig: orig, type: objcType, nullable: (objcNullability != '_Nonnull' || orig.nullable)});
-                        case Object(orig): Object({orig: orig, type: objcType, nullable: (objcNullability != '_Nonnull' || orig.nullable)});
-                        case Function(args, ret, orig): Function(args, ret, {orig: orig, type: objcType, nullable: (objcNullability != '_Nonnull' || orig.nullable)});
+                        case Void(orig): Void({orig: orig, type: objcType, nullable: (hasNullable || orig.nullable)});
+                        case Int(orig): Int({orig: orig, type: objcType, nullable: (hasNullable || orig.nullable)});
+                        case Float(orig): Float({orig: orig, type: objcType, nullable: (hasNullable || orig.nullable)});
+                        case Bool(orig): Bool({orig: orig, type: objcType, nullable: (hasNullable || orig.nullable)});
+                        case String(orig): String({orig: orig, type: objcType, nullable: (notNonNull || orig.nullable)});
+                        case Array(orig): Array({orig: orig, type: objcType, nullable: (notNonNull || orig.nullable)});
+                        case Map(orig): Map({orig: orig, type: objcType, nullable: (notNonNull || orig.nullable)});
+                        case Object(orig): Object({orig: orig, type: objcType, nullable: (notNonNull || orig.nullable)});
+                        case Function(args, ret, orig): Function(args, ret, {orig: orig, type: objcType, nullable: (notNonNull || orig.nullable)});
                     }
                 }
 
                 // Otherwise, convert ObjC type to Haxe type
                 return switch (objcType) {
                     case 'void':
-                        Void({type: objcType, nullable: objcNullability == '_Nullable'});
+                        Void({type: objcType, nullable: hasNullable});
                     case 'NSInteger',
                          'char',
                          'signed char',
@@ -539,31 +569,31 @@ class Parse {
                          'signed long long int',
                          'unsigned long long',
                          'unsigned long long int':
-                        Int({type: objcType, nullable: objcNullability == '_Nullable'});
+                        Int({type: objcType, nullable: hasNullable});
                     case 'float',
                          'double',
                          'long double',
                          'CGFloat',
                          'NSTimeInterval':
-                        Float({type: objcType, nullable: objcNullability == '_Nullable'});
+                        Float({type: objcType, nullable: hasNullable});
                     case 'bool',
                          'BOOL':
-                        Bool({type: objcType, nullable: objcNullability == '_Nullable'});
+                        Bool({type: objcType, nullable: hasNullable});
                     case 'NSNumber*':
-                        Float({type: objcType, nullable: objcNullability == '_Nonnull'});
+                        Float({type: objcType, nullable: notNonNull});
                     case 'NSString*',
                          'NSMutableString*',
                          'char*',
                          'const char*':
-                        String({type: objcType, nullable: objcNullability != '_Nonnull'});
+                        String({type: objcType, nullable: notNonNull});
                     case 'NSArray*',
                          'NSMutableArray*':
-                        Array({type: objcType, nullable: objcNullability != '_Nonnull'});
+                        Array({type: objcType, nullable: notNonNull});
                     case 'NSDictionary*',
                          'NSMutableDictionary*':
-                        Map({type: objcType, nullable: objcNullability != '_Nonnull'});
+                        Map({type: objcType, nullable: notNonNull});
                     default:
-                        Object({type: objcType, nullable: objcNullability != '_Nonnull'});
+                        Object({type: objcType, nullable: notNonNull});
                 }
             }
         }
@@ -662,10 +692,22 @@ class Parse {
             var prefix = RE_C_MODIFIERS.matched(0);
             var suffix = input.substr(prefix.length);
             prefix = RE_ALL_SPACES.replace(prefix, ' ');
-            return prefix + RE_ALL_SPACES.replace(suffix, '');
+            return (prefix + RE_ALL_SPACES.replace(suffix, '')).trim();
         }
 
-        return RE_ALL_SPACES.replace(input, '');
+        return RE_ALL_SPACES.replace(input, '').trim();
+
+    } //removeSpacesForType
+
+    static function removeNullabilityForType(input:String):String {
+
+        if (input == null) return null;
+
+        return input
+            .replace('_Nonnull', '').replace('nonnull', '').replace('__nonnull', '')
+            .replace('_Nullable', '').replace('nullable', '').replace('__nullable', '')
+            .replace('_Null_unspecified', '').replace('__null_unspecified', '')
+            ;
 
     } //removeSpacesForType
 

@@ -313,7 +313,7 @@ class Bind {
         // Extern class declaration
         writeLine('@:keep', ctx);
         writeLine('@:include(\'linc_' + ctx.objcClass.name + '.h\')', ctx);
-        writeLine('#if (!display && !lint)', ctx);
+        writeLine('#if !display', ctx);
         writeLine('@:build(bind.Linc.touch())', ctx);
         writeLine('@:build(bind.Linc.xml(\'' + ctx.objcClass.name + '\', \'./\'))', ctx);
         writeLine('#end', ctx);

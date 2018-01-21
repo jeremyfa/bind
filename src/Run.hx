@@ -31,22 +31,11 @@ class Run {
             if (code != 0) Sys.exit(code);
         }
         else {
-            // Run cli with c++
-            //
 
-            // Build if needed
-            if (!sys.FileSystem.exists(Path.join([Sys.getCwd(), 'cpp/Main']))) {
-                code = Sys.command('haxe', [Path.join([Sys.getCwd(), 'cli-cpp.hxml'])]);
-                if (code != 0) Sys.exit(code);
-            }
+            // Run with default interpreter (neko)
+            Main.main();
 
-            // Run
-            var cmd = Path.join([Sys.getCwd(), 'cpp/Main']);
-            var args = Sys.args();
-            code = Sys.command(cmd, args);
-            if (code != 0) Sys.exit(code);
         }
-
 
     } //main
 

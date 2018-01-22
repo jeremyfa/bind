@@ -70,7 +70,7 @@ class Bind {
         if (header) {
             //
         } else {
-            writeLine('#import "bind_Objc.h"', ctx);
+            writeLine('#import "linc_Objc.h"', ctx);
             writeLine('#import <Foundation/Foundation.h>', ctx);
             writeLine('#import "linc_' + ctx.objcClass.name + '.h"', ctx);
             writeLine('#import "' + ctx.objcClass.name + '.h"', ctx);
@@ -197,6 +197,10 @@ class Bind {
             writeLine('package;', ctx);
         }
 
+        writeLineBreak(ctx);
+
+        // Objc support
+        writeLine('import bind.objc.Support;', ctx);
         writeLineBreak(ctx);
 
         // Class comment

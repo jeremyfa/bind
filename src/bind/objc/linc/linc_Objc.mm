@@ -1,5 +1,5 @@
 #import <Foundation/Foundation.h>
-#import "bind_Objc.h"
+#import "linc_Objc.h"
 
 // Substantial portions of this code taken from HaxeFoundation/HXCPP repository Objc helpers code.
 
@@ -27,7 +27,7 @@ namespace bind {
 
     namespace objc {
 
-        //extern hx::Class __PointerClass;
+#ifndef HXCPP_OBJC
 
         class BindHaxeObjcData : public hx::Object
         {
@@ -45,26 +45,26 @@ namespace bind {
 
             static void clean(hx::Object *inObj)
             {
-                // WARNING: only works with ARC enabled
-
                 BindHaxeObjcData *m = dynamic_cast<BindHaxeObjcData *>(inObj);
                 if (m)
                 {
 #ifndef OBJC_ARC
                     [m->mValue release];
+#else
+                    m->mValue = nil;
 #endif
-                    //m->mValue = nil;
                 }
             }
-
-            void __Mark(hx::MarkContext *__inCtx) { mFinalizer->Mark(); }
 
 #ifdef HXCPP_VISIT_ALLOCS
             void __Visit(hx::VisitContext *__inCtx) { mFinalizer->Visit(__inCtx); }
 #endif
 
-            hx::Class __GetClass() const { return NULL; /*__PointerClass;*/ }
-            bool __Is(hx::Object *inClass) const { return dynamic_cast< BindHaxeObjcData *>(inClass); }
+            hx::Class __GetClass() const { return NULL; }
+
+            #if (HXCPP_API_LEVEL<331)
+            bool __Is(hx::Object *inClass) const { return dynamic_cast< ObjcData *>(inClass); }
+            #endif
 
             // k_cpp_objc
             int __GetType() const { return vtAbstractBase + 4; }
@@ -109,7 +109,7 @@ namespace bind {
 #endif
             hx::InternalFinalizer *mFinalizer;
         };
-
+#endif
 
         NSString* HxcppToNSString(::String str) {
             if (hx::IsNull(str)) return nil;
@@ -210,7 +210,11 @@ namespace bind {
 
         id HxcppToUnwrappedObjcId(::Dynamic inVal)
         {
+            #ifndef HXCPP_OBJC
             return ((BindHaxeObjcData*)inVal.mPtr)->mValue;
+            #else
+            return ((ObjcData*)inVal.mPtr)->mValue;
+            #endif
         }
 
         ::Dynamic NSDictionaryToHxcpp(NSDictionary *inDictionary)
@@ -268,7 +272,11 @@ namespace bind {
             if (!inVal) {
                 return Dynamic(0);
             }
+            #ifndef HXCPP_OBJC
             return Dynamic((hx::Object *)new BindHaxeObjcData(inVal));
+            #else
+            return Dynamic((hx::Object *)new ObjcData(inVal));
+            #endif
         }
 
         ::Array<unsigned char> NSDataToHxcpp(NSData *data)

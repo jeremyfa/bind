@@ -1,5 +1,5 @@
 -cp src
--main Main
+-main bind.Main
 -lib hxnodejs
 -js index.js
 -debug

@@ -1,3 +1,3 @@
 -cp src
--main Run
+-main bind.Run
 -neko run.n

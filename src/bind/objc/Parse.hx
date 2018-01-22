@@ -62,6 +62,7 @@ class Parse {
 
         // Parse class
         var lastI = -1;
+        var lastLineBreakI = -1;
         while (i < len) {
 
             if (lastI == i) break;
@@ -69,6 +70,8 @@ class Parse {
 
             c = code.charAt(i);
             cc = code.substr(i, 2);
+
+            if (c == "\n") lastLineBreakI = i;
 
             if (inPreprocessorMacro) {
 
@@ -119,6 +122,8 @@ class Parse {
                 inMultilineComment = true;
                 comment = '';
                 i += 2;
+                var pad = i - lastLineBreakI;
+                while (pad-- > 0) comment += ' ';
 
             }
             else {
@@ -849,10 +854,30 @@ class Parse {
 
         var lines = [];
 
+        // Remove noise (asterisks etc...)
         for (line in comment.split("\n")) {
+            var lineLen = line.length;
             line = RE_BEFORE_COMMENT_LINE.replace(line, '');
+            while (line.length < lineLen) {
+                line = ' ' + line;
+            }
             line = RE_AFTER_COMMENT_LINE.replace(line, '');
             lines.push(line);
+        }
+
+        if (lines.length == 0) return '';
+
+        // Remove indent common with all lines
+        var commonIndent = 99999;
+        for (line in lines) {
+            if (line.trim() != '') {
+                commonIndent = Std.int(Math.min(commonIndent, line.length - line.ltrim().length));
+            }
+        }
+        if (commonIndent > 0) {
+            for (i in 0...lines.length) {
+                lines[i] = lines[i].substring(commonIndent);
+            }
         }
 
         return lines.join("\n").trim();

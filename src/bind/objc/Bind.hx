@@ -218,6 +218,40 @@ class Bind {
         writeLine('public function new() {}', ctx);
         writeLineBreak(ctx);
 
+        // Add properties
+        for (property in ctx.objcClass.properties) {
+
+            // Read-only?
+            var readonly = property.orig != null && property.orig.readonly == true;
+
+            // Property name
+            var name = property.name;
+            if (reserved.indexOf(name) != -1) {
+                name = '_' + name;
+            }
+
+            // Property type
+            var type = toHaxeType(property.type, ctx);
+
+            // Property comment
+            if (property.description != null && property.description.trim() != '') {
+                writeComment(property.description, ctx);
+            }
+
+            writeIndent(ctx);
+            write('public ', ctx);
+
+            // Static property?
+            if (!property.instance) {
+                write('static ', ctx);
+            }
+
+            write('var ' + name + '(get,' + (readonly ? 'never' : 'set') + '):' + type + ';', ctx);
+            writeLineBreak(ctx);
+            writeLineBreak(ctx);
+
+        }
+
         // Add methods
         for (method in ctx.objcClass.methods) {
 
@@ -227,8 +261,12 @@ class Bind {
             // Factory?
             var isObjcFactory = isObjcFactory(method, ctx);
 
+            // Is it a getter or setter?
+            var isGetter = method.orig != null && method.orig.getter == true;
+            var isSetter = method.orig != null && method.orig.setter == true;
+
             // Method return type
-            var ret = toHaxeType(method.type, ctx);
+            var ret = toHaxeType(isSetter ? method.args[0].type : method.type, ctx);
 
             // Method name
             var name = method.name;
@@ -249,7 +287,11 @@ class Bind {
             }
 
             writeIndent(ctx);
-            write('public ', ctx);
+            if (isGetter || isSetter) {
+                write('inline private ', ctx);
+            } else {
+                write('public ', ctx);
+            }
 
             // Static method?
             if (!method.instance) {
@@ -257,7 +299,13 @@ class Bind {
             }
 
             // Whole method
-            write('function ' + name + '(' + args.join(', ') + '):', ctx);
+            if (isGetter) {
+                write('function get_' + name + '(' + args.join(', ') + '):', ctx);
+            } else if (isSetter) {
+                write('function set_' + method.orig.property.name + '(' + args.join(', ') + '):', ctx);
+            } else {
+                write('function ' + name + '(' + args.join(', ') + '):', ctx);
+            }
             if (isObjcConstructor) {
                 write(haxeName, ctx);
             } else if (isObjcFactory) {
@@ -301,6 +349,8 @@ class Bind {
                 writeLine('return this;', ctx);
             } else if (isObjcFactory) {
                 writeLine('return ret;', ctx);
+            } else if (isSetter) {
+                writeLine('return ' + method.orig.property.name + ';', ctx);
             }
 
             ctx.indent--;

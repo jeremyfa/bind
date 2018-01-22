@@ -94,7 +94,6 @@ class Parse {
 
                 if (cc == '*/') {
                     inMultilineComment = false;
-
                     comment = cleanComment(comment);
 
                     i += 2;
@@ -215,6 +214,9 @@ class Parse {
         ctx.i = i;
 
         if (result.name != null) {
+
+            extractPropertyMethods(result);
+
             return result;
         } else {
             return null;
@@ -274,7 +276,8 @@ class Parse {
                 instance: true,
                 description: null,
                 orig: {
-                    nullable: nullable
+                    nullable: nullable,
+                    readonly: objcModifiers.indexOf('readonly') != -1
                 }
             };
         }
@@ -666,7 +669,7 @@ class Parse {
                 ? RE_INTERFACE.matched(4).split(',').map(function(s) return s.trim())
                 : [];
 
-            ctx.i += RE_INTERFACE.matched(0).length;
+            ctx.i += RE_INTERFACE.matched(0).rtrim().length;
 
             return name;
         }
@@ -676,6 +679,76 @@ class Parse {
     } //parseClassName
 
 /// Internal
+
+    static function extractPropertyMethods(result:bind.Class):Void {
+
+        var existingMethods:Map<String,Bool> = new Map();
+        
+        for (method in result.methods) {
+            existingMethods.set(method.name, true);
+        }
+
+        for (property in result.properties) {
+            // Getter
+            if (!existingMethods.exists(property.name)) {
+                result.methods.push({
+                    name: property.name,
+                    args: [],
+                    type: property.type,
+                    instance: true,
+                    description: property.description,
+                    orig: extendOrig(property.orig, {
+                        getter: true,
+                        property: {
+                            name: property.name
+                        }
+                    })
+                });
+            }
+            // Setter
+            if (!property.orig.readonly) {
+                var setterName = 'set' + property.name.charAt(0).toUpperCase() + property.name.substring(1);
+                if (!existingMethods.exists(setterName)) {
+                    result.methods.push({
+                        name: setterName,
+                        args: [{
+                            name: property.name,
+                            orig: extendOrig(property.orig, {
+                                nameSection: setterName
+                            }),
+                            type: property.type
+                        }],
+                        type: Void({ type: 'void', nullable: false }),
+                        instance: true,
+                        description: property.description,
+                        orig: extendOrig(property.orig, {
+                            setter: true,
+                            property: {
+                                name: property.name
+                            }
+                        })
+                    });
+                }
+            }
+        }
+
+    } //extractPropertyMethods
+
+    static function extendOrig(orig:Dynamic, extension:Dynamic):Dynamic {
+
+        var result:Dynamic = {};
+
+        for (field in Reflect.fields(orig)) {
+            Reflect.setField(result, field, Reflect.field(orig, field));
+        }
+
+        for (field in Reflect.fields(extension)) {
+            Reflect.setField(result, field, Reflect.field(extension, field));
+        }
+
+        return result;
+
+    } //extendOrig
 
     static function removeSpaces(input:String):String {
 

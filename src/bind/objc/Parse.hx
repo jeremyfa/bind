@@ -258,7 +258,9 @@ class Parse {
                 for (objcArg in objcArgs) {
                     args.push(parseArg(objcArg, ctx));
                 }
-                type = bind.Class.Type.Function(args, parseType(objcType, {i: 0, types: ctx.types}));
+                type = bind.Class.Type.Function(args, parseType(objcType, {i: 0, types: ctx.types}), {
+                    type: objcType
+                });
             }
             else {
                 // Standard property

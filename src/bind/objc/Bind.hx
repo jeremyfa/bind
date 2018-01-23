@@ -618,7 +618,108 @@ class Bind {
 
             case Function(args, ret, orig):
                 var funcType = toHxcppType(arg.type, ctx);
-                writeLine(funcType + ' ' + name + ' = null(); // Not implemented, yet', ctx);
+                var funcRetType = toHxcppType(ret, ctx);
+
+                // Keep track of objc instance on haxe side
+                writeLine('::Dynamic closure_' + name + ' = ::bind::objc::WrappedObjcIdToHxcpp(' + value + ');', ctx);
+                writeIndent(ctx);
+
+                // Assign haxe function from objc block
+                write('HX_BEGIN_LOCAL_FUNC_S1(hx::LocalFunc, _hx_Closure_' + name, ctx);
+                write(', ::Dynamic, closure_' + name, ctx);
+                write(') HXARGC(' + args.length + ')', ctx);
+                writeLineBreak(ctx);
+                writeIndent(ctx);
+                write(funcRetType + ' _hx_run(', ctx);
+
+                var i = 0;
+                for (funcArg in args) {
+                    if (i++ > 0) write(', ', ctx);
+
+                    var argName = funcArg.name;
+                    if (argName == null) argName = 'arg' + (i + 1);
+
+                    write(toHxcppType(funcArg.type, ctx) + ' ' + argName, ctx);
+                }
+
+                write(') {', ctx);
+                writeLineBreak(ctx);
+                ctx.indent++;
+
+                // Convert haxe args into objc args
+                i = 0;
+                for (funcArg in args) {
+
+                    var argName = funcArg.name;
+                    if (argName == null) argName = 'arg' + (i + 1);
+
+                    writeObjcArgAssign(funcArg, i, ctx);
+
+                    i++;
+                }
+
+                // Unwrap block
+                var blockReturnType = toObjcType(ret, ctx);
+                writeIndent(ctx);
+                write(blockReturnType + ' ', ctx);
+                write('(^closure_' + value + ')(', ctx);
+                i = 0;
+                for (blockArg in args) {
+                    if (i++ > 0) write(', ', ctx);
+
+                    var argName = blockArg.name;
+                    if (argName == null) argName = 'arg' + i;
+                    write(toObjcType(blockArg.type, ctx) + ' ' + argName, ctx);
+                }
+                write(') = ::bind::objc::HxcppToUnwrappedObjcId(closure_' + name + ');', ctx);
+                writeLineBreak(ctx);
+
+                // Call block
+                writeIndent(ctx);
+                if (funcRetType != 'void') {
+                    write(toObjcType(ret, ctx) + ' return_objc_ = ', ctx);
+                }
+                write('closure_' + value + '(', ctx);
+
+                i = 0;
+                for (funcArg in args) {
+                    if (i > 0) write(', ', ctx);
+
+                    var argName = funcArg.name;
+                    if (argName == null) argName = 'arg' + (i + 1);
+                    var objcName = argName + '_objc_';
+
+                    write(objcName, ctx);
+
+                    i++;
+                }
+
+                write(');', ctx);
+                writeLineBreak(ctx);
+
+                if (funcRetType != 'void') {
+                    writeHxcppArgAssign({
+                        name: 'return',
+                        type: ret
+                    }, -1, ctx);
+                    writeLine('return return_hxcpp_;', ctx);
+                }
+
+                ctx.indent--;
+                writeLine('}', ctx);
+                writeIndent(ctx);
+                write('HX_END_LOCAL_FUNC' + args.length, ctx);
+                switch (ret) {
+                    case Void(orig):
+                        write('((void))', ctx);
+                    default:
+                        write('(return)', ctx);
+                }
+                writeLineBreak(ctx);
+
+                writeIndent(ctx);
+                write('::Dynamic ' + name + ' = ::Dynamic(new _hx_Closure_' + name + '(closure_' + name + '));', ctx);
+                writeLineBreak(ctx);
 
             case String(orig):
                 writeIndent(ctx);
@@ -697,14 +798,12 @@ class Bind {
                 write(') = ^' + (blockReturnType != 'void' ? blockReturnType : '') + '(', ctx);
                 i = 0;
                 for (blockArg in args) {
-                    if (i > 0) write(', ', ctx);
+                    if (i++ > 0) write(', ', ctx);
 
                     var argName = blockArg.name;
                     if (argName == null) argName = 'arg' + (i + 1);
 
                     write(toObjcType(blockArg.type, ctx) + ' ' + argName, ctx);
-
-                    i++;
                 }
                 write(') {', ctx);
                 ctx.indent++;
@@ -716,14 +815,13 @@ class Bind {
 
                     var argName = blockArg.name;
                     if (argName == null) argName = 'arg' + (i + 1);
-                    var hxcppName = argName + '_hxcpp_';
 
                     writeHxcppArgAssign(blockArg, i, ctx);
 
                     i++;
                 }
 
-                // Call block
+                // Call function
                 writeIndent(ctx);
                 if (blockReturnType != 'void') {
                     write(toHxcppType(ret, ctx) + ' return_hxcpp_ = ', ctx);

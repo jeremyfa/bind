@@ -14,6 +14,7 @@ class Parse {
     // These regular expressions are madness. I am aware of it. But, hey, it works.
     //
     static var RE_ALL_SPACES = ~/\s+/g;
+    static var RE_NOT_SEPARATOR = ~/[a-zA-Z0-9_]/g;
     static var RE_BEFORE_COMMENT_LINE = ~/^[\s\*]*(\/\/)?\s*/g;
     static var RE_AFTER_COMMENT_LINE = ~/[\s\*]*$/g;
     static var RE_C_MODIFIERS = ~/^\s*(?:(?:const|signed|unsigned|short|long|nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s+)*/;
@@ -768,14 +769,42 @@ class Parse {
 
         if (input == null) return null;
 
-        if (RE_C_MODIFIERS.match(input)) {
-            var prefix = RE_C_MODIFIERS.matched(0);
-            var suffix = input.substr(prefix.length);
-            prefix = RE_ALL_SPACES.replace(prefix, ' ');
-            return (prefix + RE_ALL_SPACES.replace(suffix, '')).trim();
+        var result = '';
+        var i = 0;
+        var len = input.length;
+        var inSpace = false;
+        var lastIsSeparator = false;
+        var c = '';
+        while (i < len) {
+
+            c = input.charAt(i);
+
+            if (c.trim() == '') {
+                // Space
+                inSpace = true;
+            }
+            else if (RE_NOT_SEPARATOR.match(c)) {
+                // Non-separator
+                if (inSpace) {
+                    inSpace = false;
+                    if (!lastIsSeparator) result += ' ';
+                }
+                lastIsSeparator = false;
+                result += c;
+            }
+            else {
+                if (inSpace) {
+                    inSpace = false;
+                }
+                // Separator
+                lastIsSeparator = true;
+                result += c;
+            }
+
+            i++;
         }
 
-        return RE_ALL_SPACES.replace(input, '').trim();
+        return result.trim();
 
     } //removeSpacesForType
 

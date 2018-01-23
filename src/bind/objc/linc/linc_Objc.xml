@@ -1,5 +1,6 @@
 <xml>
     <files id="haxe">
+        <compilerflag value="-DOBJC_ARC" />
         <compilerflag value="-I${LINC_OBJC_PATH}linc/" />
         <file name="${LINC_OBJC_PATH}linc/linc_Objc.mm" />
     </files>

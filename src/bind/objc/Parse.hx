@@ -44,7 +44,6 @@ class Parse {
         var c;
         var cc;
         var len = code.length;
-        var cleanedCode = getCodeWithEmptyComments(code);
 
         var inSingleLineComment = false;
         var inMultilineComment = false;
@@ -60,6 +59,26 @@ class Parse {
             methods: [],
             description: null
         };
+
+        // Skip swift header stuff if any
+        var swiftClassIndex = code.substring(i).indexOf('SWIFT_CLASS("'); // Could be smarter
+        if (swiftClassIndex != -1) {
+            swiftClassIndex += i;
+            var endSwiftClassIndex = swiftClassIndex + code.substring(swiftClassIndex).indexOf("\n") + 1;
+            i = swiftClassIndex;
+            code = code.substring(0, swiftClassIndex) + code.substring(endSwiftClassIndex);
+            len = code.length;
+
+            // Keep interface comments
+            while (code.substring(code.substring(0, i - 1).lastIndexOf("\n")).ltrim().startsWith('//')) {
+                i = code.substring(0, i - 1).lastIndexOf("\n");
+            }
+
+            ctx.i = i;
+        }
+
+        // Clean code
+        var cleanedCode = getCodeWithEmptyComments(code);
 
         // Parse class
         var lastI = -1;
@@ -117,6 +136,8 @@ class Parse {
                 inSingleLineComment = true;
                 comment = '';
                 i += 2;
+
+                while (code.charAt(i) == '/') i++; // TODO Handle multiline 3-slashes Apple style comments
             }
             else if (cc == '/*') {
 

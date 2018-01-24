@@ -43,7 +43,6 @@
                       }]];
     
     UIViewController *viewController = [[UIApplication sharedApplication] delegate].window.rootViewController;
-    NSLog(@"ROOT CONTROLLER: %@", viewController);
     [viewController presentViewController:alert animated:YES completion:nil];
     
 } //hello

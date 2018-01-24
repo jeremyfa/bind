@@ -254,6 +254,11 @@ class Parse {
                 var objcArgs = RE_PROPERTY.matched(5) != null && RE_PROPERTY.matched(5).trim() != ''
                     ? RE_PROPERTY.matched(5).split(',').map(function(s) return s.trim())
                     : [];
+                
+                // Void case
+                if (objcArgs.length == 1 && objcArgs[0] == 'void') {
+                    objcArgs = [];
+                }
 
                 var args:Array<bind.Class.Arg> = [];
                 for (objcArg in objcArgs) {
@@ -504,6 +509,11 @@ class Parse {
                 var objcArgs = RE_TYPE.matched(6) != null && RE_TYPE.matched(6).trim() != ''
                     ? RE_TYPE.matched(6).split(',').map(function(s) return s.trim())
                     : [];
+                
+                // Void case
+                if (objcArgs.length == 1 && objcArgs[0] == 'void') {
+                    objcArgs = [];
+                }
 
                 var args = [];
                 for (objcArg in objcArgs) {

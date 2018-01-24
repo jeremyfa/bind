@@ -1,0 +1,8 @@
+<xml>
+    <files id="haxe">
+        <compilerflag value="-I${LINC_APPNATIVEINTERFACE_PATH}linc/" />
+        <file name="${LINC_APPNATIVEINTERFACE_PATH}linc/linc_AppNativeInterface.mm" />
+    </files>
+    <target id="haxe">
+    </target>
+</xml>

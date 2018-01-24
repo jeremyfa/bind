@@ -2,6 +2,7 @@ package bind;
 
 import Sys.println;
 import sys.io.File;
+import sys.FileSystem;
 import haxe.io.Path;
 
 using StringTools;
@@ -30,7 +31,8 @@ class Cli {
         var options = {
             json: false,
             parseOnly: false,
-            pretty: false
+            pretty: false,
+            export: null
         };
         var bindClassOptions:Dynamic = {};
         var fileArgs = [];
@@ -41,19 +43,29 @@ class Cli {
 
             if (arg.startsWith('--')) {
                 if (arg == '--json') options.json = true;
-                if (arg == '--parse-only') options.parseOnly = true;
-                if (arg == '--pretty') options.pretty = true;
-                if (arg == '--namespace') {
+                else if (arg == '--parse-only') options.parseOnly = true;
+                else if (arg == '--pretty') options.pretty = true;
+                else if (arg == '--export') {
+                    i++;
+                    options.export = args[i];
+                    options.json = true;
+                }
+                else if (arg == '--namespace') {
                     i++;
                     bindClassOptions.namespace = args[i];
                 }
-                if (arg == '--package') {
+                else if (arg == '--package') {
                     i++;
                     bindClassOptions.pack = args[i];
                 }
-                if (arg == '--objc-prefix') {
+                else if (arg == '--objc-prefix') {
                     i++;
                     bindClassOptions.objcPrefix = args[i];
+                }
+                else if (arg == '--cwd') {
+                    i++;
+                    this.cwd = args[i];
+                    Sys.setCwd(args[i]);
                 }
             }
             else {
@@ -74,7 +86,16 @@ class Cli {
                 var file = fileArgs[i];
 
                 var path = Path.isAbsolute(file) ? file : Path.join([cwd, file]);
+                if (!FileSystem.exists(path)) {
+                    throw "Header file doesn't exist at path " + path;
+                }
+                if (FileSystem.isDirectory(path)) {
+                    throw "Expected a header file but got a directory at path " + path;
+                }
                 var code = File.getContent(path);
+
+                bindClassOptions.headerPath = path;
+                bindClassOptions.headerCode = code;
 
                 var ctx = {i: 0, types: new Map()};
                 var result = null;
@@ -108,10 +129,30 @@ class Cli {
         }
 
         if (options.json) {
-            if (options.pretty) {
-                println('['+json.join(',\n')+']');
-            } else {
-                println('['+json.join(',')+']');
+            if (options.export != null) {
+
+                if (!FileSystem.exists(options.export)) {
+                    FileSystem.createDirectory(options.export);
+                }
+
+                for (jsonItem in json) {
+                    var fileInfo:{path:String,content:String} = Json.parse(jsonItem);
+                    var filePath = Path.join([options.export, fileInfo.path]);
+
+                    if (!FileSystem.exists(Path.directory(filePath))) {
+                        FileSystem.createDirectory(Path.directory(filePath));
+                    }
+
+                    File.saveContent(filePath, fileInfo.content);
+                }
+
+            }
+            else {
+                if (options.pretty) {
+                    println('['+json.join(',\n')+']');
+                } else {
+                    println('['+json.join(',')+']');
+                }
             }
         }
         else {

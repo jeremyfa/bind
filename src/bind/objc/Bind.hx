@@ -1,5 +1,7 @@
 package bind.objc;
 
+import haxe.io.Path;
+
 using StringTools;
 
 typedef BindContext = {
@@ -10,6 +12,8 @@ typedef BindContext = {
     var pack:String;
     var objcPrefix:String;
     var currentFile:bind.File;
+    var headerPath:String;
+    var headerCode:String;
 }
 
 class Bind {
@@ -24,6 +28,8 @@ class Bind {
             objcPrefix: null,
             pack: null,
             currentFile: null,
+            headerPath: null,
+            headerCode: null
         };
 
     } //createContext
@@ -32,7 +38,7 @@ class Bind {
         To bind the related Objective-C class to Haxe.
         The files are returned as an array of bind.File objects.
         Nothing is written to disk at this stage. */
-    public static function bindClass(objcClass:bind.Class, ?options:{?namespace:String, ?pack:String, ?objcPrefix:String}):Array<bind.File> {
+    public static function bindClass(objcClass:bind.Class, ?options:{?namespace:String, ?pack:String, ?objcPrefix:String, ?headerPath:String, ?headerCode:String}):Array<bind.File> {
 
         var ctx = createContext();
         ctx.objcClass = objcClass;
@@ -41,7 +47,12 @@ class Bind {
             if (options.namespace != null) ctx.namespace = options.namespace;
             if (options.pack != null) ctx.pack = options.pack;
             if (options.objcPrefix != null) ctx.objcPrefix = options.objcPrefix;
+            if (options.headerPath != null) ctx.headerPath = options.headerPath;
+            if (options.headerCode != null) ctx.headerCode = options.headerCode;
         }
+
+        // Copy Objective C header file
+        copyObjcHeaderFile(ctx);
 
         // Generate Objective C++ file
         generateObjCPPFile(ctx, true);
@@ -56,6 +67,25 @@ class Bind {
         return ctx.files;
 
     } //bindClass
+
+    public static function copyObjcHeaderFile(ctx:BindContext):Void {
+
+        if (ctx.headerCode == null) return;
+
+        var dir = '';
+        if (ctx.pack != null && ctx.pack.trim() != '') {
+            dir = ctx.pack.replace('.', '/') + '/';
+        }
+
+        ctx.currentFile = {
+            path: dir + 'linc/objc_' + Path.withoutDirectory(ctx.headerPath),
+            content: ctx.headerCode
+        };
+        
+        ctx.files.push(ctx.currentFile);
+        ctx.currentFile = null;
+
+    } //copyObjcHeaderFile
 
     public static function generateObjCPPFile(ctx:BindContext, header:Bool = false):Void {
 
@@ -73,7 +103,11 @@ class Bind {
             writeLine('#import "linc_Objc.h"', ctx);
             writeLine('#import <Foundation/Foundation.h>', ctx);
             writeLine('#import "linc_' + ctx.objcClass.name + '.h"', ctx);
-            writeLine('#import "' + ctx.objcClass.name + '.h"', ctx);
+            if (ctx.headerPath != null) {
+                writeLine('#import "objc_' + Path.withoutDirectory(ctx.headerPath) + '"', ctx);
+            } else {
+                writeLine('#import "' + ctx.objcClass.name + '.h"', ctx);
+            }
         }
 
         writeLineBreak(ctx);
@@ -197,6 +231,7 @@ class Bind {
             writeLine('package;', ctx);
         }
 
+        writeLine('// This file was generated with bind library', ctx);
         writeLineBreak(ctx);
 
         // Objc support

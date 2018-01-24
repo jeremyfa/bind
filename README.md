@@ -18,12 +18,21 @@ haxelib run bind objc SomeObjcHeader.h [SomeOtherObjcHeader.h ...] --json --pars
 haxelib run bind objc NSSomeObjcHeader.h --namespace some::namespace --package some.haxe.pack --objc-prefix NS
 ```
 
-Nothing is written to disk. The output is simply returned by the command. You can add a ``--json`` argument to get output as JSON (file paths and contents), in order to integrate this into your own tool.
+Nothing is written to disk by default. The output is simply returned by the command. You can add a ``--json`` argument to get output as JSON (file paths and contents), in order to integrate this into your own tool or add ``--export your/export/path`` to let _bind_ save files to this _export_ directory.
 
-The generated code exposes one ore more classes to Haxe from the parsed Objective-C header.
-For now, you must define yourself header include paths or copy support files (from bind's `support/` directory) to build it.
+Note that _bind_ library is not a full _Objective-C to Haxe converter_ nor. Its approach is pragmatic and is intended to be used on a **clean and portable subset of Objective-C header syntax** that acts as a public bridge/interface to all your native iOS API.
 
-An option to generate fully standalone classes that add correct build config flags to hxcpp is planned.
+Check out an example of [bound Objective-C header](https://github.com/jeremyfa/bind/blob/master/sample/ios/project.ios/IosSample/AppNativeInterface.h) that you can use as reference to see which subset of Objective-C can be handled by _bind_. This file can be tested with the provided sample iOS/Objective-C project.
+
+## Sample iOS/Objective-C Project
+
+You can check out [The iOS Sample project](https://github.com/jeremyfa/bind/tree/master/sample/ios) which contains:
+
+ * A _Haxe_ project that can be compiled with ``build.hxml``
+ * An Xcode project configured to build haxe files to C++, generate bindings and run the result as an iOS App
+ * Scripts (used by Xcode project) to compile C++ to iOS binaries, to generate bindings
+
+This will obviously only work on a mac, with haxe, bind library and xcode properly installed.
 
 _That's all you can do for now, but there is more to come (see roadmap below)._
 
@@ -33,10 +42,9 @@ _That's all you can do for now, but there is more to come (see roadmap below)._
 * [x] Parse Objective-C blocks as Haxe functions in class methods and properties
 * [x] Parse Objective-C typedefs, including block types in typedefs
 * [x] Generate Haxe (C++) to Objective-C bindings from parsed informations
-* [ ] Add tests and examples of some Objective-C bindings
+* [x] Add examples of some Objective-C bindings and a sample Xcode/iOS project
 * [ ] Add similar tests and examples for Swift (through Objective-C compatible dynamic frameworks)
-* [ ] Add an option to write generated and support files to disk at a target directory to make them _ready to use_
+* [x] Add an option to write generated and support files to disk at a target directory to make them _ready to use_
 * [ ] Parse Java classes, with methods, properties and comments in java files
 * [ ] Generate Haxe (C++) to Java (JNI) bindings from parsed informations
 * [ ] Generate single Haxe class from Objective-C + Java (JNI) bindings having the same methods and properties
-* [ ] Provide a build macro to make all this work at compile time

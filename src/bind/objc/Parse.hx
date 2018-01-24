@@ -28,6 +28,7 @@ class Parse {
     //                                       modifiers                           type                                                                (  name                    |          name                                  block arguments                                                                 )
     static var RE_PROPERTY = ~/^@property\s*(?:\((\s*(?:[a-z]+\s*,?\s*)*)\))?\s*((?:(?:const|signed|unsigned|short|long|nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:([a-zA-Z_][a-zA-Z0-9_]*)|\(\s*\^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)\s*\(\s*((?:(?:const|signed|unsigned|short|long|nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s+)*(?:[a-zA-Z_][a-zA-Z0-9_<>\s\*]*[\s\*]?(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))\s*;/;
     static var RE_INTERFACE = ~/^@interface\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*(?::\s*([a-zA-Z_][a-zA-Z0-9_]*))?\s*(?:\(\s*([a-zA-Z_][a-zA-Z0-9_]*)?\s*\))?\s*(?:<(\s*(?:[a-zA-Z_][a-zA-Z0-9_]*\s*,?\s*)*)>)?/;
+    static var RE_LAST_NULLABILITY = ~/(_Nullable|_Nonnull|_Null_unspecified)(\s+(?:[a-zA-Z_][a-zA-Z0-9_]*))*$/;
 
     public static function createContext():ParseContext {
         return { i: 0, types: new Map() };
@@ -258,6 +259,13 @@ class Parse {
         var i = ctx.i;
         var after = code.substr(i);
 
+        var extractCtx = {
+            lastNullability: null,
+            code: after
+        };
+        extractLastNullability(extractCtx);
+        after = extractCtx.code;
+
         if (RE_PROPERTY.match(after)) {
 
             var objcModifiers = RE_PROPERTY.matched(1) != null
@@ -265,6 +273,10 @@ class Parse {
                 : [];
             var objcType = removeSpacesForType(RE_PROPERTY.matched(2));
             var objcName = RE_PROPERTY.matched(3) != null ? RE_PROPERTY.matched(3).trim() : null;
+
+            if (extractCtx.lastNullability != null) {
+                objcModifiers.push(extractCtx.lastNullability);
+            }
 
             var name = null;
             var type = null;
@@ -301,7 +313,7 @@ class Parse {
                 case Int(orig), Float(orig), Bool(orig):
                     objcModifiers.indexOf('nullable') != -1 || objcModifiers.indexOf('_Nullable') != -1 || objcModifiers.indexOf('__nullable') != -1;
                 case _:
-                    objcModifiers.indexOf('nonnull') == -1 && objcModifiers.indexOf('_Nullable') == -1 && objcModifiers.indexOf('__nullable') == -1;
+                    objcModifiers.indexOf('nonnull') == -1 && objcModifiers.indexOf('_Nonnull') == -1 && objcModifiers.indexOf('__nonnull') == -1;
             }
 
             return {
@@ -562,7 +574,7 @@ class Parse {
                 }
                 
                 var notNonNull = objcNullability != '_Nonnull' && objcNullability != 'nonnull' && objcNullability != '__nonnull';
-                var hasNullable = objcNullability == '_Nonnull' || objcNullability == 'nonnull' || objcNullability == '__nonnull';
+                var hasNullable = objcNullability == '_Nullable' || objcNullability == 'nullable' || objcNullability == '__nullable';
 
                 // Check if the type matches an existing typedef
                 var matchedType = ctx.types.get(objcType);
@@ -718,6 +730,27 @@ class Parse {
     } //parseClassName
 
 /// Internal
+
+    static function extractLastNullability(extractCtx:{lastNullability:String, code:String}):Void {
+
+        var code = extractCtx.code;
+        var i = code.indexOf(';');
+        if (i == -1) i = code.length;
+        
+        var subset = code.substring(0, i);
+
+        if (RE_LAST_NULLABILITY.match(subset)) {
+            extractCtx.lastNullability = RE_LAST_NULLABILITY.matched(1);
+            var endCode = code.substring(i);
+            code = subset.substring(0, subset.length - RE_LAST_NULLABILITY.matched(0).length);
+            for (n in 0...extractCtx.lastNullability.length) {
+                code += ' ';
+            }
+            code += RE_LAST_NULLABILITY.matched(2) + endCode;
+            extractCtx.code = code;
+        }
+
+    } //extractLastNullability
 
     static function extractPropertyMethods(result:bind.Class):Void {
 

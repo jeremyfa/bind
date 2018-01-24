@@ -1,6 +1,6 @@
 {
   "name": "bind",
-  "version": "0.2.2",
+  "version": "0.3.1",
   "description": "Bind Objective-C and Java (JNI) code to Haxe without writing glue code manually.",
   "main": "index.js",
   "directories": {

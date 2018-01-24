@@ -163,7 +163,7 @@ class Parse {
                             i = ctx.i;
 
                             if (property == null) {
-                                println('invalid property: ' + code.substring(i, ctx.i));
+                                println('invalid property: ' + code.substring(lastI).split("\n")[0]);
                             } else {
                                 if (comment != null) {
                                     property.description = comment;
@@ -186,7 +186,7 @@ class Parse {
                             var className = parseClassName(cleanedCode, ctx);
                             i = ctx.i;
                             if (className == null) {
-                                println('invalid interface');
+                                println('invalid interface: ' + code.substring(lastI).split("\n")[0]);
                                 break;
                             }
 
@@ -210,7 +210,7 @@ class Parse {
                     i = ctx.i;
 
                     if (method == null) {
-                        println('invalid method: ' + code.substring(i, ctx.i));
+                        println('invalid method: ' + code.substring(lastI).split("\n")[0]);
                     } else {
                         if (comment != null) {
                             method.description = comment;
@@ -226,7 +226,7 @@ class Parse {
                     i = ctx.i;
 
                     if (type == null) {
-                        println('invalid typedef: ' + code.substring(i, ctx.i));
+                        println('invalid typedef: ' + code.substring(lastI).split("\n")[0]);
                     }
                     comment = null;
 

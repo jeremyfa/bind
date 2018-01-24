@@ -10,6 +10,9 @@ class AppNativeInterface {
 
     public function new() {}
 
+    /** If provided, will be called when root view controller is visible on screen */
+    public var viewDidAppear(get,set):Void->Void;
+
     /** Last name. If provided, will be used when saying hello. */
     public var lastName(get,set):String;
 
@@ -23,6 +26,17 @@ class AppNativeInterface {
     /** Say hello to `name` with a native iOS dialog. Add a last name if any is known. */
     public function hello(name:String):Void {
         AppNativeInterface_Extern.hello(_instance, name);
+    }
+
+    /** If provided, will be called when root view controller is visible on screen */
+    inline private function get_viewDidAppear():Void->Void {
+        return AppNativeInterface_Extern.viewDidAppear(_instance);
+    }
+
+    /** If provided, will be called when root view controller is visible on screen */
+    inline private function set_viewDidAppear(viewDidAppear:Void->Void):Void->Void {
+        AppNativeInterface_Extern.setViewDidAppear(_instance, viewDidAppear);
+        return viewDidAppear;
     }
 
     /** Last name. If provided, will be used when saying hello. */
@@ -52,6 +66,12 @@ private extern class AppNativeInterface_Extern {
 
     @:native('ios::AppNativeInterface_hello')
     static function hello(instance_:Dynamic, name:String):Void;
+
+    @:native('ios::AppNativeInterface_viewDidAppear')
+    static function viewDidAppear(instance_:Dynamic):Void->Void;
+
+    @:native('ios::AppNativeInterface_setViewDidAppear')
+    static function setViewDidAppear(instance_:Dynamic, viewDidAppear:Void->Void):Void;
 
     @:native('ios::AppNativeInterface_lastName')
     static function lastName(instance_:Dynamic):String;

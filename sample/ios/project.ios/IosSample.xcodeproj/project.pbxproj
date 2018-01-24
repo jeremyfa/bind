@@ -103,6 +103,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 7ED4509D2017C3BA00538A00 /* Build configuration list for PBXNativeTarget "IosSample" */;
 			buildPhases = (
+				7ED450AA20188ED600538A00 /* Haxe */,
 				7ED450832017C3BA00538A00 /* Sources */,
 				7ED450842017C3BA00538A00 /* Frameworks */,
 				7ED450852017C3BA00538A00 /* Resources */,
@@ -161,6 +162,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		7ED450AA20188ED600538A00 /* Haxe */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = Haxe;
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = ../build.sh;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		7ED450832017C3BA00538A00 /* Sources */ = {

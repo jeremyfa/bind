@@ -7,9 +7,7 @@
 //
 
 #import "ViewController.h"
-
-const char *hxRunLibrary(void);
-void hxcpp_set_top_of_stack(void);
+#import "AppNativeInterface.h"
 
 @interface ViewController ()
 
@@ -23,17 +21,12 @@ void hxcpp_set_top_of_stack(void);
 
 - (void)viewDidAppear:(BOOL)animated {
     
-    // Run haxe once the root view controller is visible
-    // (Temporary)
-    hxcpp_set_top_of_stack();
+    AppNativeInterface *native = [AppNativeInterface sharedInterface];
     
-    const char *err = NULL;
-    err = hxRunLibrary();
-    
-    if (err) {
-        printf(" Error %s\n", err );
+    // Call provided block/function if it exists
+    if (native.viewDidAppear) {
+        native.viewDidAppear();
     }
-    
 }
 
 - (void)didReceiveMemoryWarning {

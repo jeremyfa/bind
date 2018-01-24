@@ -8,6 +8,9 @@
 
 #import "AppDelegate.h"
 
+const char *hxRunLibrary(void);
+void hxcpp_set_top_of_stack(void);
+
 @interface AppDelegate ()
 
 @end
@@ -17,6 +20,19 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
+    
+
+    // Run haxe
+    hxcpp_set_top_of_stack();
+    
+    const char *err = NULL;
+    err = hxRunLibrary();
+    
+    if (err) {
+        printf(" Error %s\n", err );
+    }
+    
+    
     return YES;
 }
 

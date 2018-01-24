@@ -11,6 +11,9 @@
 /** Example of Objective-C interface exposed to Haxe */
 @interface AppNativeInterface : NSObject
 
+/** If provided, will be called when root view controller is visible on screen */
+@property (nonatomic, copy) void (^viewDidAppear)(void);
+
 /** Last name. If provided, will be used when saying hello. */
 @property (nonatomic, strong) NSString *lastName;
 

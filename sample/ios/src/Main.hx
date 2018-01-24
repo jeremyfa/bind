@@ -1,6 +1,7 @@
 package;
 
 import ios.AppNativeInterface;
+import ios.AppSwiftInterface;
 
 class Main {
 
@@ -9,18 +10,37 @@ class Main {
         // Print something from Haxe
         trace('Hello From Haxe');
 
+        testObjc();
+
+        testSwift();
+
+    } //main
+
+    static function testObjc():Void {
+
         // Get native inferface
-        var native = AppNativeInterface.sharedInterface();
+        var nativeObjc = AppNativeInterface.sharedInterface();
 
         // Wait until root view controller is visible
-        native.viewDidAppear = function() {
+        nativeObjc.viewDidAppear = function() {
             trace('viewDidAppear()');
 
             // Display native iOS dialog
-            native.lastName = 'Doe';
-            native.hello('John');
+            nativeObjc.lastName = 'Doe';
+            nativeObjc.hello('John');
         };
 
-    } //main
+    } //testObjc
+
+    static function testSwift():Void {
+
+        // Get native inferface
+        var nativeSwift = new AppSwiftInterface().init();
+
+        // Call native swift
+        nativeSwift.lastName = 'Swift';
+        nativeSwift.helloSwift('Taylor');
+
+    } //testSwift
 
 } //Main

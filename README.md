@@ -31,6 +31,7 @@ You can check out [The iOS Sample project](https://github.com/jeremyfa/bind/tree
  * A _Haxe_ project that can be compiled with ``build.hxml``
  * An Xcode project configured to build haxe files to C++, generate bindings and run the result as an iOS App
  * Scripts (used by Xcode project) to compile C++ to iOS binaries, to generate bindings
+ * An example of class written in _Swift Language_ bound to _Haxe_ through an _Objective-C_ compatible dynamic framework
 
 This will obviously only work on a mac, with haxe, bind library and xcode properly installed.
 
@@ -43,7 +44,7 @@ _That's all you can do for now, but there is more to come (see roadmap below)._
 * [x] Parse Objective-C typedefs, including block types in typedefs
 * [x] Generate Haxe (C++) to Objective-C bindings from parsed informations
 * [x] Add examples of some Objective-C bindings and a sample Xcode/iOS project
-* [ ] Add similar tests and examples for Swift (through Objective-C compatible dynamic frameworks)
+* [x] Add similar tests and examples for Swift (through Objective-C compatible dynamic frameworks)
 * [x] Add an option to write generated and support files to disk at a target directory to make them _ready to use_
 * [ ] Parse Java classes, with methods, properties and comments in java files
 * [ ] Generate Haxe (C++) to Java (JNI) bindings from parsed informations

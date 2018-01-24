@@ -1,0 +1,8 @@
+<xml>
+    <files id="haxe">
+        <compilerflag value="-I${LINC_APPSWIFTINTERFACE_PATH}linc/" />
+        <file name="${LINC_APPSWIFTINTERFACE_PATH}linc/linc_AppSwiftInterface.mm" />
+    </files>
+    <target id="haxe">
+    </target>
+</xml>

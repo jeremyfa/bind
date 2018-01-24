@@ -72,6 +72,10 @@ class Bind {
 
         if (ctx.headerCode == null) return;
 
+        // Patch Swift Framework header to make it compile fine
+        ctx.headerCode = ctx.headerCode.replace('typedef uint_least16_t char16_t;', '//typedef uint_least16_t char16_t;');
+        ctx.headerCode = ctx.headerCode.replace('typedef uint_least32_t char32_t;', '//typedef uint_least32_t char32_t;');
+
         var dir = '';
         if (ctx.pack != null && ctx.pack.trim() != '') {
             dir = ctx.pack.replace('.', '/') + '/';
@@ -81,7 +85,7 @@ class Bind {
             path: dir + 'linc/objc_' + Path.withoutDirectory(ctx.headerPath),
             content: ctx.headerCode
         };
-        
+
         ctx.files.push(ctx.currentFile);
         ctx.currentFile = null;
 

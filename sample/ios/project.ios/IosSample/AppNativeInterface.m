@@ -7,6 +7,7 @@
 //
 
 #import "AppNativeInterface.h"
+#import "IosSampleSwift.h"
 
 @implementation AppNativeInterface
 

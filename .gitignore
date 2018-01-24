@@ -6,3 +6,4 @@
 .DS_Store
 /sample/ios/bin
 xcuserdata
+/sample/ios/project.ios/build

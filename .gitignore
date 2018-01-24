@@ -4,3 +4,5 @@
 /index.js.map
 /node_modules
 .DS_Store
+/sample/ios/bin
+xcuserdata

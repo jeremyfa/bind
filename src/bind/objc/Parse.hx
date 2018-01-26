@@ -258,6 +258,13 @@ class Parse {
 
         var i = ctx.i;
         var after = code.substr(i);
+        var before = code.substr(0, i);
+
+        // Swift headers can have class properties
+        var isClassProperty = false;
+        if (before.rtrim().endsWith('SWIFT_CLASS_PROPERTY(')) {
+            isClassProperty = true;
+        }
 
         var extractCtx = {
             lastNullability: null,
@@ -319,7 +326,7 @@ class Parse {
             return {
                 name: name,
                 type: type,
-                instance: true,
+                instance: !isClassProperty,
                 description: null,
                 orig: {
                     nullable: nullable,

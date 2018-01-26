@@ -263,6 +263,9 @@ class Bind {
             // Read-only?
             var readonly = property.orig != null && property.orig.readonly == true;
 
+            // Singleton?
+            var isObjcSingleton = isObjcSingleton(property, ctx);
+
             // Property name
             var name = property.name;
             if (reserved.indexOf(name) != -1) {
@@ -271,6 +274,9 @@ class Bind {
 
             // Property type
             var type = toHaxeType(property.type, ctx);
+            if (isObjcSingleton) {
+                type = haxeName;
+            }
 
             // Property comment
             if (property.description != null && property.description.trim() != '') {
@@ -522,7 +528,19 @@ class Bind {
 
         return isObjcFactory;
 
-    } //isObjcConstructor
+    } //isObjcFactory
+
+    static function isObjcSingleton(property:bind.Class.Property, ctx:BindContext):Bool {
+
+        var isObjcSingleton = false;
+        var objcType = toObjcType(property.type, ctx);
+        if (!property.instance && (objcType == 'instancetype' || objcType == ctx.objcClass.name + '*')) {
+            isObjcSingleton = true;
+        }
+
+        return isObjcSingleton;
+
+    } //isObjcSingleton
 
 /// Objective-C -> Haxe
 

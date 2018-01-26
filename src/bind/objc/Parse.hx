@@ -243,6 +243,7 @@ class Parse {
 
         if (result.name != null) {
 
+            ensureDefaultInit(result);
             extractPropertyMethods(result);
 
             return result;
@@ -759,12 +760,38 @@ class Parse {
 
     } //extractLastNullability
 
-    static function extractPropertyMethods(result:bind.Class):Void {
+    static function ensureDefaultInit(result:bind.Class):Void {
 
-        var existingMethods:Map<String,Bool> = new Map();
+        var existingMethods:Map<String,bind.Class.Method> = new Map();
         
         for (method in result.methods) {
-            existingMethods.set(method.name, true);
+            existingMethods.set(method.name, method);
+        }
+
+        if (!existingMethods.exists('init')) {
+            // Add default init method
+            result.methods.push({
+                name: 'init',
+                args: [],
+                type: Object({
+                    orig: {
+                        type: 'instancetype',
+                        nullable: false
+                    }
+                }),
+                instance: true,
+                description: null
+            });
+        }
+
+    } //ensureDefaultInit
+
+    static function extractPropertyMethods(result:bind.Class):Void {
+
+        var existingMethods:Map<String,bind.Class.Method> = new Map();
+        
+        for (method in result.methods) {
+            existingMethods.set(method.name, method);
         }
 
         for (property in result.properties) {
@@ -783,6 +810,16 @@ class Parse {
                         }
                     })
                 });
+            }
+            else {
+                var method = existingMethods.get(property.name);
+                if (method.orig == null) method.orig = {};
+                if (method.orig.property == null) {
+                    method.orig.property = {
+                        name: property.name
+                    }
+                    method.orig.getter = true;
+                }
             }
             // Setter
             if (!property.orig.readonly) {
@@ -807,6 +844,16 @@ class Parse {
                             }
                         })
                     });
+                }
+                else {
+                    var method = existingMethods.get(setterName);
+                    if (method.orig == null) method.orig = {};
+                    if (method.orig.property == null) {
+                        method.orig.property = {
+                            name: property.name
+                        }
+                        method.orig.setter = true;
+                    }
                 }
             }
         }

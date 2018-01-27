@@ -9,7 +9,7 @@
 import UIKit
 
 /** Swift interface */
-@objc @objcMembers public class AppSwiftInterface: NSObject {
+@objcMembers public class AppSwiftInterface: NSObject {
     
     /** Get shared instance */
     public static let sharedInterface = AppSwiftInterface()

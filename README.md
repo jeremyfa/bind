@@ -20,7 +20,7 @@ haxelib run bind objc NSSomeObjcHeader.h --namespace some::namespace --package s
 
 Nothing is written to disk by default. The output is simply returned by the command. You can add a ``--json`` argument to get output as JSON (file paths and contents), in order to integrate this into your own tool or add ``--export your/export/path`` to let _bind_ save files to this _export_ directory.
 
-Note that _bind_ library is not a full _Objective-C to Haxe converter_ nor. Its approach is pragmatic and is intended to be used on a **clean and portable subset of Objective-C header syntax** that acts as a public bridge/interface to all your native iOS API.
+Note that _bind_ library is not a full _Objective-C to Haxe converter_. Its approach is pragmatic and is intended to be used on a **clean and portable subset of Objective-C header syntax** that acts as a public bridge/interface to all your native iOS API.
 
 Check out an example of [bound Objective-C header](https://github.com/jeremyfa/bind/blob/master/sample/ios/project.ios/IosSample/AppNativeInterface.h) that you can use as reference to see which subset of Objective-C can be handled by _bind_. This file can be tested with the provided sample iOS/Objective-C project.
 

@@ -9,20 +9,76 @@
 import UIKit
 
 /** Swift interface */
-public class AppSwiftInterface: NSObject {
+@objc @objcMembers public class AppSwiftInterface: NSObject {
+    
+    /** Get shared instance */
+    public static let sharedInterface = AppSwiftInterface()
+    
+    /** If provided, will be called when root view controller is visible on screen */
+    public var viewDidAppear: (() -> Void)?
     
     /** Define a last name for helloSwift */
-    @objc public var lastName: String?
+    public var lastName: String?
     
-    /** Say hello to name */
-    @objc public func helloSwift(_ name: String) -> Void {
+    /** Say hello to `name` with a native iOS dialog. Add a last name if any is known. */
+    public func hello(_ name: String, done: (() -> Void)?) -> Void {
+        
+        var sentence = "Hello \(name)"
         
         if let lastName = self.lastName {
-            print("HelloSwift \(name) \(lastName)")
-        } else {
-            print("HelloSwift \(name)")
+            sentence = "\(sentence) \(lastName)"
         }
         
-    } //helloSwift
+        let alert = UIAlertController(title: "Native iOS (Swift)", message: sentence, preferredStyle: UIAlertControllerStyle.alert)
+        
+        alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: { (action: UIAlertAction) in
+            // Pressed OK
+            if done != nil {
+                done!()
+            }
+        }))
+        
+        if let viewController = UIApplication.shared.delegate?.window??.rootViewController {
+            viewController.present(alert, animated: true, completion: nil)
+        }
+        
+    } //hello
+    
+    /** Get iOS version string */
+    public func iosVersionString() -> String {
+        
+        return UIDevice.current.systemVersion
+        
+    } //iosVersionString
+    
+    /** Get iOS version number */
+    public func iosVersionNumber() -> Float {
+        
+        let result = Float(UIDevice.current.systemVersion)
+        if result != nil {
+            return result!
+        }
+        
+        return 0
+        
+    } //iosVersionNumber
+    
+    /** Dummy method to get Haxe types converted to Swift types that then get returned back as an array. */
+    public func testTypes(_ aBool: Bool, anInt: Int, aFloat: Float, anArray: Array<Any>, aDict: Dictionary<String,Any>) -> Array<Any> {
+        
+        print("Objective-C types:");
+        print("  Bool: \(aBool)");
+        print("  Int: \(anInt)");
+        print("  Float: \(aFloat)");
+        print("  Array: \(anArray)");
+        print("  Dict: \(aDict)");
+        
+        return [aBool,
+                anInt,
+                aFloat,
+                anArray,
+                aDict];
+        
+    } //testTypes
 
 } //AppSwiftInterface

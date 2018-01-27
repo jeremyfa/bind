@@ -7,7 +7,18 @@ namespace ios {
     ::Dynamic AppNativeInterface_sharedInterface();
 
     /** Say hello to `name` with a native iOS dialog. Add a last name if any is known. */
-    void AppNativeInterface_hello(::Dynamic instance_, ::String name);
+    void AppNativeInterface_hello(::Dynamic instance_, ::String name, ::Dynamic done);
+
+    /** Get iOS version string */
+    ::String AppNativeInterface_iosVersionString(::Dynamic instance_);
+
+    /** Get iOS version number */
+    double AppNativeInterface_iosVersionNumber(::Dynamic instance_);
+
+    /** Dummy method to get Haxe types converted to ObjC types that then get returned back as an array. */
+    ::Dynamic AppNativeInterface_testTypes(::Dynamic instance_, bool aBool, int anInt, double aFloat, ::Dynamic anArray, ::Dynamic aDict);
+
+    ::Dynamic AppNativeInterface_init();
 
     /** If provided, will be called when root view controller is visible on screen */
     ::Dynamic AppNativeInterface_viewDidAppear(::Dynamic instance_);

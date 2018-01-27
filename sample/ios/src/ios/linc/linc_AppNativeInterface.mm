@@ -15,9 +15,45 @@ namespace ios {
     }
 
     /** Say hello to `name` with a native iOS dialog. Add a last name if any is known. */
-    void AppNativeInterface_hello(::Dynamic instance_, ::String name) {
+    void AppNativeInterface_hello(::Dynamic instance_, ::String name, ::Dynamic done) {
         NSString* name_objc_ = ::bind::objc::HxcppToNSString(name);
-        [::bind::objc::HxcppToUnwrappedObjcId(instance_) hello:name_objc_];
+        BindObjcHaxeWrapperClass *done_objc_wrapper_ = [[BindObjcHaxeWrapperClass alloc] init:done.mPtr];
+        void (^done_objc_)() = ^() {
+            done_objc_wrapper_->haxeObject->__run();
+        };
+        [::bind::objc::HxcppToUnwrappedObjcId(instance_) hello:name_objc_ done:done_objc_];
+    }
+
+    /** Get iOS version string */
+    ::String AppNativeInterface_iosVersionString(::Dynamic instance_) {
+        NSString* return_objc_ = [::bind::objc::HxcppToUnwrappedObjcId(instance_) iosVersionString];
+        ::String return_hxcpp_ = ::bind::objc::NSStringToHxcpp(return_objc_);
+        return return_hxcpp_;
+    }
+
+    /** Get iOS version number */
+    double AppNativeInterface_iosVersionNumber(::Dynamic instance_) {
+        CGFloat return_objc_ = [::bind::objc::HxcppToUnwrappedObjcId(instance_) iosVersionNumber];
+        double return_hxcpp_ = (double) return_objc_;
+        return return_hxcpp_;
+    }
+
+    /** Dummy method to get Haxe types converted to ObjC types that then get returned back as an array. */
+    ::Dynamic AppNativeInterface_testTypes(::Dynamic instance_, bool aBool, int anInt, double aFloat, ::Dynamic anArray, ::Dynamic aDict) {
+        BOOL aBool_objc_ = (BOOL) aBool;
+        NSInteger anInt_objc_ = (NSInteger) anInt;
+        CGFloat aFloat_objc_ = (CGFloat) aFloat;
+        NSArray* anArray_objc_ = ::bind::objc::HxcppToNSArray(anArray);
+        NSDictionary* aDict_objc_ = ::bind::objc::HxcppToObjcId((Dynamic)aDict);
+        NSArray* return_objc_ = [::bind::objc::HxcppToUnwrappedObjcId(instance_) testTypes:aBool_objc_ anInt:anInt_objc_ aFloat:aFloat_objc_ anArray:anArray_objc_ aDict:aDict_objc_];
+        ::Dynamic return_hxcpp_ = ::bind::objc::ObjcIdToHxcpp(return_objc_);
+        return return_hxcpp_;
+    }
+
+    ::Dynamic AppNativeInterface_init() {
+        AppNativeInterface* return_objc_ = [[AppNativeInterface alloc] init];
+        ::Dynamic return_hxcpp_ = ::bind::objc::WrappedObjcIdToHxcpp(return_objc_);
+        return return_hxcpp_;
     }
 
     /** If provided, will be called when root view controller is visible on screen */

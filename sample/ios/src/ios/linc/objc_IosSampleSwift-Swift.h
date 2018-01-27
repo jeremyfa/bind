@@ -188,10 +188,21 @@ SWIFT_MODULE_NAMESPACE_PUSH("IosSampleSwift")
 /// Swift interface
 SWIFT_CLASS("_TtC14IosSampleSwift17AppSwiftInterface")
 @interface AppSwiftInterface : NSObject
+/// Get shared instance
+SWIFT_CLASS_PROPERTY(@property (nonatomic, class, readonly, strong) AppSwiftInterface * _Nonnull sharedInterface;)
++ (AppSwiftInterface * _Nonnull)sharedInterface SWIFT_WARN_UNUSED_RESULT;
+/// If provided, will be called when root view controller is visible on screen
+@property (nonatomic, copy) void (^ _Nullable viewDidAppear)(void);
 /// Define a last name for helloSwift
 @property (nonatomic, copy) NSString * _Nullable lastName;
-/// Say hello to name
-- (void)helloSwift:(NSString * _Nonnull)name;
+/// Say hello to <code>name</code> with a native iOS dialog. Add a last name if any is known.
+- (void)hello:(NSString * _Nonnull)name done:(void (^ _Nullable)(void))done;
+/// Get iOS version string
+- (NSString * _Nonnull)iosVersionString SWIFT_WARN_UNUSED_RESULT;
+/// Get iOS version number
+- (float)iosVersionNumber SWIFT_WARN_UNUSED_RESULT;
+/// Dummy method to get Haxe types converted to Swift types that then get returned back as an array.
+- (NSArray * _Nonnull)testTypes:(BOOL)aBool anInt:(NSInteger)anInt aFloat:(float)aFloat anArray:(NSArray * _Nonnull)anArray aDict:(NSDictionary<NSString *, id> * _Nonnull)aDict SWIFT_WARN_UNUSED_RESULT;
 - (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
 @end
 

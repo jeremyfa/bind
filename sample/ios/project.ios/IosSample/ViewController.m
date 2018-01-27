@@ -8,6 +8,7 @@
 
 #import "ViewController.h"
 #import "AppNativeInterface.h"
+#import "IosSampleSwift.h"
 
 @interface ViewController ()
 
@@ -23,9 +24,15 @@
     
     AppNativeInterface *native = [AppNativeInterface sharedInterface];
     
-    // Call provided block/function if it exists
+    // Call provided block/function if it exists (objc)
     if (native.viewDidAppear) {
         native.viewDidAppear();
+    }
+
+    // Call provided block/function if it exists (swift)
+    AppSwiftInterface *nativeSwift = [AppSwiftInterface sharedInterface];
+    if (nativeSwift.viewDidAppear) {
+        nativeSwift.viewDidAppear();
     }
 }
 

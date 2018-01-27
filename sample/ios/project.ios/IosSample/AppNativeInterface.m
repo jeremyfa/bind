@@ -23,7 +23,7 @@
     
 } //sharedInterface
 
-- (void)hello:(NSString *)name {
+- (void)hello:(NSString *)name done:(Callback)done {
     
     NSString *sentence = [NSString stringWithFormat:@"Hello %@", name];
     
@@ -32,7 +32,7 @@
     }
     
     UIAlertController *alert = [UIAlertController
-                                alertControllerWithTitle:@"Native iOS"
+                                alertControllerWithTitle:@"Native iOS (ObjC)"
                                 message:sentence
                                 preferredStyle:UIAlertControllerStyleAlert];
     
@@ -41,11 +41,43 @@
                       style:UIAlertActionStyleDefault
                       handler:^(UIAlertAction * action) {
                           // Pressed `OK`
+                          if (done) done();
                       }]];
     
     UIViewController *viewController = [[UIApplication sharedApplication] delegate].window.rootViewController;
     [viewController presentViewController:alert animated:YES completion:nil];
     
 } //hello
+
+- (NSString *)iosVersionString {
+    
+    return [[UIDevice currentDevice] systemVersion];
+    
+} //iosVersionString
+
+/** Get iOS version number */
+- (CGFloat)iosVersionNumber {
+    
+    return [[[UIDevice currentDevice] systemVersion] floatValue];
+    
+} //iosVersionNumber
+
+/** Dummy method to get Haxe types converted to ObjC types that then get returned back as an dictionary. */
+- (NSArray *)testTypes:(BOOL)aBool anInt:(NSInteger)anInt aFloat:(CGFloat)aFloat anArray:(NSArray *)anArray aDict:(NSDictionary *)aDict {
+    
+    NSLog(@"Objective-C types:");
+    NSLog(@"  Bool: %@", @(aBool));
+    NSLog(@"  Int: %@", @(anInt));
+    NSLog(@"  Float: %@", @(aFloat));
+    NSLog(@"  Array: %@", anArray);
+    NSLog(@"  Dict: %@", aDict);
+    
+    return @[aBool ? @YES : @NO,
+             @(anInt),
+             @(aFloat),
+             anArray ? anArray : [NSNull null],
+             aDict ? aDict : [NSNull null]];
+    
+} //testTypes
 
 @end

@@ -24,8 +24,28 @@ class AppNativeInterface {
     }
 
     /** Say hello to `name` with a native iOS dialog. Add a last name if any is known. */
-    public function hello(name:String):Void {
-        AppNativeInterface_Extern.hello(_instance, name);
+    public function hello(name:String, done:Void->Void):Void {
+        AppNativeInterface_Extern.hello(_instance, name, done);
+    }
+
+    /** Get iOS version string */
+    public function iosVersionString():String {
+        return AppNativeInterface_Extern.iosVersionString(_instance);
+    }
+
+    /** Get iOS version number */
+    public function iosVersionNumber():Float {
+        return AppNativeInterface_Extern.iosVersionNumber(_instance);
+    }
+
+    /** Dummy method to get Haxe types converted to ObjC types that then get returned back as an array. */
+    public function testTypes(aBool:Bool, anInt:Int, aFloat:Float, anArray:Array<Dynamic>, aDict:Dynamic):Array<Dynamic> {
+        return AppNativeInterface_Extern.testTypes(_instance, aBool, anInt, aFloat, anArray, aDict);
+    }
+
+    public function init():AppNativeInterface {
+        _instance = AppNativeInterface_Extern.init();
+        return this;
     }
 
     /** If provided, will be called when root view controller is visible on screen */
@@ -65,7 +85,19 @@ private extern class AppNativeInterface_Extern {
     static function sharedInterface():Dynamic;
 
     @:native('ios::AppNativeInterface_hello')
-    static function hello(instance_:Dynamic, name:String):Void;
+    static function hello(instance_:Dynamic, name:String, done:Void->Void):Void;
+
+    @:native('ios::AppNativeInterface_iosVersionString')
+    static function iosVersionString(instance_:Dynamic):String;
+
+    @:native('ios::AppNativeInterface_iosVersionNumber')
+    static function iosVersionNumber(instance_:Dynamic):Float;
+
+    @:native('ios::AppNativeInterface_testTypes')
+    static function testTypes(instance_:Dynamic, aBool:Bool, anInt:Int, aFloat:Float, anArray:Array<Dynamic>, aDict:Dynamic):Array<Dynamic>;
+
+    @:native('ios::AppNativeInterface_init')
+    static function init():Dynamic;
 
     @:native('ios::AppNativeInterface_viewDidAppear')
     static function viewDidAppear(instance_:Dynamic):Void->Void;

@@ -296,8 +296,9 @@ namespace bind {
                 return nil;
 
               case vtInt:
-              case vtBool:
                  return [ NSNumber numberWithInt: (int)d ];
+              case vtBool:
+                 return [ NSNumber numberWithBool: (bool)d ];
               case vtInt64:
                  return [ NSNumber numberWithLongLong: (cpp::Int64)d ];
               case vtFloat:

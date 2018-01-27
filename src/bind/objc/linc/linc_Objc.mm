@@ -157,7 +157,7 @@ namespace bind {
               if (val) {
                   array[i] = val;
               } else {
-                  array[i] == [NSNull null];
+                  array[i] = [NSNull null];
               }
            }
 
@@ -326,7 +326,7 @@ namespace bind {
                           if (val) {
                               array[i] = val;
                           } else {
-                              array[i] == [NSNull null];
+                              array[i] = [NSNull null];
                           }
                        }
                        return array;

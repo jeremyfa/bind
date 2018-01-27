@@ -240,6 +240,7 @@ class Bind {
 
         // Objc support
         writeLine('import bind.objc.Support;', ctx);
+
         writeLineBreak(ctx);
 
         // Class comment

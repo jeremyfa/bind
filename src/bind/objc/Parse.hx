@@ -21,12 +21,12 @@ class Parse {
     static var RE_TYPEDEF_BLOCK_NAME = ~/(?:\(\s*\^\s*(?:[a-zA-Z_][a-zA-Z0-9_]*)\s*\))/;
     static var RE_TYPEDEF_NAME = ~/\s+([a-zA-Z_][a-zA-Z0-9_]*)?\s*$/;
     //                       type                         protocol                                   block nullability                        nullability                           block arguments
-    static var RE_TYPE = ~/^((?:(const|signed|unsigned|short|long|nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:\(\s*\^\s*(_Nullable|_Nonnull|nullable|nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)?\s*\)|(_Nullable|_Nonnull|nullable|nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)?)\s*(\(\s*((?:(?:const|signed|unsigned|short|long|nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s+)*(?:[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))?\s*/;
+    static var RE_TYPE = ~/^((?:(const|signed|unsigned|short|long|nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_, \*]*\s*>)?[\*\s]*)(?:\(\s*\^\s*(_Nullable|_Nonnull|nullable|nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)?\s*\)|(_Nullable|_Nonnull|nullable|nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)?)\s*(\(\s*((?:(?:const|signed|unsigned|short|long|nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s+)*(?:[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))?\s*/;
     //                         type                         protocol                                   block type name                        type name                           block arguments                                                                                            type name
     static var RE_TYPEDEF = ~/^typedef\s+(((?:(?:const|signed|unsigned|short|long|nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:\(\s*\^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\))?\s*(\(\s*((?:[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))?)\s*([a-zA-Z_][a-zA-Z0-9_]*)?\s*;/;
     static var RE_IDENTIFIER = ~/^[a-zA-Z_][a-zA-Z0-9_]*/;
     //                                       modifiers                           type                                                                (  name                    |          name                                  block arguments                                                                 )
-    static var RE_PROPERTY = ~/^@property\s*(?:\((\s*(?:[a-z]+\s*,?\s*)*)\))?\s*((?:(?:const|signed|unsigned|short|long|nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:([a-zA-Z_][a-zA-Z0-9_]*)|\(\s*\^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)\s*\(\s*((?:(?:const|signed|unsigned|short|long|nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s+)*(?:[a-zA-Z_][a-zA-Z0-9_<>\s\*]*[\s\*]?(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))\s*;/;
+    static var RE_PROPERTY = ~/^@property\s*(?:\((\s*(?:[a-z]+\s*,?\s*)*)\))?\s*((?:(?:const|signed|unsigned|short|long|nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s+)*[a-zA-Z_][a-zA-Z0-9_]*(?:\s*<\s*[a-zA-Z_][a-zA-Z0-9_]*\s*>)?[\*\s]*)(?:([a-zA-Z_][a-zA-Z0-9_]*)|\(\s*\^\s*(?:(?:nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s*)?([a-zA-Z_][a-zA-Z0-9_]*)\s*\)\s*\(\s*((?:(?:const|signed|unsigned|short|long|nullable|nonnull|_Nullable|_Nonnull|_Null_unspecified|__nullable|__nonnull|__null_unspecified)\s+)*(?:[a-zA-Z_][a-zA-Z0-9_<>\s\*]*[\s\*]?(?:[a-zA-Z_][a-zA-Z0-9_]*)?\s*,?\s*)*)?\s*\))\s*;/;
     static var RE_INTERFACE = ~/^@interface\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*(?::\s*([a-zA-Z_][a-zA-Z0-9_]*))?\s*(?:\(\s*([a-zA-Z_][a-zA-Z0-9_]*)?\s*\))?\s*(?:<(\s*(?:[a-zA-Z_][a-zA-Z0-9_]*\s*,?\s*)*)>)?/;
     static var RE_LAST_NULLABILITY = ~/(_Nullable|_Nonnull|_Null_unspecified)(\s+(?:[a-zA-Z_][a-zA-Z0-9_]*))*$/;
 
@@ -655,7 +655,14 @@ class Parse {
                          'NSMutableDictionary*':
                         Map({type: objcType, nullable: notNonNull});
                     default:
-                        Object({type: objcType, nullable: notNonNull});
+                        objcType.startsWith('NSArray<') || objcType.startsWith('NSMutableArray<') ?
+                            Array({type: objcType, nullable: notNonNull})
+                        :
+                        objcType.startsWith('NSDictionary<') || objcType.startsWith('NSMutableDictionary<') ?
+                            Map({type: objcType, nullable: notNonNull})
+                        :
+                            Object({type: objcType, nullable: notNonNull})
+                        ;
                 }
             }
         }

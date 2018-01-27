@@ -8,4 +8,4 @@ package bind.objc;
 #end
 class Support {
 
-}
+} //Support

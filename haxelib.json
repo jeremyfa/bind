@@ -4,7 +4,7 @@
   "license": "MIT",
   "tags": ["cross", "bindings"],
   "description": "Bind Objective-C and Java (JNI) code to Haxe without writing glue code manually.",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "classPath": "src/",
   "releasenote": "Add a working example with Objective-C compatible Swift dynamic framework.",
   "contributors": ["jeremyfa"],

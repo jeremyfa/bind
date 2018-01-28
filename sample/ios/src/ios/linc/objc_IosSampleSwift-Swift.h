@@ -193,7 +193,7 @@ SWIFT_CLASS_PROPERTY(@property (nonatomic, class, readonly, strong) AppSwiftInte
 + (AppSwiftInterface * _Nonnull)sharedInterface SWIFT_WARN_UNUSED_RESULT;
 /// If provided, will be called when root view controller is visible on screen
 @property (nonatomic, copy) void (^ _Nullable viewDidAppear)(BOOL);
-/// Define a last name for helloSwift
+/// Define a last name for hello()
 @property (nonatomic, copy) NSString * _Nullable lastName;
 /// Say hello to <code>name</code> with a native iOS dialog. Add a last name if any is known.
 - (void)hello:(NSString * _Nonnull)name done:(void (^ _Nullable)(void))done;

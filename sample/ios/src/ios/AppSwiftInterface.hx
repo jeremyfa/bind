@@ -16,7 +16,7 @@ class AppSwiftInterface {
     /** If provided, will be called when root view controller is visible on screen */
     public var viewDidAppear(get,set):Bool->Void;
 
-    /** Define a last name for helloSwift */
+    /** Define a last name for hello() */
     public var lastName(get,set):String;
 
     inline private static function get_sharedInterface():AppSwiftInterface {
@@ -61,12 +61,12 @@ class AppSwiftInterface {
         return viewDidAppear;
     }
 
-    /** Define a last name for helloSwift */
+    /** Define a last name for hello() */
     inline private function get_lastName():String {
         return AppSwiftInterface_Extern.lastName(_instance);
     }
 
-    /** Define a last name for helloSwift */
+    /** Define a last name for hello() */
     inline private function set_lastName(lastName:String):String {
         AppSwiftInterface_Extern.setLastName(_instance, lastName);
         return lastName;

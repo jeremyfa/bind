@@ -80,14 +80,14 @@ namespace ios {
         [::bind::objc::HxcppToUnwrappedObjcId(instance_) setViewDidAppear:viewDidAppear_objc_];
     }
 
-    /** Define a last name for helloSwift */
+    /** Define a last name for hello() */
     ::String AppSwiftInterface_lastName(::Dynamic instance_) {
         NSString* return_objc_ = [::bind::objc::HxcppToUnwrappedObjcId(instance_) lastName];
         ::String return_hxcpp_ = ::bind::objc::NSStringToHxcpp(return_objc_);
         return return_hxcpp_;
     }
 
-    /** Define a last name for helloSwift */
+    /** Define a last name for hello() */
     void AppSwiftInterface_setLastName(::Dynamic instance_, ::String lastName) {
         NSString* lastName_objc_ = ::bind::objc::HxcppToNSString(lastName);
         [::bind::objc::HxcppToUnwrappedObjcId(instance_) setLastName:lastName_objc_];

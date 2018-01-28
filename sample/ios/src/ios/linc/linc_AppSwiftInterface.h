@@ -25,10 +25,10 @@ namespace ios {
     /** If provided, will be called when root view controller is visible on screen */
     void AppSwiftInterface_setViewDidAppear(::Dynamic instance_, ::Dynamic viewDidAppear);
 
-    /** Define a last name for helloSwift */
+    /** Define a last name for hello() */
     ::String AppSwiftInterface_lastName(::Dynamic instance_);
 
-    /** Define a last name for helloSwift */
+    /** Define a last name for hello() */
     void AppSwiftInterface_setLastName(::Dynamic instance_, ::String lastName);
 
 }

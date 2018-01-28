@@ -47,10 +47,12 @@ class Parse {
         var len = code.length;
 
         var inSingleLineComment = false;
+        var inThreeSlashesComment = false;
         var inMultilineComment = false;
         var inPreprocessorMacro = false;
         var inInterface = false;
 
+        var threeSlashesComment = null;
         var comment = null;
 
         var result:bind.Class = {
@@ -107,6 +109,11 @@ class Parse {
                 if (c == "\n") {
                     inSingleLineComment = false;
                     comment = cleanComment(comment);
+                    if (inThreeSlashesComment) {
+                        if (threeSlashesComment == null) threeSlashesComment = comment;
+                        else threeSlashesComment += "\n" + comment;
+                        comment = threeSlashesComment;
+                    }
                 }
                 else {
                     comment += c;
@@ -130,7 +137,16 @@ class Parse {
             else if (c == '#') {
 
                 inPreprocessorMacro = true;
+                inThreeSlashesComment = false;
+                threeSlashesComment = null;
                 i++;
+            }
+            else if (c == "\n") {
+
+                inThreeSlashesComment = false;
+                threeSlashesComment = null;
+                i++;
+
             }
             else if (cc == '//') {
 
@@ -138,10 +154,18 @@ class Parse {
                 comment = '';
                 i += 2;
 
-                while (code.charAt(i) == '/') i++; // TODO Handle multiline 3-slashes Apple style comments
+                if (code.charAt(i) == '/') {
+                    inThreeSlashesComment = true;
+                    while (code.charAt(i) == '/') {
+                        comment += ' ';
+                        i++;
+                    }
+                }
             }
             else if (cc == '/*') {
 
+                inThreeSlashesComment = false;
+                threeSlashesComment = null;
                 inMultilineComment = true;
                 comment = '';
                 i += 2;
@@ -151,6 +175,7 @@ class Parse {
             }
             else {
 
+                threeSlashesComment = null;
                 var after = code.substr(i);
 
                 if (c == '@') {

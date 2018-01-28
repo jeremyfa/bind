@@ -1014,6 +1014,7 @@ class Bind {
 
         writeIndent(ctx);
         write('/** ', ctx);
+        var spaces = getLastLineIndent(ctx);
         var i = 0;
         var lines = comment.split("\n");
         while (i < lines.length) {
@@ -1022,7 +1023,7 @@ class Bind {
 
             if (i > 0) {
                 writeLineBreak(ctx);
-                write('    ', ctx);
+                write(spaces, ctx);
             }
 
             write(line, ctx);
@@ -1068,5 +1069,17 @@ class Bind {
         ctx.currentFile.content += input;
 
     } //write
+
+    static function getLastLineIndent(ctx:BindContext):String {
+
+        var lines = ctx.currentFile.content.split("\n");
+        var numChars = lines[lines.length - 1].length;
+        var spaces = '';
+        for (i in 0...numChars) {
+            spaces += ' ';
+        }
+        return spaces;
+
+    } //getLastLineIndent
 
 } //Bind

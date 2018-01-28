@@ -15,9 +15,9 @@ import UIKit
     public static let sharedInterface = AppSwiftInterface()
     
     /** If provided, will be called when root view controller is visible on screen */
-    public var viewDidAppear: (() -> Void)?
+    public var viewDidAppear: ((_ animated: Bool) -> Void)?
     
-    /** Define a last name for helloSwift */
+    /** Define a last name for hello() */
     public var lastName: String?
     
     /** Say hello to `name` with a native iOS dialog. Add a last name if any is known. */
@@ -66,7 +66,7 @@ import UIKit
     /** Dummy method to get Haxe types converted to Swift types that then get returned back as an array. */
     public func testTypes(_ aBool: Bool, anInt: Int, aFloat: Float, anArray: Array<Any>, aDict: Dictionary<String,Any>) -> Array<Any> {
         
-        print("Objective-C types:");
+        print("Swift types:");
         print("  Bool: \(aBool)");
         print("  Int: \(anInt)");
         print("  Float: \(aFloat)");

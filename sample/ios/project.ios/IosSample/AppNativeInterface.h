@@ -18,7 +18,7 @@ typedef void (^Callback)(void);
 + (instancetype)sharedInterface;
 
 /** If provided, will be called when root view controller is visible on screen */
-@property (nonatomic, copy) void (^viewDidAppear)(void);
+@property (nonatomic, copy) void (^viewDidAppear)(BOOL animated);
 
 /** Last name. If provided, will be used when saying hello. */
 @property (nonatomic, strong) NSString *lastName;

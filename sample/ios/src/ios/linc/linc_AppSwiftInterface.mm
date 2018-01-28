@@ -59,12 +59,13 @@ namespace ios {
     ::Dynamic AppSwiftInterface_viewDidAppear(::Dynamic instance_) {
         id return_objc_ = [::bind::objc::HxcppToUnwrappedObjcId(instance_) viewDidAppear];
         ::Dynamic closure_return_hxcpp_ = ::bind::objc::WrappedObjcIdToHxcpp(return_objc_);
-        HX_BEGIN_LOCAL_FUNC_S1(hx::LocalFunc, _hx_Closure_return_hxcpp_, ::Dynamic, closure_return_hxcpp_) HXARGC(0)
-        void _hx_run() {
-            void (^closure_return_objc_)() = ::bind::objc::HxcppToUnwrappedObjcId(closure_return_hxcpp_);
-            closure_return_objc_();
+        HX_BEGIN_LOCAL_FUNC_S1(hx::LocalFunc, _hx_Closure_return_hxcpp_, ::Dynamic, closure_return_hxcpp_) HXARGC(1)
+        void _hx_run(bool arg2) {
+            BOOL arg1_objc_ = (BOOL) arg1;
+            void (^closure_return_objc_)(BOOL arg1) = ::bind::objc::HxcppToUnwrappedObjcId(closure_return_hxcpp_);
+            closure_return_objc_(arg1_objc_);
         }
-        HX_END_LOCAL_FUNC0((void))
+        HX_END_LOCAL_FUNC1((void))
         ::Dynamic return_hxcpp_ = ::Dynamic(new _hx_Closure_return_hxcpp_(closure_return_hxcpp_));
         return return_hxcpp_;
     }
@@ -72,8 +73,9 @@ namespace ios {
     /** If provided, will be called when root view controller is visible on screen */
     void AppSwiftInterface_setViewDidAppear(::Dynamic instance_, ::Dynamic viewDidAppear) {
         BindObjcHaxeWrapperClass *viewDidAppear_objc_wrapper_ = [[BindObjcHaxeWrapperClass alloc] init:viewDidAppear.mPtr];
-        void (^viewDidAppear_objc_)() = ^() {
-            viewDidAppear_objc_wrapper_->haxeObject->__run();
+        void (^viewDidAppear_objc_)(BOOL arg1) = ^(BOOL arg2) {
+            bool arg1_hxcpp_ = (bool) arg1;
+            viewDidAppear_objc_wrapper_->haxeObject->__run(arg1_hxcpp_);
         };
         [::bind::objc::HxcppToUnwrappedObjcId(instance_) setViewDidAppear:viewDidAppear_objc_];
     }

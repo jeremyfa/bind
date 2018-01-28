@@ -14,7 +14,7 @@ class AppSwiftInterface {
     public static var sharedInterface(get,never):AppSwiftInterface;
 
     /** If provided, will be called when root view controller is visible on screen */
-    public var viewDidAppear(get,set):Void->Void;
+    public var viewDidAppear(get,set):Bool->Void;
 
     /** Define a last name for helloSwift */
     public var lastName(get,set):String;
@@ -51,12 +51,12 @@ class AppSwiftInterface {
     }
 
     /** If provided, will be called when root view controller is visible on screen */
-    inline private function get_viewDidAppear():Void->Void {
+    inline private function get_viewDidAppear():Bool->Void {
         return AppSwiftInterface_Extern.viewDidAppear(_instance);
     }
 
     /** If provided, will be called when root view controller is visible on screen */
-    inline private function set_viewDidAppear(viewDidAppear:Void->Void):Void->Void {
+    inline private function set_viewDidAppear(viewDidAppear:Bool->Void):Bool->Void {
         AppSwiftInterface_Extern.setViewDidAppear(_instance, viewDidAppear);
         return viewDidAppear;
     }
@@ -102,10 +102,10 @@ private extern class AppSwiftInterface_Extern {
     static function init():Dynamic;
 
     @:native('ios::AppSwiftInterface_viewDidAppear')
-    static function viewDidAppear(instance_:Dynamic):Void->Void;
+    static function viewDidAppear(instance_:Dynamic):Bool->Void;
 
     @:native('ios::AppSwiftInterface_setViewDidAppear')
-    static function setViewDidAppear(instance_:Dynamic, viewDidAppear:Void->Void):Void;
+    static function setViewDidAppear(instance_:Dynamic, viewDidAppear:Bool->Void):Void;
 
     @:native('ios::AppSwiftInterface_lastName')
     static function lastName(instance_:Dynamic):String;

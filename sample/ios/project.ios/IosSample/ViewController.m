@@ -26,13 +26,13 @@
     
     // Call provided block/function if it exists (objc)
     if (native.viewDidAppear) {
-        native.viewDidAppear();
+        native.viewDidAppear(animated);
     }
 
     // Call provided block/function if it exists (swift)
     AppSwiftInterface *nativeSwift = [AppSwiftInterface sharedInterface];
     if (nativeSwift.viewDidAppear) {
-        nativeSwift.viewDidAppear();
+        nativeSwift.viewDidAppear(animated);
     }
 }
 

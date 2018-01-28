@@ -46,8 +46,8 @@ class Main {
         trace('Result on Haxe side: ' + result);
 
         // Wait until root view controller is visible
-        nativeObjc.viewDidAppear = function() {
-            trace('viewDidAppear()');
+        nativeObjc.viewDidAppear = function(animated) {
+            trace('viewDidAppear(animated=$animated)');
 
             // Display native iOS dialog
             nativeObjc.lastName = 'Doe';

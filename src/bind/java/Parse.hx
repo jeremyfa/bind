@@ -7,7 +7,6 @@ using StringTools;
 typedef ParseContext = {
     var i:Int;
     var types:Map<String,bind.Class.Type>;
-    var rootClass:bind.Class;
 }
 
 class Parse {
@@ -29,7 +28,7 @@ class Parse {
     static var RE_FUNC = ~/^Func([0-9])$/;
 
     public static function createContext():ParseContext {
-        return { i: 0, types: new Map(), rootClass: null };
+        return { i: 0, types: new Map() };
     }
 
     /** Parse Objective-C header content to get class informations. */
@@ -48,16 +47,11 @@ class Parse {
         var inSingleLineComment = false;
         var inMultilineComment = false;
         
-        var numTypes = 0;
-        for (key in ctx.types) numTypes++;
-        var inClass = numTypes;
-        var inSubClass = false;
+        var inClass = false;
 
         var comment = null;
         var word = '';
         var after = '';
-
-        var inClass = ctx.rootClass != null;
 
         var result:bind.Class = {
             name: null,
@@ -224,22 +218,17 @@ class Parse {
                         i += RE_DECL.matched(0).length;
                         consumeBlock();
                     }
-                    else if (inClass && inSubClass) {
-                        // We only handle one level of class imbrication
+                    else if (inClass) {
+                        // We only handle top level class in file
                         i += RE_DECL.matched(0).length;
                         consumeBlock();
                     }
                     else {
-                        // We are in a subclass (well, not inheritance-wise but block-wise)
-                        if (inClass) {
-                            inSubClass = true;
-                            ctx.rootClass = result;
-                        }
-                        // Or just a root class
-                        else inClass = true;
+                        // We are now inside a class
+                        inClass = true;
 
                         // Keep class name
-                        result.name = ctx.rootClass != null ? ctx.rootClass.name + '.' + name : name;
+                        result.name = name;
                         result.orig = {};
                         result.description = comment != null && comment.trim() != '' ? comment : null;
                         if (modifiers.exists('static')) Reflect.setField(result.orig, 'static', true);

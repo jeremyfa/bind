@@ -146,7 +146,7 @@ class Cli {
                 bindClassOptions.javaPath = path;
                 bindClassOptions.javaCode = code;
 
-                var ctx = {i: 0, types: new Map(), rootClass: null};
+                var ctx = {i: 0, types: new Map()};
                 var result = null;
                 while ((result = bind.java.Parse.parseClass(code, ctx)) != null) {
                     result.path = path;

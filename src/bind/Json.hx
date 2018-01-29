@@ -73,8 +73,8 @@ class Json {
             case Float(orig): { Float: {orig: toJson(orig)} };
             case Bool(orig): { Bool: {orig: toJson(orig)} };
             case String(orig): { String: {orig: toJson(orig)} };
-            case Array(orig): { Array: {orig: toJson(orig)} };
-            case Map(orig): { Map: {orig: toJson(orig)} };
+            case Array(itemType, orig): { Array: {itemType: typeEnumToJson(itemType), orig: toJson(orig)} };
+            case Map(itemType, orig): { Map: {itemType: typeEnumToJson(itemType), orig: toJson(orig)} };
             case Object(orig): { Object: {orig: toJson(orig)} };
             case Function(args, ret, orig): { Function: {args: toJson(args), ret: typeEnumToJson(ret), orig: toJson(orig)} };
         }

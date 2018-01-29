@@ -553,8 +553,8 @@ class Bind {
             case Float(orig): 'Float';
             case Bool(orig): 'Bool';
             case String(orig): 'String';
-            case Array(orig): 'Array<Dynamic>';
-            case Map(orig): 'Dynamic';
+            case Array(itemType, orig): 'Array<Dynamic>';
+            case Map(itemType, orig): 'Dynamic';
             case Object(orig): 'Dynamic';
             case Function(args, ret, orig): toHaxeFunctionType(type, ctx);
         }
@@ -604,8 +604,8 @@ class Bind {
             case Float(orig): 'double';
             case Bool(orig): 'bool';
             case String(orig): '::String';
-            case Array(orig): toHxcppArrayType(type, ctx);
-            case Map(orig): toHxcppMapType(type, ctx);
+            case Array(itemType, orig): toHxcppArrayType(type, ctx);
+            case Map(itemType, orig): toHxcppMapType(type, ctx);
             case Object(orig): toHxcppObjectType(type, ctx);
             case Function(args, ret, orig): toHxcppFunctionType(type, ctx);
         }
@@ -650,8 +650,8 @@ class Bind {
             case Float(orig_): orig = orig_;
             case Bool(orig_): orig = orig_;
             case String(orig_): orig = orig_;
-            case Array(orig_): orig = orig_;
-            case Map(orig_): orig = orig_;
+            case Array(itemType_, orig_): orig = orig_;
+            case Map(itemType_, orig_): orig = orig_;
             case Object(orig_): orig = orig_;
             case Function(args, ret, orig_): orig = orig_;
         }
@@ -928,7 +928,7 @@ class Bind {
                 }
                 writeLineBreak(ctx);
 
-            case Array(orig):
+            case Array(itemType, orig):
                 switch (type) {
                     case 'NSArray*':
                         write('$type $name = ::bind::objc::HxcppToNSArray($value);', ctx);

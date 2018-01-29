@@ -126,7 +126,59 @@ class Cli {
                     }
                 }
             }
-        }
+
+        } //objc
+
+        else if (kind == 'java') {
+
+            for (i in 0...fileArgs.length) {
+                var file = fileArgs[i];
+
+                var path = Path.isAbsolute(file) ? file : Path.join([cwd, file]);
+                if (!FileSystem.exists(path)) {
+                    throw "Java file doesn't exist at path " + path;
+                }
+                if (FileSystem.isDirectory(path)) {
+                    throw "Expected a java file but got a directory at path " + path;
+                }
+                var code = File.getContent(path);
+
+                bindClassOptions.javaPath = path;
+                bindClassOptions.javaCode = code;
+
+                var ctx = {i: 0, types: new Map(), rootClass: null};
+                var result = null;
+                while ((result = bind.java.Parse.parseClass(code, ctx)) != null) {
+                    result.path = path;
+
+                    if (options.json) {
+                        if (options.parseOnly) {
+                            json.push(bind.Json.stringify(result, options.pretty));
+                        }
+                        else {
+                            // TODO
+                            /*for (entry in bind.java.Bind.bindClass(result, bindClassOptions)) {
+                                json.push(bind.Json.stringify(entry, options.pretty));
+                            }*/
+                        }
+                    }
+                    else {
+                        if (options.parseOnly) {
+                            output += '' + result;
+                        }
+                        else {
+                            // TODO
+                            /*for (entry in bind.java.Bind.bindClass(result, bindClassOptions)) {
+                                output += '-- BEGIN ' + entry.path + " --\n";
+                                output += entry.content.rtrim() + "\n\n";
+                                output += '-- END ' + entry.path + " --\n";
+                            }*/
+                        }
+                    }
+                }
+            }
+
+        } //java
 
         if (options.json) {
             if (options.export != null) {

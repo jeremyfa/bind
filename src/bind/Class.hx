@@ -68,9 +68,9 @@ enum Type {
 
     String(?orig:Dynamic);
 
-    Array(?orig:Dynamic);
+    Array(?itemType:bind.Type, ?orig:Dynamic);
 
-    Map(?orig:Dynamic);
+    Map(?itemType:bind.Type, ?orig:Dynamic);
 
     Object(?orig:Dynamic);
 

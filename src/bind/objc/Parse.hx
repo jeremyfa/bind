@@ -54,6 +54,7 @@ class Parse {
 
         var threeSlashesComment = null;
         var comment = null;
+        var after = '';
 
         var result:bind.Class = {
             name: null,
@@ -176,7 +177,7 @@ class Parse {
             else {
 
                 threeSlashesComment = null;
-                var after = code.substr(i);
+                after = code.substr(i);
 
                 if (c == '@') {
 
@@ -618,8 +619,8 @@ class Parse {
                         case Float(orig): Float({orig: orig, type: objcType, nullable: (hasNullable || orig.nullable)});
                         case Bool(orig): Bool({orig: orig, type: objcType, nullable: (hasNullable || orig.nullable)});
                         case String(orig): String({orig: orig, type: objcType, nullable: (notNonNull || orig.nullable)});
-                        case Array(orig): Array({orig: orig, type: objcType, nullable: (notNonNull || orig.nullable)});
-                        case Map(orig): Map({orig: orig, type: objcType, nullable: (notNonNull || orig.nullable)});
+                        case Array(itemType, orig): Array(itemType, {orig: orig, type: objcType, nullable: (notNonNull || orig.nullable)});
+                        case Map(itemType, orig): Map(itemType, {orig: orig, type: objcType, nullable: (notNonNull || orig.nullable)});
                         case Object(orig): Object({orig: orig, type: objcType, nullable: (notNonNull || orig.nullable)});
                         case Function(args, ret, orig): Function(args, ret, {orig: orig, type: objcType, nullable: (notNonNull || orig.nullable)});
                     }
@@ -977,7 +978,6 @@ class Parse {
         var len = input.length;
         var inSingleLineComment = false;
         var inMultilineComment = false;
-        var k;
         var c, cc;
 
         while (i < len) {

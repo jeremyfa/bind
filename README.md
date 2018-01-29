@@ -46,6 +46,6 @@ _That's all you can do for now, but there is more to come (see roadmap below)._
 * [x] Add examples of some Objective-C bindings and a sample Xcode/iOS project
 * [x] Add similar tests and examples for Swift (through Objective-C compatible dynamic frameworks)
 * [x] Add an option to write generated and support files to disk at a target directory to make them _ready to use_
-* [ ] Parse Java classes, with methods, properties and comments in java files
+* [x] Parse Java classes, with methods, properties and comments in java files
 * [ ] Generate Haxe (C++) to Java (JNI) bindings from parsed informations
 * [ ] Generate single Haxe class from Objective-C + Java (JNI) bindings having the same methods and properties

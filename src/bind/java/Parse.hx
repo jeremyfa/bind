@@ -58,7 +58,11 @@ class Parse {
             path: null,
             properties: [],
             methods: [],
-            description: null
+            description: null,
+            orig: {
+                pack: null,
+                imports: []
+            }
         };
 
         // Clean code
@@ -143,10 +147,10 @@ class Parse {
             else {
                 pc = '';
             }
-            if (pc != '' &&
+            if ((i == 0 || (pc != '' &&
                 !inSingleLineComment &&
                 !inMultilineComment &&
-                RE_WORD_SEP.match(pc) &&
+                RE_WORD_SEP.match(pc))) &&
                 RE_WORD.match(after)) {
                 word = RE_WORD.matched(0);
             }
@@ -205,7 +209,7 @@ class Parse {
             }
             else {
 
-                // Class declaration?
+                // Class
                 if (word != '' && RE_DECL.match(after)) {
                     
                     var modifiers = extractModifiers(RE_DECL.matched(1));
@@ -229,7 +233,6 @@ class Parse {
 
                         // Keep class name
                         result.name = name;
-                        result.orig = {};
                         result.description = comment != null && comment.trim() != '' ? comment : null;
                         if (modifiers.exists('static')) Reflect.setField(result.orig, 'static', true);
                         if (modifiers.exists('final')) Reflect.setField(result.orig, 'final', true);
@@ -241,6 +244,7 @@ class Parse {
                 }
                 else if (inClass) {
                     if (word != '') {
+                        // Property
                         if (RE_PROPERTY.match(after)) {
 
                             var modifiers = extractModifiers(RE_PROPERTY.matched(1));
@@ -269,6 +273,7 @@ class Parse {
                             }
 
                         }
+                        // Constructor
                         else if (RE_CONSTRUCTOR.match(after)) {
 
                             var modifiers = extractModifiers(RE_CONSTRUCTOR.matched(1));
@@ -300,6 +305,7 @@ class Parse {
                             consumeBlock();
                             
                         }
+                        // Method
                         else if (RE_METHOD.match(after)) {
 
                             var modifiers = extractModifiers(RE_METHOD.matched(1));
@@ -339,6 +345,32 @@ class Parse {
                     else {
                         i++;
                     }
+                }
+                // Package
+                else if (word == 'package') {
+                    i += word.length;
+                    var pack = '';
+                    c = cleanedCode.charAt(i);
+                    while (c != ';') {
+                        pack += c;
+                        i++;
+                        c = cleanedCode.charAt(i);
+                    }
+                    i++;
+                    if (result.orig.pack == null) result.orig.pack = pack.trim();
+                }
+                // Import
+                else if (word == 'import') {
+
+                    if (!RE_IMPORT.match(after)) {
+                        throw 'Failed to parse import';
+                    }
+                    
+                    var pack = RE_IMPORT.matched(2);
+                    result.orig.imports.push(pack);
+                    
+                    i += RE_IMPORT.matched(0).length;
+
                 }
                 else {
                     i++;

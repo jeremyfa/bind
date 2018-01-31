@@ -156,10 +156,9 @@ class Cli {
                             json.push(bind.Json.stringify(result, options.pretty));
                         }
                         else {
-                            // TODO
-                            /*for (entry in bind.java.Bind.bindClass(result, bindClassOptions)) {
+                            for (entry in bind.java.Bind.bindClass(result, bindClassOptions)) {
                                 json.push(bind.Json.stringify(entry, options.pretty));
-                            }*/
+                            }
                         }
                     }
                     else {
@@ -167,12 +166,11 @@ class Cli {
                             output += '' + result;
                         }
                         else {
-                            // TODO
-                            /*for (entry in bind.java.Bind.bindClass(result, bindClassOptions)) {
+                            for (entry in bind.java.Bind.bindClass(result, bindClassOptions)) {
                                 output += '-- BEGIN ' + entry.path + " --\n";
                                 output += entry.content.rtrim() + "\n\n";
                                 output += '-- END ' + entry.path + " --\n";
-                            }*/
+                            }
                         }
                     }
                 }
@@ -188,7 +186,9 @@ class Cli {
                 }
 
                 for (jsonItem in json) {
+
                     var fileInfo:{path:String,content:String} = Json.parse(jsonItem);
+
                     var filePath = Path.join([options.export, fileInfo.path]);
 
                     if (!FileSystem.exists(Path.directory(filePath))) {

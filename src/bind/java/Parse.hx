@@ -26,6 +26,7 @@ class Parse {
     static var RE_NOT_SEPARATOR = ~/[a-zA-Z0-9_]/g;
 
     static var RE_FUNC = ~/^Func([0-9])$/;
+    static var RE_FINAL = ~/^\s*final\s+/;
 
     public static function createContext():ParseContext {
         return { i: 0, types: new Map() };
@@ -464,31 +465,31 @@ class Parse {
             switch (baseType) {
                 case 'String':
                     type = String({
-                        javaType: javaType
+                        type: javaType
                     });
                 case 'Runnable':
-                    type = Function([], Void({ javaType: 'void' }), {
-                        javaType: javaType
+                    type = Function([], Void({ type: 'void' }), {
+                        type: javaType
                     });
                 case 'List', 'AbstractList', 'ArrayList', 'AbstractSequentialList', 'AttributeList', 'CopyOnWriteArrayList', 'LinkedList', 'Stack', 'Vector':
                     type = Array(typeParameters.length > 0 ? typeParameters[0] : null, {
-                        javaType: javaType
+                        type: javaType
                     });
                 case 'Map', 'Attributes', 'ConcurrentHashMap', 'HashMap', 'Hashtable', 'LinkedHashMap', 'TreeMap':
                     type = Map(typeParameters.length > 1 ? typeParameters[1] : null, {
-                        javaType: javaType
+                        type: javaType
                     });
                 case 'Boolean', 'boolean':
                     type = Bool({
-                        javaType: javaType
+                        type: javaType
                     });
                 case 'short', 'byte', 'int', 'long', 'char':
                     type = Int({
-                        javaType: javaType
+                        type: javaType
                     });
                 case 'float', 'double':
                     type = Float({
-                        javaType: javaType
+                        type: javaType
                     });
                 case 'Func0', 'Func1', 'Func2', 'Func3', 'Func4', 'Func5', 'Func6', 'Func7', 'Func8', 'Func9':
                     RE_FUNC.match(baseType);
@@ -502,16 +503,16 @@ class Parse {
                     }
                     var ret = typeParameters[numArgs];
                     type = Function(args, ret, {
-                        javaType: javaType
+                        type: javaType
                     });
                 case 'void', 'Void':
                     type = Void({
-                        javaType: javaType
+                        type: javaType
                     });
                 default:
                     // Unknown object
                     type = Object({
-                        javaType: javaType
+                        type: javaType
                     });
             }
 
@@ -547,8 +548,15 @@ class Parse {
         var len = inArgs.length;
         var type = null;
         var name = null;
+        var orig:Dynamic = {};
 
         while (i < len) {
+
+            var after = inArgs.substring(i);
+            if (RE_FINAL.match(after)) {
+                Reflect.setField(orig, 'final', true);
+                i += RE_FINAL.matched(0).length;
+            }
 
             var ctx = createContext();
             ctx.i = i;
@@ -562,7 +570,8 @@ class Parse {
             name = RE_ARG_END.matched(1);
             args.push({
                 type: type,
-                name: name
+                name: name,
+                orig: orig
             });
             i += RE_ARG_END.matched(0).length;
 

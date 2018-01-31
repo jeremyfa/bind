@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "*.ect": "eco",
+        "*.YAML-tmLanguage": "yaml",
+        "*.cproj": "json",
+        "*.scenes": "json",
+        "*.ceramic": "json",
+        "*.fragments": "json",
+        "*.flow": "plaintext",
+        "__split_buffer": "cpp",
+        "string": "cpp",
+        "vector": "cpp"
+    }
+}

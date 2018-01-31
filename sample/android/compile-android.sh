@@ -4,9 +4,9 @@ cd bin
 
 # Build an Android debug binary on required architectures (may take a while the first time)
 haxelib run hxcpp Build.xml -DHXCPP_CPP11 -DHXCPP_CLANG -Dandroid -DHXCPP_ARMV7 -Ddebug
-haxelib run hxcpp Build.xml -DHXCPP_CPP11 -DHXCPP_CLANG -Dandroid -DHXCPP_ARM64 -Ddebug
-haxelib run hxcpp Build.xml -DHXCPP_CPP11 -DHXCPP_CLANG -Dandroid -DHXCPP_ARMV5 -Ddebug
-haxelib run hxcpp Build.xml -DHXCPP_CPP11 -DHXCPP_CLANG -Dandroid -DHXCPP_X86 -Ddebug
+#haxelib run hxcpp Build.xml -DHXCPP_CPP11 -DHXCPP_CLANG -Dandroid -DHXCPP_ARM64 -Ddebug
+#haxelib run hxcpp Build.xml -DHXCPP_CPP11 -DHXCPP_CLANG -Dandroid -DHXCPP_ARMV5 -Ddebug
+#haxelib run hxcpp Build.xml -DHXCPP_CPP11 -DHXCPP_CLANG -Dandroid -DHXCPP_X86 -Ddebug
 
 cd ..
 

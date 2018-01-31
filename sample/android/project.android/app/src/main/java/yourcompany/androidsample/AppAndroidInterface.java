@@ -100,7 +100,7 @@ public class AppAndroidInterface {
     /**
      * Dummy method to get Haxe types converted to Java types that then get returned back as an array.
      */
-    public List<Object> testTypes (boolean aBool, int anInt , float aFloat, List<Object > aList, Map <String ,Object > aMap) {
+    public List<Object> testTypes(boolean aBool, int anInt, float aFloat, List<Object> aList, Map <String, Object> aMap) {
 
         Log.i(TAG, "Java types:");
         Log.i(TAG, "  Bool: " + aBool);

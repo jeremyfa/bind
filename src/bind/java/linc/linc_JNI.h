@@ -9,9 +9,9 @@ namespace bind {
 
         ::String JStringToHxcpp(jstring str);
 
-        int ResolveJClassRef(::String className);
+        ::cpp::Pointer<void> ResolveJClass(::String className);
 
-        inline jclass JClassFromRef(int index);
+        ::cpp::Pointer<void> ResolveStaticJMethodID(::cpp::Pointer<void> jclassRef, ::String name, ::String signature);
 
     }
 

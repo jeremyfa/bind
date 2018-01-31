@@ -8,8 +8,7 @@ namespace bind {
 
     namespace jni {
 
-        std::map<std::string, int> _jclassIndexes;
-        std::vector<jclass> _jclasses;
+        std::map<std::string, jclass> jclasses;
         JNIEnv *env;
 
         jstring HxcppToJString(::String str) {
@@ -28,38 +27,41 @@ namespace bind {
 
         } //JStringToHxcpp
 
-        int ResolveJClassRef(::String className) {
+        ::cpp::Pointer<void> ResolveJClass(::String className) {
             
             jclass globalRef;
             std::string cppClassName(className.c_str());
-            int index = -1;
+
+            if (jclasses.find(cppClassName) != jclasses.end()) {
+                return ::cpp::Pointer<void>(jclasses[cppClassName]);
+            }
                 
-            jclass tmp = env->FindClass(className);
+            jclass result = env->FindClass(className);
             
-            if (!tmp) {
-                return -1;
+            if (!result) {
+                return null();
             }
             
-            globalRef = (jclass)env->NewGlobalRef(tmp);
-            if (_jclassIndexes.find(cppClassName) == _jclassIndexes.end()) {
-                index = _jclasses.size();
-                _jclasses.push_back(globalRef);
-                _jclassIndexes[cppClassName] = index;
-            } else {
-                index = _jclassIndexes[cppClassName];
-                _jclasses[index] = globalRef;
+            globalRef = (jclass)env->NewGlobalRef(result);
+            jclasses[cppClassName] = globalRef;
+            env->DeleteLocalRef(result);
+            
+            return ::cpp::Pointer<void>(globalRef);
+            
+        } //ResolveJClass
+
+        ::cpp::Pointer<void> ResolveStaticJMethodID(::cpp::Pointer<void> jclassRef, ::String name, ::String signature) {
+            
+            jclass cls = (jclass) jclassRef.ptr;
+            jmethodID mid = env->GetStaticMethodID(cls, name.c_str(), signature.c_str());
+
+            if (!mid) {
+                return null();
             }
-            env->DeleteLocalRef(tmp);
+
+            return ::cpp::Pointer<void>(mid);
             
-            return index;
-            
-        } //ResolveJClassRef
-
-        inline jclass JClassFromRef(int index) {
-
-            return index >= 0 ? _jclasses[index] : NULL;
-
-        } //JClassFromRef
+        } //ResolveStaticJMethodID
 
     }
 

@@ -371,6 +371,7 @@ class Parse {
         var c = '';
         var before = '';
         var expectNextTypeParam = false;
+        var firstCharAfterSpace = '';
 
         while (i < len) {
 
@@ -400,7 +401,11 @@ class Parse {
                 break;
             }
             else if (c.trim() == '') {
-                if (baseType == '' || input.substring(i).ltrim().startsWith('<')) {
+                firstCharAfterSpace = input.substring(i).ltrim().charAt(0);
+                if (baseType == '' || firstCharAfterSpace == '<') {
+                    i++;
+                }
+                else if (inTypeParam && (firstCharAfterSpace == '>' || firstCharAfterSpace == ',')) {
                     i++;
                 }
                 else {

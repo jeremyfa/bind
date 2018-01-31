@@ -209,7 +209,7 @@ class Parse {
                 if (word != '' && RE_DECL.match(after)) {
                     
                     var modifiers = extractModifiers(RE_DECL.matched(1));
-                    var name = RE_DECL.matched(3);
+                    var name = RE_DECL.matched(3).trim();
 
                     var keyword = RE_DECL.matched(2);
 

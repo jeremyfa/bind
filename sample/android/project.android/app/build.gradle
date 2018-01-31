@@ -1,3 +1,5 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
 apply plugin: 'com.android.application'
 
 android {
@@ -16,6 +18,23 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+}
+
+task haxeBuild(type: Exec) {
+    workingDir '../..'
+
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        // TODO
+    }
+    else {
+        commandLine './build.sh'
+    }
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'packageDebug' || task.name == 'packageRelease') {
+        task.dependsOn haxeBuild
     }
 }
 

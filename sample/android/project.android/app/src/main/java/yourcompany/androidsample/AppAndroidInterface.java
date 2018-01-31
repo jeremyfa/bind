@@ -38,7 +38,7 @@ public class AppAndroidInterface {
     } //sharedInterface
 
     /** Constructor */
-    public SharedInterface() {
+    public AppAndroidInterface() {
 
         context = null;
 

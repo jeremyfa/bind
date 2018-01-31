@@ -4,6 +4,8 @@
 /index.js.map
 /node_modules
 .DS_Store
-/sample/ios/bin
 xcuserdata
 /sample/ios/project.ios/build
+/sample/ios/bin
+/sample/android/bin
+/sample/android/project.android/app/src/main/jniLibs

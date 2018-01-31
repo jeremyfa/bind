@@ -5,6 +5,8 @@ package bind;
  */
 public class Support {
 
+/// Function types
+
     public interface Func0<T> {
 
         T run();
@@ -64,5 +66,9 @@ public class Support {
         T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9);
 
     } //Func9
+
+/// Native init
+
+    public static native void init();
 
 } //Support

@@ -1,0 +1,7 @@
+-cp src
+-main Main
+-cpp bin
+-lib hxcpp
+-lib bind
+-D no-compilation
+-debug

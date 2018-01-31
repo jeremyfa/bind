@@ -1,0 +1,8 @@
+<xml>
+    <files id="haxe">
+        <compilerflag value="-I${LINC_JNI_PATH}linc/" />
+        <file name="${LINC_JNI_PATH}linc/linc_JNI.cpp" />
+    </files>
+    <target id="haxe">
+    </target>
+</xml>

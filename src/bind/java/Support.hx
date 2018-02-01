@@ -3,20 +3,28 @@ package bind.java;
 import cpp.Pointer;
 
 typedef JClass = Pointer<Void>;
+typedef JObject = Pointer<Void>;
 typedef JMethodID = Pointer<Void>;
 
 @:keep
 class Support {
 
+    static var jclasses:Map<String,JClass> = new Map();
+
     public inline static function resolveJClass(className:String):JClass {
 
-        return Support_Extern.resolveJClass(className);
+        if (jclasses.exists(className)) return jclasses.get(className);
+
+        var result:JClass = Support_Extern.resolveJClass(className);
+        jclasses.set(className, result);
+
+        return result;
 
     } //resolveJClass
 
-    public inline static function ResolveStaticJMethodID(jclass:JClass, name:String, signature:String):JMethodID {
+    public inline static function resolveStaticJMethodID(className:String, name:String, signature:String):JMethodID {
 
-        return Support_Extern.resolveStaticJMethodID(jclass, name, signature);
+        return Support_Extern.resolveStaticJMethodID(resolveJClass(className), name, signature);
 
     } //resolveJClass
 

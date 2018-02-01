@@ -263,6 +263,12 @@ public class Support {
 
 /// Thread safety
 
+    public static class BindResult {
+
+        public Object value = null;
+
+    } //BindResult
+
     public static void runInNativeThread(Runnable r) {
 
         if (sGLSurfaceView != null) {

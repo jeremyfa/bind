@@ -1,6 +1,6 @@
 package;
 
-import bind.java.Support;
+import android.AppAndroidInterface;
 
 class Main {
 

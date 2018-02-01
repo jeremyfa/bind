@@ -1,7 +1,6 @@
 #include "linc_JNI.h"
 
 #include <map>
-#include <vector>
 #include <string>
 
 namespace bind {
@@ -10,6 +9,12 @@ namespace bind {
 
         std::map<std::string, jclass> jclasses;
         JNIEnv *env;
+
+        JNIEnv *GetJNIEnv() {
+
+            return env;
+
+        } //GetJNIEnv
 
         jstring HxcppToJString(::String str) {
 

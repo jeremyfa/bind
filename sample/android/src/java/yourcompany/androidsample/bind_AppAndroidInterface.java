@@ -23,7 +23,7 @@ class bind_AppAndroidInterface {
     public static Object sharedInterface() {
         if (!bind.Support.isUIThread()) {
             final Object _bind_lock = new Object();
-            final bind_Result _bind_result = new bind_Result();
+            final BindResult _bind_result = new BindResult();
             bind.Support.runInUIThread(new Runnable() {
                 public void run() {
                     try {
@@ -51,7 +51,7 @@ class bind_AppAndroidInterface {
     public static AppAndroidInterface constructor() {
         if (!bind.Support.isUIThread()) {
             final Object _bind_lock = new Object();
-            final bind_Result _bind_result = new bind_Result();
+            final BindResult _bind_result = new BindResult();
             bind.Support.runInUIThread(new Runnable() {
                 public void run() {
                     try {
@@ -93,7 +93,7 @@ class bind_AppAndroidInterface {
     public static String androidVersionString(final AppAndroidInterface _instance) {
         if (!bind.Support.isUIThread()) {
             final Object _bind_lock = new Object();
-            final bind_Result _bind_result = new bind_Result();
+            final BindResult _bind_result = new BindResult();
             bind.Support.runInUIThread(new Runnable() {
                 public void run() {
                     try {
@@ -121,7 +121,7 @@ class bind_AppAndroidInterface {
     public static int androidVersionNumber(final AppAndroidInterface _instance) {
         if (!bind.Support.isUIThread()) {
             final Object _bind_lock = new Object();
-            final bind_Result _bind_result = new bind_Result();
+            final BindResult _bind_result = new BindResult();
             bind.Support.runInUIThread(new Runnable() {
                 public void run() {
                     try {
@@ -149,7 +149,7 @@ class bind_AppAndroidInterface {
     public static String testTypes(final AppAndroidInterface _instance, final int aBool, final int anInt, final float aFloat, final String aList, final String aMap) {
         if (!bind.Support.isUIThread()) {
             final Object _bind_lock = new Object();
-            final bind_Result _bind_result = new bind_Result();
+            final BindResult _bind_result = new BindResult();
             bind.Support.runInUIThread(new Runnable() {
                 public void run() {
                     try {

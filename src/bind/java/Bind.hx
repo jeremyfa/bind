@@ -54,18 +54,12 @@ class Bind {
         // Generate Java intermediate file
         generateJavaFile(ctx);
 
-        /*// Copy Objective C header file
-        copyObjcHeaderFile(ctx);
-
         // Generate Objective C++ file
-        generateObjCPPFile(ctx, true);
-        generateObjCPPFile(ctx);
-
-        // Generate Haxe file
-        generateHaxeFile(ctx);
+        generateCPPFile(ctx, true);
+        generateCPPFile(ctx);
 
         // Generate Linc (XML) file
-        generateLincFile(ctx);*/
+        generateLincFile(ctx);
 
         return ctx.files;
 
@@ -73,7 +67,7 @@ class Bind {
 
     public static function generateHaxeFile(ctx:BindContext):Void {
 
-        var reserved = ['new', 'with'];
+        var reserved = ['new', 'with', 'init'];
 
         var dir = '';
         if (ctx.pack != null && ctx.pack.trim() != '') {
@@ -81,12 +75,14 @@ class Bind {
         }
 
         var haxeName = ctx.javaClass.name;
+        var javaClassPath = ctx.javaClass.name;
 
         ctx.currentFile = { path: dir + haxeName + '.hx', content: '' };
 
         var packPrefix = '';
         if (ctx.pack != null && ctx.pack.trim() != '') {
             packPrefix = ctx.pack.trim() + '.';
+            javaClassPath = packPrefix + javaClassPath;
             writeLine('package ' + ctx.pack.trim() + ';', ctx);
         } else {
             writeLine('package;', ctx);
@@ -107,6 +103,9 @@ class Bind {
 
         writeLine('class ' + haxeName + ' {', ctx);
         ctx.indent++;
+        writeLineBreak(ctx);
+
+        writeLine('private static var _jclass = Support.resolveJClass(' + Json.stringify(javaClassPath.replace('.', '/')) + ');', ctx);
         writeLineBreak(ctx);
 
         writeLine('private var _instance:Dynamic = null;', ctx);
@@ -207,6 +206,8 @@ class Bind {
                 write('function get_' + name + '(' + args.join(', ') + '):', ctx);
             } else if (isSetter) {
                 write('function set_' + method.orig.property.name + '(' + args.join(', ') + '):', ctx);
+            } else if (isJavaConstructor) {
+                write('function init(' + args.join(', ') + '):', ctx);
             } else {
                 write('function ' + name + '(' + args.join(', ') + '):', ctx);
             }
@@ -221,10 +222,16 @@ class Bind {
             writeLineBreak(ctx);
             ctx.indent++;
 
-            writeIndent(ctx);
+            var index = 0;
+            for (arg in method.args) {
+                writeHaxeBindArgAssign(arg, index++, ctx);
+            }
+
             if (isJavaConstructor) {
+                writeIndent(ctx);
                 write('_instance = ', ctx);
             } else if (isJavaFactory) {
+                writeIndent(ctx);
                 write('var ret = new ' + haxeName + '();', ctx);
                 writeLineBreak(ctx);
                 writeIndent(ctx);
@@ -232,19 +239,27 @@ class Bind {
             } else {
                 switch (method.type) {
                     case Void(orig):
+                        writeIndent(ctx);
                     default:
-                        write('return ', ctx);
+                        writeIndent(ctx);
+                        write('var return_jni_ = ', ctx);
                 }
             }
+
             write(ctx.javaClass.name + '_Extern.' + name + '(', ctx);
             var i = 0;
+            write('_jclass, ', ctx);
+            i++;
+            write('_mid_' + method.name, ctx);
+            i++;
             if (!isJavaConstructor && method.instance) {
+                if (i > 0) write(', ', ctx);
                 write('_instance', ctx);
                 i++;
             }
             for (arg in method.args) {
                 if (i > 0) write(', ', ctx);
-                write(arg.name, ctx);
+                write(arg.name + '_jni_', ctx);
                 i++;
             }
             write(');', ctx);
@@ -256,9 +271,37 @@ class Bind {
             } else if (isSetter) {
                 writeLine('return ' + method.orig.property.name + ';', ctx);
             }
+            else {
+                switch (method.type) {
+                    case Void(orig):
+                    default:
+                        writeHaxeArgAssign({
+                            name: 'return',
+                            type: method.type
+                        }, -1, ctx);
+                        writeLine('return return_haxe_;', ctx);
+                }
+            }
 
             ctx.indent--;
             writeLine('}', ctx);
+
+            var jniSig = '(';
+            for (arg in method.args) {
+                jniSig += toJniSignatureType(arg.type, ctx);
+            }
+            jniSig += ')';
+            jniSig += toJniSignatureType(method.type, ctx);
+
+            writeIndent(ctx);
+            write('private static var _mid_' + name + ' = Support.resolveStaticJMethodID(', ctx);
+            write(Json.stringify(javaClassPath.replace('.', '/')), ctx);
+            write(', ', ctx);
+            write(Json.stringify(method.name), ctx);
+            write(', ', ctx);
+            write(Json.stringify(jniSig), ctx);
+            write(');', ctx);
+            writeLineBreak(ctx);
 
             writeLineBreak(ctx);
 
@@ -287,7 +330,7 @@ class Bind {
             var isJavaConstructor = isJavaConstructor(method, ctx);
 
             // Method return type
-            var ret = toHaxeType(method.type, ctx);
+            var ret = toHaxeBindType(method.type, ctx);
 
             // Method name
             var name = method.name;
@@ -297,14 +340,20 @@ class Bind {
 
             var args = [];
 
+            // Class argument
+            args.push('class_:JClass');
+
+            // Method argument
+            args.push('method_:JMethodID');
+
             // Instance argument
             if (method.instance && !isJavaConstructor) {
-                args.push('instance_:Dynamic');
+                args.push('instance_:JObject');
             }
 
             // Method args
             for (arg in method.args) {
-                args.push(arg.name + ':' + toHaxeType(arg.type, ctx));
+                args.push(arg.name + ':' + toHaxeBindType(arg.type, ctx));
             }
 
             // C++ method
@@ -337,6 +386,150 @@ class Bind {
         ctx.currentFile = null;
 
     } //generateHaxeFile
+
+    public static function generateLincFile(ctx:BindContext, header:Bool = false):Void {
+
+        var dir = '';
+        if (ctx.pack != null && ctx.pack.trim() != '') {
+            dir = ctx.pack.replace('.', '/') + '/';
+        }
+
+        ctx.currentFile = { path: dir + 'linc/linc_' + ctx.javaClass.name + '.xml', content: '' };
+
+        writeLine('<xml>', ctx);
+        ctx.indent++;
+        writeLine('<files id="haxe">', ctx);
+        ctx.indent++;
+        writeLine('<compilerflag value="-I$'+'{LINC_' + ctx.javaClass.name.toUpperCase() + '_PATH}linc/" />', ctx);
+        writeLine('<file name="$'+'{LINC_' + ctx.javaClass.name.toUpperCase() + '_PATH}linc/linc_' + ctx.javaClass.name + '.cpp" />', ctx);
+        ctx.indent--;
+        writeLine('</files>', ctx);
+        writeLine('<target id="haxe">', ctx);
+        writeLine('</target>', ctx);
+        ctx.indent--;
+        writeLine('</xml>', ctx);
+
+        ctx.files.push(ctx.currentFile);
+        ctx.currentFile = null;
+
+    } //generateLincFile
+
+    public static function generateCPPFile(ctx:BindContext, header:Bool = false):Void {
+
+        var dir = '';
+        if (ctx.pack != null && ctx.pack.trim() != '') {
+            dir = ctx.pack.replace('.', '/') + '/';
+        }
+
+        ctx.currentFile = { path: dir + 'linc/linc_' + ctx.javaClass.name + (header ? '.h' : '.cpp'), content: '' };
+
+        if (header) {
+            writeLine('#include <hxcpp.h>', ctx);
+            writeLine('#include <jni.h>', ctx);
+        } else {
+            writeLine('#include "linc_JNI.h"', ctx);
+            writeLine('#include "linc_' + ctx.javaClass.name + '.h"', ctx);
+        }
+
+        writeLineBreak(ctx);
+
+        var namespaceEntries = [];
+        if (ctx.namespace != null && ctx.namespace.trim() != '') {
+            namespaceEntries = ctx.namespace.split('::');
+        }
+
+        // Class comment
+        if (ctx.javaClass.description != null && ctx.javaClass.description.trim() != '') {
+            writeComment(ctx.javaClass.description, ctx);
+            if (namespaceEntries.length == 0) {
+                writeLineBreak(ctx);
+            }
+        }
+
+        // Open namespaces
+        for (name in namespaceEntries) {
+            writeLine('namespace $name {', ctx);
+            ctx.indent++;
+            writeLineBreak(ctx);
+        }
+
+        // Add methods
+        for (method in ctx.javaClass.methods) {
+
+            // Constructor?
+            var isJavaConstructor = isJavaConstructor(method, ctx);
+
+            // Method return type
+            var ret = toHxcppType(method.type, ctx);
+
+            // Method name
+            var name = method.name;
+
+            var args = [];
+
+            // Class handle
+            args.push('::cpp::Pointer<void> class_');
+
+            // Method handle
+            args.push('::cpp::Pointer<void> method_');
+
+            // Instance handle
+            if (method.instance && !isJavaConstructor) {
+                args.push('::cpp::Pointer<void> instance_');
+            }
+
+            // Method args
+            for (arg in method.args) {
+                args.push(toHxcppType(arg.type, ctx) + ' ' + arg.name);
+            }
+
+            // Method comment
+            if (method.description != null && method.description.trim() != '') {
+                writeComment(method.description, ctx);
+            }
+
+            // Whole method
+            writeIndent(ctx);
+            write(ret + ' ' + ctx.javaClass.name + '_' + name + '(' + args.join(', ') + ')', ctx);
+            if (header) {
+                write(';', ctx);
+            }
+            else {
+                write(' {', ctx);
+                writeLineBreak(ctx);
+                ctx.indent++;
+
+                // Method body
+                //
+                // Convert args to JNI
+                var i = 0;
+                for (arg in method.args) {
+                    writeJniArgAssign(arg, i, ctx);
+                    i++;
+                }
+                // Call jni
+                writeJniCall(method, ctx);
+
+                ctx.indent--;
+                writeIndent(ctx);
+                write('}', ctx);
+            }
+            writeLineBreak(ctx);
+            writeLineBreak(ctx);
+
+        }
+
+        // Close namespaces
+        for (name in namespaceEntries) {
+            ctx.indent--;
+            writeLine('}', ctx);
+            writeLineBreak(ctx);
+        }
+
+        ctx.files.push(ctx.currentFile);
+        ctx.currentFile = null;
+
+    } //generateCPPFile
 
     public static function generateJavaFile(ctx:BindContext):Void {
 
@@ -441,7 +634,7 @@ class Bind {
             ctx.indent++;
             if (hasReturn) {
                 writeLine('final Object _bind_lock = new Object();', ctx);
-                writeLine('final bind_Result _bind_result = new bind_Result();', ctx);
+                writeLine('final BindResult _bind_result = new BindResult();', ctx);
             }
             writeLine('bind.Support.runInUIThread(new Runnable() {', ctx);
             ctx.indent++;
@@ -539,7 +732,7 @@ class Bind {
             case String(orig): 'String';
             case Array(itemType, orig): 'Array<Dynamic>';
             case Map(itemType, orig): 'Dynamic';
-            case Object(orig): 'Dynamic';
+            case Object(orig): 'JObject';
             case Function(args, ret, orig): toHaxeFunctionType(type, ctx);
         }
 
@@ -577,6 +770,80 @@ class Bind {
         return result;
 
     } //toHaxeFunctionType
+
+    static function toHaxeBindType(type:bind.Class.Type, ctx:BindContext):String {
+
+        var result = switch (type) {
+            case Void(orig): 'Void';
+            case Int(orig): 'Int';
+            case Float(orig): 'Float';
+            case Bool(orig): 'Int';
+            case String(orig): 'String';
+            case Array(itemType, orig): 'String';
+            case Map(itemType, orig): 'String';
+            case Object(orig): 'Dynamic';
+            case Function(args, ret, orig): 'Dynamic';
+        }
+
+        return result;
+
+    } //toHaxeBindType
+
+/// Haxe -> HXCPP
+
+    static function toHxcppType(type:bind.Class.Type, ctx:BindContext):String {
+
+        var result = switch (type) {
+            case Void(orig): 'void';
+            case Int(orig): 'int';
+            case Float(orig): 'double';
+            case Bool(orig): 'int';
+            case String(orig): '::String';
+            case Array(itemType, orig): '::String';
+            case Map(itemType, orig): '::String';
+            case Object(orig): '::Dynamic';
+            case Function(args, ret, orig): '::Dynamic';
+        }
+
+        return result;
+
+    } //toHxcppType
+
+    static function toJniType(type:bind.Class.Type, ctx:BindContext):String {
+
+        var result = switch (type) {
+            case Void(orig): 'void';
+            case Int(orig): 'jint';
+            case Float(orig): 'jfloat';
+            case Bool(orig): 'jint';
+            case String(orig): 'jstring';
+            case Array(itemType, orig): 'jstring';
+            case Map(itemType, orig): 'jstring';
+            case Object(orig): 'jobject';
+            case Function(args, ret, orig): 'jobject';
+        }
+
+        return result;
+
+    } //toJniType
+
+    static function toJniSignatureType(type:bind.Class.Type, ctx:BindContext):String {
+
+        var result = switch (type) {
+            case Void(orig): 'V';
+            case Int(orig): 'I';
+            case Float(orig): 'F';
+            case Bool(orig): 'I';
+            case String(orig): 'Ljava.lang.String;';
+            case Array(itemType, orig): 'Ljava.lang.String;';
+            case Map(itemType, orig): 'Ljava.lang.String;';
+            case Object(orig): 'Ljava.lang.Object;';
+            case Function(args, ret, orig): 'Ljava.lang.Object;';
+        }
+
+        return result;
+
+    } //toJniType
 
 /// HXCPP -> Java
 
@@ -754,6 +1021,267 @@ class Bind {
 
     } //writeJavaBindArgAssign
 
+    static function writeJniArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+
+        writeIndent(ctx);
+
+        var type = toJniType(arg.type, ctx);
+        var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_jni_';
+        var value = (arg.name != null ? arg.name : 'arg' + (index + 1)) + (index == -1 ? '_hxcpp_' : '');
+
+        switch (arg.type) {
+
+            case Function(args, ret, orig):
+                write('$type $name = NULL; // Not implemented yet', ctx);
+                writeLineBreak(ctx);
+
+            case String(orig):
+                write('$type $name = ::bind::jni::HxcppToJString($value);', ctx);
+                writeLineBreak(ctx);
+
+            case Bool(orig):
+                write('$type $name = ($type) $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Int(orig):
+                write('$type $name = ($type) $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Float(orig):
+                write('$type $name = ($type) $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Array(itemType, orig):
+                write('$type $name = ::bind::jni::HxcppToJString($value);', ctx);
+                writeLineBreak(ctx);
+
+            case Map(itemType, orig):
+                write('$type $name = ::bind::jni::HxcppToJString($value);', ctx);
+                writeLineBreak(ctx);
+
+            case Object(orig):
+                write('$type $name = NULL; // Not implemented yet', ctx);
+                writeLineBreak(ctx);
+
+            default:
+                write('$type $name = NULL; // Not implemented yet', ctx);
+                writeLineBreak(ctx);
+        }
+
+    } //writeJniArgAssign
+
+    static function writeJniCall(method:bind.Class.Method, ctx:BindContext):Void {
+
+        var hasReturn = false;
+        var isJavaConstructor = isJavaConstructor(method, ctx);
+
+        writeIndent(ctx);
+        switch (method.type) {
+            case Void(orig):
+            default:
+                hasReturn = true;
+        }
+        if (hasReturn) {
+            var jniType = toJniType(method.type, ctx);
+            write(jniType + ' return_jni_ = ', ctx);
+            if (jniType == 'jstring') {
+                write('(jstring) ', ctx);
+            }
+        }
+
+        write('::bind::jni::GetJNIEnv()->CallStatic', ctx);
+
+        switch (method.type) {
+
+            case Function(args, ret, orig):
+                write('Object', ctx);
+            case String(orig):
+                write('Object', ctx);
+            case Bool(orig):
+                write('Int', ctx);
+            case Int(orig):
+                write('Int', ctx);
+            case Float(orig):
+                write('Float', ctx);
+            case Array(itemType, orig):
+                write('Object', ctx);
+            case Map(itemType, orig):
+                write('Object', ctx);
+            case Object(orig):
+                write('Object', ctx);
+            default:
+                write('Object', ctx);
+        }
+
+        write('Method((jclass) class_.ptr, (jmethodID) method_.ptr', ctx);
+        if (method.instance && !isJavaConstructor) {
+            write(', (jobject) instance_.ptr', ctx);
+        }
+        
+        for (arg in method.args) {
+            write(', ' + arg.name + '_jni_', ctx);
+        }
+        write(');', ctx);
+        writeLineBreak(ctx);
+        if (hasReturn) {
+            writeHxcppArgAssign({
+                name: 'return',
+                type: method.type
+            }, -1, ctx);
+            writeLine('return return_hxcpp_;', ctx);
+        }
+
+    } //writeJniCall
+
+    static function writeHaxeArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+
+        var type = toHaxeType(arg.type, ctx);
+        var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_haxe_';
+        var value = (arg.name != null ? arg.name : 'arg' + (index + 1)) + (index == -1 ? '_jni_' : '');
+
+        switch (arg.type) {
+
+            case Function(args, ret, orig):
+                writeLine('var $name:Dynamic = null; // Not implemented yet', ctx);
+
+            case String(orig):
+                writeIndent(ctx);
+                write('var $name = $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Int(orig):
+                writeIndent(ctx);
+                write('var $name = $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Float(orig):
+                writeIndent(ctx);
+                write('var $name = $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Bool(orig):
+                writeIndent(ctx);
+                write('var $name = $value ? 1 : 0;', ctx);
+                writeLineBreak(ctx);
+
+            case Array(itemType, orig):
+                writeIndent(ctx);
+                write('var $name:$type = haxe.Json.parse($value);', ctx);
+                writeLineBreak(ctx);
+
+            case Map(itemType, orig):
+                writeIndent(ctx);
+                write('var $name:$type = haxe.Json.parse($value);', ctx);
+                writeLineBreak(ctx);
+
+            default:
+                writeIndent(ctx);
+                write('var $name:$type = $value;', ctx);
+                writeLineBreak(ctx);
+        }
+
+    } //writeHaxeArgAssign
+
+    static function writeHaxeBindArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+
+        var type = toHaxeBindType(arg.type, ctx);
+        var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_jni_';
+        var value = (arg.name != null ? arg.name : 'arg' + (index + 1)) + (index == -1 ? '_haxe_' : '');
+
+        switch (arg.type) {
+
+            case Function(args, ret, orig):
+                writeLine('var $name:Dynamic = null; // Not implemented yet', ctx);
+
+            case String(orig):
+                writeIndent(ctx);
+                write('var $name = $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Int(orig):
+                writeIndent(ctx);
+                write('var $name = $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Float(orig):
+                writeIndent(ctx);
+                write('var $name = $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Bool(orig):
+                writeIndent(ctx);
+                write('var $name = $value ? 1 : 0;', ctx);
+                writeLineBreak(ctx);
+
+            case Array(itemType, orig):
+                writeIndent(ctx);
+                write('var $name = haxe.Json.stringify($value);', ctx);
+                writeLineBreak(ctx);
+
+            case Map(itemType, orig):
+                writeIndent(ctx);
+                write('var $name = haxe.Json.stringify($value);', ctx);
+                writeLineBreak(ctx);
+
+            default:
+                writeIndent(ctx);
+                write('var $name:$type = $value;', ctx);
+                writeLineBreak(ctx);
+        }
+
+    } //writeHaxeBindArgAssign
+
+    static function writeHxcppArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+
+        var type = toHxcppType(arg.type, ctx);
+        var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_hxcpp_';
+        var value = (arg.name != null ? arg.name : 'arg' + (index + 1)) + (index == -1 ? '_jni_' : '');
+
+        switch (arg.type) {
+
+            case Function(args, ret, orig):
+
+                // Keep track of java instance on haxe side
+                writeLine('::Dynamic closure_' + name + ' = null(); // Not implemented yet', ctx);
+
+            case String(orig):
+                writeIndent(ctx);
+                write('$type $name = ::bind::jni::JStringToHxcpp($value);', ctx);
+                writeLineBreak(ctx);
+
+            case Int(orig):
+                writeIndent(ctx);
+                write('$type $name = ($type) $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Float(orig):
+                writeIndent(ctx);
+                write('$type $name = ($type) $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Bool(orig):
+                writeIndent(ctx);
+                write('$type $name = ($type) $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Array(orig):
+                writeIndent(ctx);
+                write('$type $name = ::bind::jni::JStringToHxcpp($value);', ctx);
+                writeLineBreak(ctx);
+
+            case Map(orig):
+                writeIndent(ctx);
+                write('$type $name = ::bind::jni::JStringToHxcpp($value);', ctx);
+                writeLineBreak(ctx);
+
+            default:
+                writeIndent(ctx);
+                write('$type $name = null(); // Not implemented yet', ctx);
+                writeLineBreak(ctx);
+        }
+
+    } //writeHxcppArgAssign
+
     static function writeJavaCall(method:bind.Class.Method, ctx:BindContext):Void {
 
         var hasReturn = false;
@@ -768,7 +1296,7 @@ class Bind {
         if (hasReturn) {
             switch (method.type) {
                 case Function(args, ret, orig):
-                    write('id return_java_ = ', ctx);
+                    write('Object return_java_ = ', ctx);
                 default:
                     var javaType = toJavaType(method.type, ctx);
                     write(javaType + ' return_java_ = ', ctx);

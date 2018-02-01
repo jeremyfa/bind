@@ -1,0 +1,8 @@
+<xml>
+    <files id="haxe">
+        <compilerflag value="-I${LINC_APPANDROIDINTERFACE_PATH}linc/" />
+        <file name="${LINC_APPANDROIDINTERFACE_PATH}linc/linc_AppAndroidInterface.cpp" />
+    </files>
+    <target id="haxe">
+    </target>
+</xml>

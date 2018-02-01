@@ -662,7 +662,7 @@ class Bind {
 
         return orig.type;
 
-    } //toObjcArg
+    } //toObjcType
 
 /// Write utils (specific)
 

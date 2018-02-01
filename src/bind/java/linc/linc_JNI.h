@@ -5,6 +5,8 @@ namespace bind {
 
     namespace jni {
 
+        JNIEnv *GetJNIEnv();
+
         jstring HxcppToJString(::String str);
 
         ::String JStringToHxcpp(jstring str);

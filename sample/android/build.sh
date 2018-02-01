@@ -5,7 +5,7 @@ cd "${0%/*}"
 export PATH="/usr/local/bin:$PATH"
 
 # Bind Java code to Haxe
-#./bind-java.sh
+./bind-java.sh
 
 # Build Haxe code
 haxe build.hxml

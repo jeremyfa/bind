@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Java support file for bind.
@@ -267,6 +269,8 @@ public class Support {
 
         public Object value = null;
 
+        public int status = 0;
+
     } //BindResult
 
     public static void runInNativeThread(Runnable r) {
@@ -290,7 +294,7 @@ public class Support {
     public static void runInUIThread(Runnable r) {
 
         if (!isUIThread()) {
-            sUIThreadHandler.post(r);
+            getUIThreadHandler().post(r);
         }
         else {
             r.run();
@@ -334,7 +338,7 @@ public class Support {
     }
 
     public static boolean isUIThread() {
-        return Looper.getMainLooper().getThread() != Thread.currentThread();
+        return Looper.getMainLooper().getThread() == Thread.currentThread();
     }
 
 } //Support

@@ -15,9 +15,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Init bindings
-        bind.Support.init();
-
         // Start Haxe
         HXCPP.run("Main");
     }

@@ -20,29 +20,38 @@ class bind_AppAndroidInterface {
     }
 
     /** Get shared instance */
-    public static Object sharedInterface() {
+    public static AppAndroidInterface sharedInterface() {
         if (!bind.Support.isUIThread()) {
-            final Object _bind_lock = new Object();
             final BindResult _bind_result = new BindResult();
-            bind.Support.runInUIThread(new Runnable() {
+            bind.Support.getUIThreadHandler().post(new Runnable() {
                 public void run() {
                     try {
                         _bind_result.value = bind_AppAndroidInterface.sharedInterface();
                     } catch (Throwable e) {
                         e.printStackTrace();
                     }
-                    _bind_lock.notify();
+                    synchronized(_bind_result) {
+                        if (_bind_result.status == 1) {
+                            _bind_result.status = 2;
+                            _bind_result.notify();
+                        }
+                    }
                 }
             });
-            try {
-                _bind_lock.wait();
-            } catch (Throwable e) {
-                e.printStackTrace();
+            synchronized(_bind_result) {
+                if (_bind_result.status == 0) {
+                    _bind_result.status = 1;
+                    try {
+                        _bind_result.wait();
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                    }
+                }
             }
-            return (Object) _bind_result.value;
+            return (AppAndroidInterface) _bind_result.value;
         } else {
             AppAndroidInterface return_java_ = AppAndroidInterface.sharedInterface();
-            Object return_jni_ = (Object) return_java_;
+            AppAndroidInterface return_jni_ = (AppAndroidInterface) return_java_;
             return return_jni_;
         }
     }
@@ -50,22 +59,31 @@ class bind_AppAndroidInterface {
     /** Constructor */
     public static AppAndroidInterface constructor() {
         if (!bind.Support.isUIThread()) {
-            final Object _bind_lock = new Object();
             final BindResult _bind_result = new BindResult();
-            bind.Support.runInUIThread(new Runnable() {
+            bind.Support.getUIThreadHandler().post(new Runnable() {
                 public void run() {
                     try {
                         _bind_result.value = bind_AppAndroidInterface.constructor();
                     } catch (Throwable e) {
                         e.printStackTrace();
                     }
-                    _bind_lock.notify();
+                    synchronized(_bind_result) {
+                        if (_bind_result.status == 1) {
+                            _bind_result.status = 2;
+                            _bind_result.notify();
+                        }
+                    }
                 }
             });
-            try {
-                _bind_lock.wait();
-            } catch (Throwable e) {
-                e.printStackTrace();
+            synchronized(_bind_result) {
+                if (_bind_result.status == 0) {
+                    _bind_result.status = 1;
+                    try {
+                        _bind_result.wait();
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                    }
+                }
             }
             return (AppAndroidInterface) _bind_result.value;
         } else {
@@ -77,7 +95,7 @@ class bind_AppAndroidInterface {
     /** Say hello to `name` with a native Android dialog. Add a last name if any is known. */
     public static void hello(final AppAndroidInterface _instance, final String name, final Object done) {
         if (!bind.Support.isUIThread()) {
-            bind.Support.runInUIThread(new Runnable() {
+            bind.Support.getUIThreadHandler().post(new Runnable() {
                 public void run() {
                     bind_AppAndroidInterface.hello(_instance, name, done);
                 }
@@ -92,22 +110,31 @@ class bind_AppAndroidInterface {
     /** Get Android version string */
     public static String androidVersionString(final AppAndroidInterface _instance) {
         if (!bind.Support.isUIThread()) {
-            final Object _bind_lock = new Object();
             final BindResult _bind_result = new BindResult();
-            bind.Support.runInUIThread(new Runnable() {
+            bind.Support.getUIThreadHandler().post(new Runnable() {
                 public void run() {
                     try {
                         _bind_result.value = bind_AppAndroidInterface.androidVersionString(_instance);
                     } catch (Throwable e) {
                         e.printStackTrace();
                     }
-                    _bind_lock.notify();
+                    synchronized(_bind_result) {
+                        if (_bind_result.status == 1) {
+                            _bind_result.status = 2;
+                            _bind_result.notify();
+                        }
+                    }
                 }
             });
-            try {
-                _bind_lock.wait();
-            } catch (Throwable e) {
-                e.printStackTrace();
+            synchronized(_bind_result) {
+                if (_bind_result.status == 0) {
+                    _bind_result.status = 1;
+                    try {
+                        _bind_result.wait();
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                    }
+                }
             }
             return (String) _bind_result.value;
         } else {
@@ -120,22 +147,31 @@ class bind_AppAndroidInterface {
     /** Get Android version number */
     public static int androidVersionNumber(final AppAndroidInterface _instance) {
         if (!bind.Support.isUIThread()) {
-            final Object _bind_lock = new Object();
             final BindResult _bind_result = new BindResult();
-            bind.Support.runInUIThread(new Runnable() {
+            bind.Support.getUIThreadHandler().post(new Runnable() {
                 public void run() {
                     try {
                         _bind_result.value = bind_AppAndroidInterface.androidVersionNumber(_instance);
                     } catch (Throwable e) {
                         e.printStackTrace();
                     }
-                    _bind_lock.notify();
+                    synchronized(_bind_result) {
+                        if (_bind_result.status == 1) {
+                            _bind_result.status = 2;
+                            _bind_result.notify();
+                        }
+                    }
                 }
             });
-            try {
-                _bind_lock.wait();
-            } catch (Throwable e) {
-                e.printStackTrace();
+            synchronized(_bind_result) {
+                if (_bind_result.status == 0) {
+                    _bind_result.status = 1;
+                    try {
+                        _bind_result.wait();
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                    }
+                }
             }
             return (int) _bind_result.value;
         } else {
@@ -148,22 +184,31 @@ class bind_AppAndroidInterface {
     /** Dummy method to get Haxe types converted to Java types that then get returned back as an array. */
     public static String testTypes(final AppAndroidInterface _instance, final int aBool, final int anInt, final float aFloat, final String aList, final String aMap) {
         if (!bind.Support.isUIThread()) {
-            final Object _bind_lock = new Object();
             final BindResult _bind_result = new BindResult();
-            bind.Support.runInUIThread(new Runnable() {
+            bind.Support.getUIThreadHandler().post(new Runnable() {
                 public void run() {
                     try {
                         _bind_result.value = bind_AppAndroidInterface.testTypes(_instance, aBool, anInt, aFloat, aList, aMap);
                     } catch (Throwable e) {
                         e.printStackTrace();
                     }
-                    _bind_lock.notify();
+                    synchronized(_bind_result) {
+                        if (_bind_result.status == 1) {
+                            _bind_result.status = 2;
+                            _bind_result.notify();
+                        }
+                    }
                 }
             });
-            try {
-                _bind_lock.wait();
-            } catch (Throwable e) {
-                e.printStackTrace();
+            synchronized(_bind_result) {
+                if (_bind_result.status == 0) {
+                    _bind_result.status = 1;
+                    try {
+                        _bind_result.wait();
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                    }
+                }
             }
             return (String) _bind_result.value;
         } else {

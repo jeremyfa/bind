@@ -12,8 +12,13 @@ public class HXCPP {
 
     public static void run(String inClassName) {
 
+        // Load binary
         System.loadLibrary(inClassName);
 
+        // Init bindings
+        bind.Support.init();
+
+        // Start haxe
         if (!sInit) {
             sInit = true;
             main();

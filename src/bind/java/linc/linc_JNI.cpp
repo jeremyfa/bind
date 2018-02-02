@@ -41,7 +41,7 @@ namespace bind {
                 return ::cpp::Pointer<void>(jclasses[cppClassName]);
             }
                 
-            jclass result = env->FindClass(className);
+            jclass result = env->FindClass(className.c_str());
             
             if (!result) {
                 return null();

@@ -75,14 +75,19 @@ class Bind {
         }
 
         var haxeName = ctx.javaClass.name;
-        var javaClassPath = ctx.javaClass.name;
+        var javaBindClassPath = 'bind_' + ctx.javaClass.name;
+        var javaClassPath = '' + ctx.javaClass.name;
+        var javaPack = '' + ctx.javaClass.orig.pack;
+        if (javaPack != '') {
+            javaBindClassPath = javaPack + '.' + javaBindClassPath;
+            javaClassPath = javaPack + '.' + javaClassPath;
+        }
 
         ctx.currentFile = { path: dir + haxeName + '.hx', content: '' };
 
         var packPrefix = '';
         if (ctx.pack != null && ctx.pack.trim() != '') {
             packPrefix = ctx.pack.trim() + '.';
-            javaClassPath = packPrefix + javaClassPath;
             writeLine('package ' + ctx.pack.trim() + ';', ctx);
         } else {
             writeLine('package;', ctx);
@@ -105,7 +110,7 @@ class Bind {
         ctx.indent++;
         writeLineBreak(ctx);
 
-        writeLine('private static var _jclass = Support.resolveJClass(' + Json.stringify(javaClassPath.replace('.', '/')) + ');', ctx);
+        writeLine('private static var _jclass = Support.resolveJClass(' + Json.stringify(javaBindClassPath.replace('.', '/')) + ');', ctx);
         writeLineBreak(ctx);
 
         writeLine('private var _instance:Dynamic = null;', ctx);
@@ -287,6 +292,9 @@ class Bind {
             writeLine('}', ctx);
 
             var jniSig = '(';
+            if (method.instance && !isJavaConstructor) {
+                jniSig += 'L' + javaClassPath.replace('.', '/') + ';';
+            }
             for (arg in method.args) {
                 jniSig += toJniSignatureType(arg.type, ctx);
             }
@@ -295,7 +303,7 @@ class Bind {
 
             writeIndent(ctx);
             write('private static var _mid_' + name + ' = Support.resolveStaticJMethodID(', ctx);
-            write(Json.stringify(javaClassPath.replace('.', '/')), ctx);
+            write(Json.stringify(javaBindClassPath.replace('.', '/')), ctx);
             write(', ', ctx);
             write(Json.stringify(method.name), ctx);
             write(', ', ctx);
@@ -633,10 +641,9 @@ class Bind {
             writeLine('if (!bind.Support.isUIThread()) {', ctx);
             ctx.indent++;
             if (hasReturn) {
-                writeLine('final Object _bind_lock = new Object();', ctx);
                 writeLine('final BindResult _bind_result = new BindResult();', ctx);
             }
-            writeLine('bind.Support.runInUIThread(new Runnable() {', ctx);
+            writeLine('bind.Support.getUIThreadHandler().post(new Runnable() {', ctx);
             ctx.indent++;
             writeLine('public void run() {', ctx);
             ctx.indent++;
@@ -669,7 +676,16 @@ class Bind {
                 writeLine('e.printStackTrace();', ctx);
                 ctx.indent--;
                 writeLine('}', ctx);
-                writeLine('_bind_lock.notify();', ctx);
+                writeLine('synchronized(_bind_result) {', ctx);
+                ctx.indent++;
+                writeLine('if (_bind_result.status == 1) {', ctx);
+                ctx.indent++;
+                writeLine('_bind_result.status = 2;', ctx);
+                writeLine('_bind_result.notify();', ctx);
+                ctx.indent--;
+                writeLine('}', ctx);
+                ctx.indent--;
+                writeLine('}', ctx);
             }
 
             ctx.indent--;
@@ -678,13 +694,22 @@ class Bind {
             writeLine('});', ctx);
 
             if (hasReturn) {
+                writeLine('synchronized(_bind_result) {', ctx);
+                ctx.indent++;
+                writeLine('if (_bind_result.status == 0) {', ctx);
+                ctx.indent++;
+                writeLine('_bind_result.status = 1;', ctx);
                 writeLine('try {', ctx);
                 ctx.indent++;
-                writeLine('_bind_lock.wait();', ctx);
+                writeLine('_bind_result.wait();', ctx);
                 ctx.indent--;
                 writeLine('} catch (Throwable e) {', ctx);
                 ctx.indent++;
                 writeLine('e.printStackTrace();', ctx);
+                ctx.indent--;
+                writeLine('}', ctx);
+                ctx.indent--;
+                writeLine('}', ctx);
                 ctx.indent--;
                 writeLine('}', ctx);
                 writeLine('return (' + ret + ') _bind_result.value;', ctx);
@@ -829,16 +854,21 @@ class Bind {
 
     static function toJniSignatureType(type:bind.Class.Type, ctx:BindContext):String {
 
+        var javaType = toJavaType(type, ctx);
+        if (javaType == ctx.javaClass.name || javaType == ctx.javaClass.orig.pack + '.' + ctx.javaClass.name) {
+            return 'L' + (ctx.javaClass.orig.pack + '.').replace('.', '/') + ctx.javaClass.name + ';';
+        }
+
         var result = switch (type) {
             case Void(orig): 'V';
             case Int(orig): 'I';
             case Float(orig): 'F';
             case Bool(orig): 'I';
-            case String(orig): 'Ljava.lang.String;';
-            case Array(itemType, orig): 'Ljava.lang.String;';
-            case Map(itemType, orig): 'Ljava.lang.String;';
-            case Object(orig): 'Ljava.lang.Object;';
-            case Function(args, ret, orig): 'Ljava.lang.Object;';
+            case String(orig): 'Ljava/lang/String;';
+            case Array(itemType, orig): 'Ljava/lang/String;';
+            case Map(itemType, orig): 'Ljava/lang/String;';
+            case Object(orig): 'Ljava/lang/Object;';
+            case Function(args, ret, orig): 'Ljava/lang/Object;';
         }
 
         return result;
@@ -872,6 +902,11 @@ class Bind {
     } //toJavaType
 
     static function toJavaBindType(type:bind.Class.Type, ctx:BindContext):String {
+
+        var javaType = toJavaType(type, ctx);
+        if (javaType == ctx.javaClass.name || javaType == ctx.javaClass.orig.pack + '.' + ctx.javaClass.name) {
+            return javaType;
+        }
 
         var result = switch (type) {
             case Void(orig): 'void';
@@ -1109,6 +1144,8 @@ class Bind {
                 write('Object', ctx);
             case Object(orig):
                 write('Object', ctx);
+            case Void(orig):
+                write('Void', ctx);
             default:
                 write('Object', ctx);
         }

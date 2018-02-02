@@ -6,7 +6,7 @@ import bind.java.Support;
 /** Java/Android interface */
 class AppAndroidInterface {
 
-    private static var _jclass = Support.resolveJClass("android/AppAndroidInterface");
+    private static var _jclass = Support.resolveJClass("yourcompany/androidsample/bind_AppAndroidInterface");
 
     private var _instance:Dynamic = null;
 
@@ -18,14 +18,14 @@ class AppAndroidInterface {
         ret._instance = AppAndroidInterface_Extern.sharedInterface(_jclass, _mid_sharedInterface);
         return ret;
     }
-    private static var _mid_sharedInterface = Support.resolveStaticJMethodID("android/AppAndroidInterface", "sharedInterface", "()Ljava.lang.Object;");
+    private static var _mid_sharedInterface = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "sharedInterface", "()Lyourcompany/androidsample/AppAndroidInterface;");
 
     /** Constructor */
     public function init():AppAndroidInterface {
         _instance = AppAndroidInterface_Extern.constructor(_jclass, _mid_constructor);
         return this;
     }
-    private static var _mid_constructor = Support.resolveStaticJMethodID("android/AppAndroidInterface", "constructor", "()Ljava.lang.Object;");
+    private static var _mid_constructor = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "constructor", "()Lyourcompany/androidsample/AppAndroidInterface;");
 
     /** Say hello to `name` with a native Android dialog. Add a last name if any is known. */
     public function hello(name:String, done:Void->Void):Void {
@@ -33,7 +33,7 @@ class AppAndroidInterface {
         var done_jni_:Dynamic = null; // Not implemented yet
         AppAndroidInterface_Extern.hello(_jclass, _mid_hello, _instance, name_jni_, done_jni_);
     }
-    private static var _mid_hello = Support.resolveStaticJMethodID("android/AppAndroidInterface", "hello", "(Ljava.lang.String;Ljava.lang.Object;)V");
+    private static var _mid_hello = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "hello", "(Lyourcompany/androidsample/AppAndroidInterface;Ljava/lang/String;Ljava/lang/Object;)V");
 
     /** Get Android version string */
     public function androidVersionString():String {
@@ -41,7 +41,7 @@ class AppAndroidInterface {
         var return_haxe_ = return_jni_;
         return return_haxe_;
     }
-    private static var _mid_androidVersionString = Support.resolveStaticJMethodID("android/AppAndroidInterface", "androidVersionString", "()Ljava.lang.String;");
+    private static var _mid_androidVersionString = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "androidVersionString", "(Lyourcompany/androidsample/AppAndroidInterface;)Ljava/lang/String;");
 
     /** Get Android version number */
     public function androidVersionNumber():Int {
@@ -49,7 +49,7 @@ class AppAndroidInterface {
         var return_haxe_ = return_jni_;
         return return_haxe_;
     }
-    private static var _mid_androidVersionNumber = Support.resolveStaticJMethodID("android/AppAndroidInterface", "androidVersionNumber", "()I");
+    private static var _mid_androidVersionNumber = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "androidVersionNumber", "(Lyourcompany/androidsample/AppAndroidInterface;)I");
 
     /** Dummy method to get Haxe types converted to Java types that then get returned back as an array. */
     public function testTypes(aBool:Bool, anInt:Int, aFloat:Float, aList:Array<Dynamic>, aMap:Dynamic):Array<Dynamic> {
@@ -62,7 +62,7 @@ class AppAndroidInterface {
         var return_haxe_:Array<Dynamic> = haxe.Json.parse(return_jni_);
         return return_haxe_;
     }
-    private static var _mid_testTypes = Support.resolveStaticJMethodID("android/AppAndroidInterface", "testTypes", "(IIFLjava.lang.String;Ljava.lang.String;)Ljava.lang.String;");
+    private static var _mid_testTypes = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "testTypes", "(Lyourcompany/androidsample/AppAndroidInterface;IIFLjava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
 
 }
 

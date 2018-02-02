@@ -22,7 +22,7 @@ namespace android {
     void AppAndroidInterface_hello(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_, ::String name, ::Dynamic done) {
         jstring name_jni_ = ::bind::jni::HxcppToJString(name);
         jobject done_jni_ = NULL; // Not implemented yet
-        ::bind::jni::GetJNIEnv()->CallStaticObjectMethod((jclass) class_.ptr, (jmethodID) method_.ptr, (jobject) instance_.ptr, name_jni_, done_jni_);
+        ::bind::jni::GetJNIEnv()->CallStaticVoidMethod((jclass) class_.ptr, (jmethodID) method_.ptr, (jobject) instance_.ptr, name_jni_, done_jni_);
     }
 
     /** Get Android version string */

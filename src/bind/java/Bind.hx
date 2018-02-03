@@ -13,6 +13,7 @@ typedef BindContext = {
     var currentFile:bind.File;
     var javaPath:String;
     var javaCode:String;
+    var nativeCallbacks:Map<String,bind.Class.Type>;
 }
 
 class Bind {
@@ -27,7 +28,8 @@ class Bind {
             pack: null,
             currentFile: null,
             javaPath: null,
-            javaCode: null
+            javaCode: null,
+            nativeCallbacks: new Map()
         };
 
     } //createContext
@@ -96,8 +98,9 @@ class Bind {
         writeLine('// This file was generated with bind library', ctx);
         writeLineBreak(ctx);
 
-        // Objc support
+        // Support support
         writeLine('import bind.java.Support;', ctx);
+        writeLine('import cpp.Pointer;', ctx);
 
         writeLineBreak(ctx);
 
@@ -113,7 +116,7 @@ class Bind {
         writeLine('private static var _jclass = Support.resolveJClass(' + Json.stringify(javaBindClassPath.replace('.', '/')) + ');', ctx);
         writeLineBreak(ctx);
 
-        writeLine('private var _instance:Dynamic = null;', ctx);
+        writeLine('private var _instance:JObject = null;', ctx);
         writeLineBreak(ctx);
 
         writeLine('public function new() {}', ctx);
@@ -234,13 +237,13 @@ class Bind {
 
             if (isJavaConstructor) {
                 writeIndent(ctx);
-                write('_instance = ', ctx);
+                write('_instance = new JObject(', ctx);
             } else if (isJavaFactory) {
                 writeIndent(ctx);
                 write('var ret = new ' + haxeName + '();', ctx);
                 writeLineBreak(ctx);
                 writeIndent(ctx);
-                write('ret._instance = ', ctx);
+                write('ret._instance = new JObject(', ctx);
             } else {
                 switch (method.type) {
                     case Void(orig):
@@ -259,13 +262,16 @@ class Bind {
             i++;
             if (!isJavaConstructor && method.instance) {
                 if (i > 0) write(', ', ctx);
-                write('_instance', ctx);
+                write('_instance.pointer', ctx);
                 i++;
             }
             for (arg in method.args) {
                 if (i > 0) write(', ', ctx);
                 write(arg.name + '_jni_', ctx);
                 i++;
+            }
+            if (isJavaConstructor || isJavaFactory) {
+                write(')', ctx);
             }
             write(');', ctx);
             writeLineBreak(ctx);
@@ -356,7 +362,7 @@ class Bind {
 
             // Instance argument
             if (method.instance && !isJavaConstructor) {
-                args.push('instance_:JObject');
+                args.push('instance_:Pointer<Void>');
             }
 
             // Method args
@@ -572,7 +578,7 @@ class Bind {
             writeComment(ctx.javaClass.description, ctx);
         }
 
-        writeLine('@SuppressWarnings("unchecked")', ctx);
+        writeLine('@SuppressWarnings("all")', ctx);
         writeLine('class ' + bindingName + ' {', ctx);
         ctx.indent++;
         writeLineBreak(ctx);
@@ -649,6 +655,8 @@ class Bind {
             ctx.indent++;
 
             if (hasReturn) {
+                writeLine('synchronized(_bind_result) {', ctx);
+                ctx.indent++;
                 writeLine('try {', ctx);
                 ctx.indent++;
                 writeIndent(ctx);
@@ -676,14 +684,8 @@ class Bind {
                 writeLine('e.printStackTrace();', ctx);
                 ctx.indent--;
                 writeLine('}', ctx);
-                writeLine('synchronized(_bind_result) {', ctx);
-                ctx.indent++;
-                writeLine('if (_bind_result.status == 1) {', ctx);
-                ctx.indent++;
-                writeLine('_bind_result.status = 2;', ctx);
-                writeLine('_bind_result.notify();', ctx);
-                ctx.indent--;
-                writeLine('}', ctx);
+                writeLine('_bind_result.resolved = true;', ctx);
+                writeLine('_bind_result.notifyAll();', ctx);
                 ctx.indent--;
                 writeLine('}', ctx);
             }
@@ -696,9 +698,8 @@ class Bind {
             if (hasReturn) {
                 writeLine('synchronized(_bind_result) {', ctx);
                 ctx.indent++;
-                writeLine('if (_bind_result.status == 0) {', ctx);
+                writeLine('if (!_bind_result.resolved) {', ctx);
                 ctx.indent++;
-                writeLine('_bind_result.status = 1;', ctx);
                 writeLine('try {', ctx);
                 ctx.indent++;
                 writeLine('_bind_result.wait();', ctx);
@@ -735,6 +736,32 @@ class Bind {
 
         }
 
+        // Native callbacks
+        for (key in ctx.nativeCallbacks.keys()) {
+
+            var func = ctx.nativeCallbacks.get(key);
+
+            switch (func) {
+                case Function(args, ret, orig):
+                    writeIndent(ctx);
+                    var retType = toJavaBindType(ret, ctx);
+                    write('static native ' + retType + ' call_' + key + '(long address', ctx);
+
+                    var n = 1;
+                    for (funcArg in args) {
+                        var argType = toJavaBindType(funcArg.type, ctx);
+                        write(', $argType arg' + (n++), ctx);
+                    }
+
+                    write(');', ctx);
+                    writeLineBreak(ctx);
+                    writeLineBreak(ctx);
+
+                default:
+            }
+
+        }
+
         // Class end
         ctx.indent--;
         writeLine('}', ctx);
@@ -748,6 +775,11 @@ class Bind {
 /// Java -> Haxe
 
     static function toHaxeType(type:bind.Class.Type, ctx:BindContext):String {
+
+        var javaType = toJavaType(type, ctx);
+        if (javaType == ctx.javaClass.name || javaType == ctx.javaClass.orig.pack + '.' + ctx.javaClass.name) {
+            return ctx.javaClass.name;
+        }
 
         var result = switch (type) {
             case Void(orig): 'Void';
@@ -806,8 +838,8 @@ class Bind {
             case String(orig): 'String';
             case Array(itemType, orig): 'String';
             case Map(itemType, orig): 'String';
-            case Object(orig): 'Dynamic';
-            case Function(args, ret, orig): 'Dynamic';
+            case Object(orig): 'Pointer<Void>';
+            case Function(args, ret, orig): 'HObject';
         }
 
         return result;
@@ -826,7 +858,7 @@ class Bind {
             case String(orig): '::String';
             case Array(itemType, orig): '::String';
             case Map(itemType, orig): '::String';
-            case Object(orig): '::Dynamic';
+            case Object(orig): '::cpp::Pointer<void>';
             case Function(args, ret, orig): '::Dynamic';
         }
 
@@ -845,7 +877,7 @@ class Bind {
             case Array(itemType, orig): 'jstring';
             case Map(itemType, orig): 'jstring';
             case Object(orig): 'jobject';
-            case Function(args, ret, orig): 'jobject';
+            case Function(args, ret, orig): 'jlong';
         }
 
         return result;
@@ -917,12 +949,25 @@ class Bind {
             case Array(itemType, orig): 'String';
             case Map(itemType, orig): 'String';
             case Object(orig): 'Object';
-            case Function(args, ret, orig): 'Object';
+            case Function(args, ret, orig): 'long';
         }
 
         return result;
 
     } //toJavaBindType
+
+    static function toNativeCallPart(part:String):String {
+
+        if (part.startsWith('List<')) part = 'List';
+        else if (part.startsWith('Map<')) part = 'Map';
+        part = part.replace('<', '');
+        part = part.replace('>', '');
+        part = part.replace(',', '');
+        part = part.charAt(0).toUpperCase() + part.substring(1);
+
+        return part;
+
+    } //toNativeCallPart
 
 /// Helpers
 
@@ -936,7 +981,7 @@ class Bind {
 
         var isJavaFactory = false;
         var javaType = toJavaType(method.type, ctx);
-        if (!method.instance && (javaType == ctx.javaClass.name || javaType == ctx.javaClass.orig.pack + '.' + ctx.javaClass.name)) {
+        if (javaType == ctx.javaClass.name || javaType == ctx.javaClass.orig.pack + '.' + ctx.javaClass.name) {
             isJavaFactory = true;
         }
 
@@ -967,7 +1012,83 @@ class Bind {
         switch (arg.type) {
 
             case Function(args, ret, orig):
-                writeLine(type + ' ' + name + ' = null; // Not implemented yet', ctx);
+                var retType = toJavaType(ret, ctx);
+                writeLine('final HaxeObject ' + name + 'hobj_ = new HaxeObject($value);', ctx);
+                writeLine(type + ' ' + name + ' = new ' + type + '() {', ctx);
+                ctx.indent++;
+                writeIndent(ctx);
+                write('public $retType run(', ctx);
+                var i = 0;
+                for (funcArg in args) {
+                    if (i++ > 0) write(', ', ctx);
+                    var argType = toJavaType(funcArg.type, ctx);
+                    var argName = funcArg.name;
+                    if (argName == null) argName = 'arg' + (i + 1);
+                    write('final $argType ' + argName, ctx);
+                }
+                write(') {', ctx);
+                writeLineBreak(ctx);
+                ctx.indent++;
+
+                // Convert java args into java-bind args
+                i = 0;
+                for (funcArg in args) {
+                    var argName = funcArg.name;
+                    if (argName == null) argName = 'arg' + (i + 1);
+                    writeJavaBindArgAssign(funcArg, i, ctx);
+                    i++;
+                }
+
+                // Call
+                writeIndent(ctx);
+
+                if (retType != 'void' && retType != 'Void') {
+                    write(toJavaBindType(ret, ctx) + ' return_jni_ = ', ctx);
+                }
+
+                write('call_', ctx);
+
+                i = 0;
+                var allParts = '';
+                for (funcArg in args) {
+                    var part = toJavaType(funcArg.type, ctx);
+                    part = toNativeCallPart(part);
+                    allParts += part;
+                    write(part, ctx);
+                }
+                var part = toNativeCallPart(retType);
+                allParts += part;
+                write(part, ctx);
+
+                if (!ctx.nativeCallbacks.exists(allParts)) {
+                    ctx.nativeCallbacks.set(allParts, arg.type);
+                }
+
+                write('(', ctx);
+                write(name + 'hobj_.address', ctx);
+
+                for (funcArg in args) {
+                    write(', ' + funcArg.name + '_jni_', ctx);
+                }
+
+                write(');', ctx);
+                writeLineBreak(ctx);
+
+                if (retType == 'Void') {
+                    writeLine('return null;', ctx);
+                }
+                else if (retType != 'void') {
+                    writeJavaArgAssign({
+                        name: 'return',
+                        type: ret
+                    }, -1, ctx);
+                    writeLine('return return_java_;', ctx);
+                }
+
+                ctx.indent--;
+                writeLine('}', ctx);
+                ctx.indent--;
+                writeLine('};', ctx);
 
             case String(orig):
                 writeIndent(ctx);
@@ -1067,7 +1188,7 @@ class Bind {
         switch (arg.type) {
 
             case Function(args, ret, orig):
-                write('$type $name = NULL; // Not implemented yet', ctx);
+                write('$type $name = ::bind::jni::HObjectToJLong($value);', ctx);
                 writeLineBreak(ctx);
 
             case String(orig):
@@ -1211,6 +1332,20 @@ class Bind {
                 write('var $name:$type = haxe.Json.parse($value);', ctx);
                 writeLineBreak(ctx);
 
+            case Object(orig):
+                if (type == ctx.javaClass.name) {
+                    writeIndent(ctx);
+                    write('var $name = new $type();', ctx);
+                    writeLineBreak(ctx);
+                    writeIndent(ctx);
+                    write('$name._instance = $value;', ctx);
+                    writeLineBreak(ctx);
+                } else {
+                    writeIndent(ctx);
+                    write('var $name = new JObject($value);', ctx);
+                    writeLineBreak(ctx);
+                }
+
             default:
                 writeIndent(ctx);
                 write('var $name:$type = $value;', ctx);
@@ -1221,6 +1356,7 @@ class Bind {
 
     static function writeHaxeBindArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
 
+        var haxeType = toHaxeType(arg.type, ctx);
         var type = toHaxeBindType(arg.type, ctx);
         var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_jni_';
         var value = (arg.name != null ? arg.name : 'arg' + (index + 1)) + (index == -1 ? '_haxe_' : '');
@@ -1228,7 +1364,7 @@ class Bind {
         switch (arg.type) {
 
             case Function(args, ret, orig):
-                writeLine('var $name:Dynamic = null; // Not implemented yet', ctx);
+                writeLine('var $name = $value != null ? new HObject($value) : null;', ctx);
 
             case String(orig):
                 writeIndent(ctx);
@@ -1260,6 +1396,17 @@ class Bind {
                 write('var $name = haxe.Json.stringify($value);', ctx);
                 writeLineBreak(ctx);
 
+            case Object(orig):
+                if (haxeType == ctx.javaClass.name) {
+                    writeIndent(ctx);
+                    write('var $name = $value._instance.pointer;', ctx);
+                    writeLineBreak(ctx);
+                } else {
+                    writeIndent(ctx);
+                    write('var $name = $value.pointer;', ctx);
+                    writeLineBreak(ctx);
+                }
+
             default:
                 writeIndent(ctx);
                 write('var $name:$type = $value;', ctx);
@@ -1277,9 +1424,9 @@ class Bind {
         switch (arg.type) {
 
             case Function(args, ret, orig):
-
-                // Keep track of java instance on haxe side
-                writeLine('::Dynamic closure_' + name + ' = null(); // Not implemented yet', ctx);
+                writeIndent(ctx);
+                write('$type $name = ::cpp::Pointer<void>(::bind::jni::GetJNIEnv()->NewGlobalRef($value));', ctx);
+                writeLineBreak(ctx);
 
             case String(orig):
                 writeIndent(ctx);
@@ -1311,9 +1458,14 @@ class Bind {
                 write('$type $name = ::bind::jni::JStringToHxcpp($value);', ctx);
                 writeLineBreak(ctx);
 
+            case Object(orig):
+                writeIndent(ctx);
+                write('$type $name = ::cpp::Pointer<void>(::bind::jni::GetJNIEnv()->NewGlobalRef($value));', ctx);
+                writeLineBreak(ctx);
+
             default:
                 writeIndent(ctx);
-                write('$type $name = null(); // Not implemented yet', ctx);
+                write('$type $name = null(); // Not implemented', ctx);
                 writeLineBreak(ctx);
         }
 

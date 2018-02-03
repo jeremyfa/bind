@@ -406,6 +406,8 @@ class Parse {
         var expectNextTypeParam = false;
         var firstCharAfterSpace = '';
 
+        var parsed = input.substring(i, i + 50);
+
         while (i < len) {
 
             c = input.charAt(i);
@@ -423,6 +425,7 @@ class Parse {
 
                 if (before.endsWith('>')) {
                     endI = i;
+                    i++;
                     break;
                 } else {
                     expectNextTypeParam = true;
@@ -479,15 +482,15 @@ class Parse {
                     type = Map(typeParameters.length > 1 ? typeParameters[1] : null, {
                         type: javaType
                     });
-                case 'Boolean', 'boolean':
+                case 'boolean', 'Boolean':
                     type = Bool({
                         type: javaType
                     });
-                case 'short', 'byte', 'int', 'long', 'char':
+                case 'short', 'byte', 'int', 'long', 'char', 'Short', 'Byte', 'Int', 'Long', 'Char':
                     type = Int({
                         type: javaType
                     });
-                case 'float', 'double':
+                case 'float', 'double', 'Float', 'Double':
                     type = Float({
                         type: javaType
                     });

@@ -5,24 +5,32 @@
 namespace android {
 
     /** Get shared instance */
-    ::Dynamic AppAndroidInterface_sharedInterface(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_) {
+    ::cpp::Pointer<void> AppAndroidInterface_sharedInterface(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_) {
         jobject return_jni_ = ::bind::jni::GetJNIEnv()->CallStaticObjectMethod((jclass) class_.ptr, (jmethodID) method_.ptr);
-        ::Dynamic return_hxcpp_ = null(); // Not implemented yet
+        ::cpp::Pointer<void> return_hxcpp_ = ::cpp::Pointer<void>(::bind::jni::GetJNIEnv()->NewGlobalRef(return_jni_));
         return return_hxcpp_;
     }
 
     /** Constructor */
-    ::Dynamic AppAndroidInterface_constructor(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_) {
+    ::cpp::Pointer<void> AppAndroidInterface_constructor(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_) {
         jobject return_jni_ = ::bind::jni::GetJNIEnv()->CallStaticObjectMethod((jclass) class_.ptr, (jmethodID) method_.ptr);
-        ::Dynamic return_hxcpp_ = null(); // Not implemented yet
+        ::cpp::Pointer<void> return_hxcpp_ = ::cpp::Pointer<void>(::bind::jni::GetJNIEnv()->NewGlobalRef(return_jni_));
         return return_hxcpp_;
     }
 
     /** Say hello to `name` with a native Android dialog. Add a last name if any is known. */
     void AppAndroidInterface_hello(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_, ::String name, ::Dynamic done) {
         jstring name_jni_ = ::bind::jni::HxcppToJString(name);
-        jobject done_jni_ = NULL; // Not implemented yet
+        jlong done_jni_ = ::bind::jni::HObjectToJLong(done);
         ::bind::jni::GetJNIEnv()->CallStaticVoidMethod((jclass) class_.ptr, (jmethodID) method_.ptr, (jobject) instance_.ptr, name_jni_, done_jni_);
+    }
+
+    /** hello */
+    ::String AppAndroidInterface_callbackTest(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_, ::Dynamic callback) {
+        jlong callback_jni_ = ::bind::jni::HObjectToJLong(callback);
+        jstring return_jni_ = (jstring) ::bind::jni::GetJNIEnv()->CallStaticObjectMethod((jclass) class_.ptr, (jmethodID) method_.ptr, (jobject) instance_.ptr, callback_jni_);
+        ::String return_hxcpp_ = ::bind::jni::JStringToHxcpp(return_jni_);
+        return return_hxcpp_;
     }
 
     /** Get Android version string */

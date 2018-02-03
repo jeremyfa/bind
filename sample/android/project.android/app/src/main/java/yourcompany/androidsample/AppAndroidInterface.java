@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Build;
+import android.os.Handler;
 import android.util.Log;
 
 import java.util.Arrays;
@@ -39,8 +40,6 @@ public class AppAndroidInterface {
 
     /** Constructor */
     public AppAndroidInterface() {
-
-        context = null;
 
     } //SharedInterface
 
@@ -78,6 +77,19 @@ public class AppAndroidInterface {
                 .show();
 
     } //hello
+
+    public String callbackTest(final Func2<List<String>,String,Float> callback) {
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                float result = callback.run(Arrays.asList("a", "b", "c", "d"), "test");
+            }
+        }, 1000);
+
+        return "wait 1 second.";
+
+    } //callbackTest
 
     /**
      * Get Android version string

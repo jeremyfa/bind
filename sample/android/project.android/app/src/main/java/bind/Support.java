@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Java support file for bind.
  */
-@SuppressWarnings("unchecked")
+@SuppressWarnings("unchecked,unused,WeakerAccess")
 public class Support {
 
 /// Function types
@@ -85,50 +85,42 @@ public class Support {
 
     } //Func9
 
-/// Native init
+/// Native calls
 
     public static native void init();
 
+    public static native void releaseHaxeObject(long address);
+
 /// Helpers for native
 
-    private static class TrackedJavaObject {
+    public static class HaxeObject {
 
-        int mObjectId;
+        public long address;
 
-        public TrackedJavaObject(int objectId) {
-            mObjectId = objectId;
+        public HaxeObject(long address) {
+            this.address = address;
         }
 
         @Override
         protected void finalize() throws Throwable {
 
-            // TODO use ReferenceQueue/PhantomReferences instead of finalize()
-            Support.notifyFinalize(mObjectId);
+            try {
+                // TODO use ReferenceQueue/PhantomReferences instead of finalize()
+                Support.notifyFinalize(address);
+            }
+            finally {
+                super.finalize();
+            }
 
-            super.finalize();
         }
 
-    } //TrackedJavaObject
+    } //HaxeObject
 
-    static Object sTrackObjectLock = null;
-
-    static int sNextJavaObjectId = 0;
-
-    public static Object trackNewJavaObject() {
-
-        if (sTrackObjectLock == null) sTrackObjectLock = new Object();
-
-        synchronized (sTrackObjectLock) {
-            return new TrackedJavaObject(++sNextJavaObjectId);
-        }
-
-    } //trackNewJavaObject
-
-    static void notifyFinalize(final int objectId) {
+    static void notifyFinalize(final long address) {
 
         runInNativeThread(new Runnable() {
             public void run() {
-                javaObjectDidFinalize(objectId);
+                Support.releaseHaxeObject(address);
             }
         });
 
@@ -269,14 +261,14 @@ public class Support {
 
         public Object value = null;
 
-        public int status = 0;
+        public boolean resolved = false;
 
     } //BindResult
 
     public static void runInNativeThread(Runnable r) {
 
         if (sGLSurfaceView != null) {
-            sGLSurfaceView.queueEvent(r);
+            ((GLSurfaceView)sGLSurfaceView).queueEvent(r);
         }
         else if (sNativeThreadHandler != null) {
             if (sNativeThreadHandler.getLooper().getThread() != Thread.currentThread()) {
@@ -305,14 +297,39 @@ public class Support {
     /**
      * If provided, calls to JNI will be done on this GLSurfaceView's renderer thread.
      */
-    static GLSurfaceView sGLSurfaceView = null;
+    static Object sGLSurfaceView = null;
+    static Thread sGLSurfaceViewThread = null;
 
     public static GLSurfaceView getGLSurfaceView() {
-        return sGLSurfaceView;
+        return (GLSurfaceView) sGLSurfaceView;
     }
 
     public static void setGLSurfaceView(GLSurfaceView surfaceView) {
         sGLSurfaceView = surfaceView;
+        if (sGLSurfaceView == null) {
+            sGLSurfaceViewThread = null;
+        } else {
+            final Object lock = new Object();
+            sGLSurfaceViewThread = null;
+            ((GLSurfaceView)sGLSurfaceView).queueEvent(new Runnable() {
+                @Override
+                public void run() {
+                    synchronized(lock) {
+                        sGLSurfaceViewThread = Thread.currentThread();
+                        lock.notifyAll();
+                    }
+                }
+            });
+            synchronized(lock) {
+                if (sGLSurfaceViewThread == null) {
+                    try {
+                        lock.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -339,6 +356,18 @@ public class Support {
 
     public static boolean isUIThread() {
         return Looper.getMainLooper().getThread() == Thread.currentThread();
+    }
+
+    public static boolean isNativeThread() {
+        if (sGLSurfaceView != null) {
+            return sGLSurfaceViewThread == Thread.currentThread();
+        }
+        else if (sNativeThreadHandler != null) {
+            return sNativeThreadHandler.getLooper().getThread() == Thread.currentThread();
+        }
+        else {
+            return isUIThread();
+        }
     }
 
 } //Support

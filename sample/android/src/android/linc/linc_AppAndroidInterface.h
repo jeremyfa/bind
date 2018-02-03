@@ -5,13 +5,16 @@
 namespace android {
 
     /** Get shared instance */
-    ::Dynamic AppAndroidInterface_sharedInterface(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_);
+    ::cpp::Pointer<void> AppAndroidInterface_sharedInterface(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_);
 
     /** Constructor */
-    ::Dynamic AppAndroidInterface_constructor(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_);
+    ::cpp::Pointer<void> AppAndroidInterface_constructor(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_);
 
     /** Say hello to `name` with a native Android dialog. Add a last name if any is known. */
     void AppAndroidInterface_hello(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_, ::String name, ::Dynamic done);
+
+    /** hello */
+    ::String AppAndroidInterface_callbackTest(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_, ::Dynamic callback);
 
     /** Get Android version string */
     ::String AppAndroidInterface_androidVersionString(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_);

@@ -32,7 +32,8 @@ class Cli {
             json: false,
             parseOnly: false,
             pretty: false,
-            export: null
+            export: null,
+            mute: false
         };
         var bindClassOptions:Dynamic = {};
         var fileArgs = [];
@@ -49,6 +50,10 @@ class Cli {
                     i++;
                     options.export = args[i];
                     options.json = true;
+                }
+                else if (arg == '--mute') {
+                    i++;
+                    options.mute = true;
                 }
                 else if (arg == '--namespace') {
                     i++;
@@ -201,15 +206,15 @@ class Cli {
             }
             else {
                 if (options.pretty) {
-                    println('['+json.join(',\n')+']');
+                    if (!options.mute) println('['+json.join(',\n')+']');
                 } else {
-                    println('['+json.join(',')+']');
+                    if (!options.mute) println('['+json.join(',')+']');
                 }
             }
         }
         else {
             if (output.trim() != '') {
-                println(output.rtrim());
+                if (!options.mute) println(output.rtrim());
             }
         }
 

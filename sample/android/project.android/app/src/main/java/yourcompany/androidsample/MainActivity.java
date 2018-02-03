@@ -15,6 +15,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Set correct android context
+        AppAndroidInterface.context = this;
+
         // Start Haxe
         HXCPP.run("Main");
     }

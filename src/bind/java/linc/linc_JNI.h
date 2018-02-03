@@ -15,6 +15,12 @@ namespace bind {
 
         ::cpp::Pointer<void> ResolveStaticJMethodID(::cpp::Pointer<void> jclassRef, ::String name, ::String signature);
 
+        void ReleaseJObject(::cpp::Pointer<void> jobjectRef);
+
+        jlong HObjectToJLong(::Dynamic hobjectRef);
+
+        ::Dynamic JLongToHObject(jlong jlongValue);
+
     }
 
 }
@@ -22,5 +28,7 @@ namespace bind {
 extern "C" {
 
     JNIEXPORT void JNICALL Java_bind_Support_init(JNIEnv *env);
+    
+    JNIEXPORT void JNICALL Java_bind_Support_releaseHaxeObject(JNIEnv *env, jlong address);
  
 }

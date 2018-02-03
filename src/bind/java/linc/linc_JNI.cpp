@@ -3,6 +3,10 @@
 #include <map>
 #include <string>
 
+#ifndef INCLUDED_bind_java_HObject
+#include <bind/java/HObject.h>
+#endif
+
 namespace bind {
 
     namespace jni {
@@ -18,17 +22,23 @@ namespace bind {
 
         jstring HxcppToJString(::String str) {
 
-            return env->NewStringUTF(str.c_str());
+            if (hx::IsNotNull(str)) {
+                return env->NewStringUTF(str.c_str());
+            }
+            return NULL;
 
         } //HxcppToJString
 
         ::String JStringToHxcpp(jstring str) {
 
-            jboolean is_copy;
-            const char *c_str = env->GetStringUTFChars(str, &is_copy);
-            ::String result = ::String(c_str);
-            env->ReleaseStringUTFChars(str, c_str);
-            return result;
+            if (str != NULL) {
+                jboolean is_copy;
+                const char *c_str = env->GetStringUTFChars(str, &is_copy);
+                ::String result = ::String(c_str);
+                env->ReleaseStringUTFChars(str, c_str);
+                return result;
+            }
+            return null();
 
         } //JStringToHxcpp
 
@@ -68,6 +78,34 @@ namespace bind {
             
         } //ResolveStaticJMethodID
 
+        void ReleaseJObject(::cpp::Pointer<void> jobjectRef) {
+
+            jobject obj = (jobject) jobjectRef.ptr;
+            env->DeleteGlobalRef(obj);
+
+        } //ReleaseJObject
+
+        jlong HObjectToJLong(::Dynamic hobjectRef) {
+
+            if (hx::IsNotNull(hobjectRef)) {
+                hx::Object *objPointer = hobjectRef.mPtr;
+                return (jlong)(void*)objPointer;
+            }
+            return (jlong) NULL;
+
+        } //HObjectToJLong
+
+        ::Dynamic JLongToHObject(jlong address) {
+
+            if (address == ((jlong) NULL)) {
+                return null();
+            }
+            ::Dynamic result = ::Dynamic();
+            result.mPtr = (hx::Object*)(void*)address;
+            return result;
+
+        } //HObjectToJLong
+
     }
 
 }
@@ -75,7 +113,18 @@ namespace bind {
 extern "C" {
 
     JNIEXPORT void JNICALL Java_bind_Support_init(JNIEnv *env) {
+
         ::bind::jni::env = env;
-    }
+
+    } //init
+
+    JNIEXPORT void JNICALL Java_bind_Support_releaseHaxeObject(JNIEnv *env, jlong address) {
+        
+        ::Dynamic hobjectRef = ::bind::jni::JLongToHObject(address);
+        if (hx::IsNotNull(hobjectRef)) {
+            ((::bind::java::HObject)hobjectRef)->destroy();
+        }
+
+    } //releaseHaxeObject
  
 }

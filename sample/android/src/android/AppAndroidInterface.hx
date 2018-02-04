@@ -45,10 +45,10 @@ class AppAndroidInterface {
     public function callbackTest(callback:Array<Dynamic>->String->Float):String {
         var callback_jni_:HObject = null;
         if (callback != null) {
-            callback_jni_ = new HObject(function(arg1:String, arg2:String) {
-                var arg1_haxe_:Array<Dynamic> = haxe.Json.parse(arg1);
-                var arg2_haxe_ = arg2;
-                var return_haxe_ = callback(arg1_haxe_, arg2_haxe_);
+            callback_jni_ = new HObject(function(arg1_cl:String, arg2_cl:String) {
+                var arg1_cl_haxe_:Array<Dynamic> = haxe.Json.parse(arg1_cl);
+                var arg2_cl_haxe_ = arg2_cl;
+                var return_haxe_ = callback(arg1_cl_haxe_, arg2_cl_haxe_);
                 var return_jni_ = return_haxe_;
                 return return_jni_;
             });

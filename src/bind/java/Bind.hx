@@ -1489,7 +1489,7 @@ class Bind {
                 var i = 0;
                 for (funcArg in args) {
                     if (i++ > 0) write(', ', ctx);
-                    write(funcArg.name + ':' + toHaxeBindType(funcArg.type, ctx), ctx);
+                    write(funcArg.name + '_cl:' + toHaxeBindType(funcArg.type, ctx), ctx);
                 }
                 write(') {', ctx);
                 writeLineBreak(ctx);
@@ -1497,7 +1497,11 @@ class Bind {
 
                 i = 0;
                 for (funcArg in args) {
-                    writeHaxeArgAssign(funcArg, i++, ctx);
+                    writeHaxeArgAssign({
+                        name: funcArg.name + '_cl',
+                        type: funcArg.type,
+                        orig: funcArg.orig
+                    }, i++, ctx);
                 }
 
                 // Call
@@ -1513,7 +1517,7 @@ class Bind {
                 i = 0;
                 for (funcArg in args) {
                     if (i++ > 0) write(', ', ctx);
-                    write(funcArg.name + '_haxe_', ctx);
+                    write(funcArg.name + '_cl_haxe_', ctx);
                 }
                 write(');', ctx);
                 writeLineBreak(ctx);
@@ -1529,7 +1533,6 @@ class Bind {
                 writeLine('});', ctx);
                 ctx.indent--;
                 writeLine('}', ctx);
-                //writeLine('var $name = $value != null ? new HObject($value) : null;', ctx);
 
             case String(orig):
                 writeIndent(ctx);

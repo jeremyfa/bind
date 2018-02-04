@@ -13,7 +13,7 @@ import java.util.Map;
 import bind.Support.*;
 
 /** Java/Android interface */
-@SuppressWarnings("all,unchecked")
+@SuppressWarnings("all")
 class bind_AppAndroidInterface {
 
     private static class bind_Result {

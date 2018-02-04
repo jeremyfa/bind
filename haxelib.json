@@ -6,7 +6,7 @@
   "description": "Bind Objective-C and Java (JNI) code to Haxe without writing glue code manually.",
   "version": "0.4.0",
   "classPath": "src/",
-  "releasenote": "Add a working example with Objective-C compatible Swift dynamic framework.",
+  "releasenote": "Now generates bindings for both iOS and Android code!",
   "contributors": ["jeremyfa"],
   "dependencies": {}
 }

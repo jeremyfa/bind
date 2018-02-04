@@ -10,7 +10,7 @@ Writing Haxe-compatible native extensions that take advantage of iOS or Android 
 
 The idea of _bind_ is to let you focus exclusively on **Objective-C/Swift** code (that you would edit with full IDE integration on Xcode) when you work on an iOS native extension for Haxe, as well as **Java** code (that you would edit inside Android Studio with full completion support) when your work on an Android native extension for Haxe. These Objective-C/Swift/Java code files could even be used without Haxe first, allowing you to test them separately etc...
 
-Then, _bind_ utility will take your _Objective-C/Swift_ code or _Java_ code as input and **generate all intermediate glue code** to make the same class, methods and properties usable from a **clean Haxe interface** with types converted automatically.
+Then, _bind_ utility will take your _Objective-C/Swift_ code or _Java_ code as input and **generate all intermediate glue code** to make the same classes, methods and properties usable from a **clean Haxe interface** with types converted automatically.
 
 In other words, **use the best tools for each part**: Xcode to make iOS code, Android Studio to make Android code and VSCode (or your other favourite Haxe editor) to make Haxe code that uses your iOS/Android bound code.
 

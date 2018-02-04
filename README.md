@@ -6,13 +6,13 @@ Bind Objective-C/Swift and Java/JNI code to Haxe without writing glue code manua
 
 ## Overall idea
 
-Writing Haxe-compatible native extensions that take advantage of iOS or Android API is quite complicated, especially if you start to deal with callbacks etc... This usually implies writing a lot of difficult to grasp _glue code_. This _glue code_ is definitely not what you want care about in practice. In addition, these intermediate files usually don't integrate well with code editors, just try to get iOS API code completion in [this file that mixes Objective-C, C++ and HXCPP FFI code](https://github.com/HaxeExtension/extension-webview/blob/dca79b548fc6f3522f6d4543104a22e7bec1a26e/project/ios/WebViewEx.mm).
+Writing Haxe-compatible native extensions that take advantage of iOS or Android API is quite complicated, especially if you start to dealing callbacks etc... This usually implies writing a lot of difficult to grasp _glue code_. This _glue code_ is definitely not what you want to care about in practice. In addition, these intermediate files, that you would write yourself, usually don't integrate well with code editors. Just try to get iOS API code completion in [this file that mixes Objective-C, C++ and HXCPP FFI code to display a UIWebView instance](https://github.com/HaxeExtension/extension-webview/blob/dca79b548fc6f3522f6d4543104a22e7bec1a26e/project/ios/WebViewEx.mm).
 
-The idea of _bind_ is to let you focus exclusively on _clean Objective-C/Swift_ code (that you would edit with full IDE integration on Xcode) when you work on an iOS native extension for Haxe, as well as _clean Java_ code (that you would edit inside Android Studio with full completion support) when your work on an Android native extension for Haxe.
+The idea of _bind_ is to let you focus exclusively on **Objective-C/Swift** code (that you would edit with full IDE integration on Xcode) when you work on an iOS native extension for Haxe, as well as **Java** code (that you would edit inside Android Studio with full completion support) when your work on an Android native extension for Haxe. These Objective-C/Swift/Java code files could even be used without Haxe first, allowing you to test them separately etc...
 
-Then, _bind_ utility will take your _Objective-C/Swift_ code or _Java_ code as input and generate all intermediate _glue code_ to make the same class, methods and properties usable from a _clean Haxe interface_.
+Then, _bind_ utility will take your _Objective-C/Swift_ code or _Java_ code as input and **generate all intermediate glue code** to make the same class, methods and properties usable from a **clean Haxe interface** with types converted automatically.
 
-In other words, **use the best tools for each part**: Xcode to make iOS code, Android Studio to make Android code and VSCode (or your other favourite Haxe editor) to make Haxe code.
+In other words, **use the best tools for each part**: Xcode to make iOS code, Android Studio to make Android code and VSCode (or your other favourite Haxe editor) to make Haxe code that uses your iOS/Android bound code.
 
 ## Usage
 
@@ -54,6 +54,20 @@ Nothing is written to disk by default. The output is simply returned by the comm
 
 Check out an example of [bound Objective-C header](https://github.com/jeremyfa/bind/blob/master/sample/ios/project.ios/IosSample/AppNativeInterface.h) that you can use as reference to see which subset of Objective-C can be handled by _bind_. This file can be tested with the provided sample iOS/Objective-C project.
 
+#### Supported Objective-C types
+
+These are the Objective-C types that _bind_ utility can understand and convert to a corresponding Haxe type.
+
+Objective-C Type | Haxe Type
+-----------------|----------
+NSString*        | String
+CGFloat/float    | Float
+NSInteger/int    | Int
+BOOL/bool        | Bool
+NSArray          | Array
+NSDictionary     | Dynamic (anonymous structure)
+typed ObjC Block | typed Haxe function
+
 #### Sample Xcode Project
 
 You can check out [The iOS Sample project](https://github.com/jeremyfa/bind/tree/master/sample/ios) which contains:
@@ -69,6 +83,21 @@ This will obviously only work on a mac, with haxe, bind library and xcode proper
 ## Java/JNI on Android
 
 Check out an example of [bound Java class file](https://github.com/jeremyfa/bind/blob/master/sample/android/project.android/app/src/main/java/yourcompany/androidsample/AppAndroidInterface.javah) that you can use as reference to see which subset of Java can be handled by _bind_. This file can be tested with the provided sample Java/Android project.
+
+#### Supported Java types
+
+These are the Java types that _bind_ utility can understand and convert to a corresponding Haxe type.
+
+Java Type            | Haxe Type
+---------------------|----------
+String               | String
+Float/float          | Float
+Int/int              | Int
+Boolean/boolean      | Bool
+List                 | Array
+Map                  | Dynamic (anonymous structure)
+Runnable/Func0<Void> | Void->Void function
+FuncN<A1,A2...,T>    | A1->A2...->T function
 
 #### Sample Android Studio Project
 

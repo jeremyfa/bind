@@ -48,6 +48,8 @@ public class AppAndroidInterface {
      */
     public Func1<Boolean,Void> onResume = null;
 
+    public Runnable onDone1 = null;
+
     /**
      * Define a last name for hello()
      */

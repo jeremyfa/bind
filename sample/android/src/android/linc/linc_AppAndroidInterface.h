@@ -25,13 +25,41 @@ namespace android {
     /** Dummy method to get Haxe types converted to Java types that then get returned back as an array. */
     ::String AppAndroidInterface_testTypes(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_, int aBool, int anInt, double aFloat, ::String aList, ::String aMap);
 
+    /** Android Context */
+    ::cpp::Pointer<void> AppAndroidInterface_getContext(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_);
+
+    /** Android Context */
+    void AppAndroidInterface_setContext(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> context);
+
+    /** If provided, will be called when main activity is started/resumed */
+    ::Dynamic AppAndroidInterface_getOnResume(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_);
+
+    /** If provided, will be called when main activity is started/resumed */
+    void AppAndroidInterface_setOnResume(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_, ::Dynamic onResume);
+
+    ::Dynamic AppAndroidInterface_getOnDone1(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_);
+
+    void AppAndroidInterface_setOnDone1(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_, ::Dynamic onDone1);
+
+    /** Define a last name for hello() */
+    ::String AppAndroidInterface_getLastName(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_);
+
+    /** Define a last name for hello() */
+    void AppAndroidInterface_setLastName(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_, ::String lastName);
+
+    void AppAndroidInterface_callJ_BooleanVoid(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> callback_, int arg1);
+
+    void AppAndroidInterface_callJ_Void(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> callback_);
+
 }
 
 extern "C" {
 
-    JNIEXPORT void Java_yourcompany_androidsample_bind_1AppAndroidInterface_call_1Void(JNIEnv *env, jlong address);
+    JNIEXPORT void Java_yourcompany_androidsample_bind_1AppAndroidInterface_callN_1Void(JNIEnv *env, jlong address);
 
-    JNIEXPORT jfloat Java_yourcompany_androidsample_bind_1AppAndroidInterface_call_1ListStringFloat(JNIEnv *env, jlong address, jstring arg1, jstring arg2);
+    JNIEXPORT jfloat Java_yourcompany_androidsample_bind_1AppAndroidInterface_callN_1ListStringFloat(JNIEnv *env, jlong address, jstring arg1, jstring arg2);
+
+    JNIEXPORT void Java_yourcompany_androidsample_bind_1AppAndroidInterface_callN_1BooleanVoid(JNIEnv *env, jlong address, jint arg1);
 
 }
 

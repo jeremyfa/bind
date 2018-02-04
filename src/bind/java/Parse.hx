@@ -24,6 +24,7 @@ class Parse {
     static var RE_WORD_SEP = ~/^[^a-zA-Z0-9_]/;
     static var RE_WORD = ~/^[a-zA-Z0-9_]+/;
     static var RE_NOT_SEPARATOR = ~/[a-zA-Z0-9_]/g;
+    static var RE_GETTER = ~/^get([A-Z][a-zA-Z0-9_]*)$/;
 
     static var RE_FUNC = ~/^Func([0-9])$/;
     static var RE_FINAL = ~/^\s*final\s+/;
@@ -270,6 +271,9 @@ class Parse {
                                 };
                                 comment = null;
 
+                                // A java final property can't be modified, so let's consider it's readonly
+                                if (modifiers.exists('final')) property.orig.readonly = true;
+
                                 result.properties.push(property);
                             }
 
@@ -382,6 +386,8 @@ class Parse {
 
         ctx.i = i;
 
+        extractPropertyMethods(result);
+
         if (result.name == null) {
             return null;
         }
@@ -405,8 +411,6 @@ class Parse {
         var before = '';
         var expectNextTypeParam = false;
         var firstCharAfterSpace = '';
-
-        var parsed = input.substring(i, i + 50);
 
         while (i < len) {
 
@@ -523,6 +527,175 @@ class Parse {
         }
 
     } //parseType
+
+    static function extractPropertyMethods(result:bind.Class):Void {
+
+        var existingMethods:Map<String,bind.Class.Method> = new Map();
+        var existingProperties:Map<String,bind.Class.Property> = new Map();
+        
+        for (method in result.methods) {
+            existingMethods.set(method.name, method);
+        }
+        for (property in result.properties) {
+            existingProperties.set(property.name, property);
+        }
+
+        // Link or imply getters and setters from public properties
+        for (property in result.properties) {
+            // Getter
+            var getterName = 'get' + property.name.charAt(0).toUpperCase() + property.name.substring(1);
+            if (!existingMethods.exists(getterName)) {
+                result.methods.push({
+                    name: getterName,
+                    args: [],
+                    type: property.type,
+                    instance: property.instance,
+                    description: property.description,
+                    orig: extendOrig(property.orig, {
+                        implicit: true,
+                        getter: true,
+                        property: {
+                            name: property.name
+                        }
+                    })
+                });
+            }
+            else {
+                var method = existingMethods.get(getterName);
+                if (method.orig == null) method.orig = {};
+                if (method.orig.property == null) {
+                    method.orig.property = {
+                        name: property.name
+                    }
+                    method.orig.getter = true;
+                }
+            }
+            // Setter
+            if (!property.orig.readonly) {
+                var setterName = 'set' + property.name.charAt(0).toUpperCase() + property.name.substring(1);
+                if (!existingMethods.exists(setterName)) {
+                    result.methods.push({
+                        name: setterName,
+                        args: [{
+                            name: property.name,
+                            orig: extendOrig(property.orig, {
+                                nameSection: setterName
+                            }),
+                            type: property.type
+                        }],
+                        type: Void({ type: 'void', nullable: false }),
+                        instance: property.instance,
+                        description: property.description,
+                        orig: extendOrig(property.orig, {
+                            implicit: true,
+                            setter: true,
+                            property: {
+                                name: property.name
+                            }
+                        })
+                    });
+                }
+                else {
+                    var method = existingMethods.get(setterName);
+                    if (method.orig == null) method.orig = {};
+                    if (method.orig.property == null) {
+                        method.orig.property = {
+                            name: property.name
+                        }
+                        method.orig.setter = true;
+                    }
+                }
+            }
+        }
+
+        // Resolve properties from public getters and setters
+        for (method in result.methods) {
+            if (RE_GETTER.match(method.name)) {
+                var propertyName = RE_GETTER.matched(1).charAt(0).toLowerCase() + RE_GETTER.matched(1).substring(1);
+                var getterName = 'get' + RE_GETTER.matched(1);
+                var setterName = 'set' + RE_GETTER.matched(1);
+                var setter = existingMethods.get(setterName);
+                var getter = existingMethods.get(getterName);
+                var canImplyProperty = true;
+                if (!existingProperties.exists(propertyName)) {
+                    // We resolve an implicit property from its public getters and setters
+                    var readonly = true;
+                    var getterType = toJavaType(getter.type);
+                    if (getter != null) {
+                        // Ensure setter shares the same type as getter
+                        if (setter.args.length == 1) {
+                            var setterType = toJavaType(setter.args[0].type);
+                            if (getterType != setterType) {
+                                canImplyProperty = false;
+                            }
+                            else {
+                                // Setter matches, property is not readonly then
+                                readonly = false;
+                            }
+                        }
+                        else {
+                            canImplyProperty = false;
+                        }
+                    }
+
+                    if (canImplyProperty) {
+                        // Add implicit property
+                        result.properties.push({
+                            type: getter.type,
+                            orig: {
+                                implicit: true,
+                                readonly: readonly
+                            },
+                            name: propertyName,
+                            instance: getter.instance,
+                            description: getter.description
+                        });
+                    }
+                }
+            }
+        }
+
+    } //extractPropertyMethods
+
+    static function extendOrig(orig:Dynamic, extension:Dynamic):Dynamic {
+
+        var result:Dynamic = {};
+
+        for (field in Reflect.fields(orig)) {
+            Reflect.setField(result, field, Reflect.field(orig, field));
+        }
+
+        for (field in Reflect.fields(extension)) {
+            Reflect.setField(result, field, Reflect.field(extension, field));
+        }
+
+        return result;
+
+    } //extendOrig
+
+    static function toJavaType(type:bind.Class.Type):String {
+
+        var orig:Dynamic = null;
+
+        switch (type) {
+            case Void(orig_): orig = orig_;
+            case Int(orig_): orig = orig_;
+            case Float(orig_): orig = orig_;
+            case Bool(orig_): orig = orig_;
+            case String(orig_): orig = orig_;
+            case Array(itemType_, orig_): orig = orig_;
+            case Map(itemType_, orig_): orig = orig_;
+            case Object(orig_): orig = orig_;
+            case Function(args, ret, orig_): orig = orig_;
+        }
+
+        while (orig.orig != null) {
+            orig = orig.orig;
+        }
+
+        return orig.type;
+
+    } //toJavaType
 
 /// Internal
 

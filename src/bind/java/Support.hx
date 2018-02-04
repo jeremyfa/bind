@@ -58,8 +58,6 @@ class HObject {
 
     public function destroy():Void {
 
-        trace('BIND DESTROY HOBJECT ' + this.obj);
-
         mutex.acquire();
         @:privateAccess Support.hobjects.remove(this);
         mutex.release();
@@ -74,6 +72,12 @@ class HObject {
         return wrappedTyped.obj;
 
     } //unwrap
+
+    public static function wrap(obj:Dynamic):Dynamic {
+
+        return new HObject(obj);
+
+    } //wrap
 
 } //HObject
 

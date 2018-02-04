@@ -834,7 +834,7 @@ class Parse {
                     name: property.name,
                     args: [],
                     type: property.type,
-                    instance: true,
+                    instance: property.instance,
                     description: property.description,
                     orig: extendOrig(property.orig, {
                         getter: true,
@@ -868,7 +868,7 @@ class Parse {
                             type: property.type
                         }],
                         type: Void({ type: 'void', nullable: false }),
-                        instance: true,
+                        instance: property.instance,
                         description: property.description,
                         orig: extendOrig(property.orig, {
                             setter: true,

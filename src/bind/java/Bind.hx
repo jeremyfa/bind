@@ -14,6 +14,7 @@ typedef BindContext = {
     var javaPath:String;
     var javaCode:String;
     var nativeCallbacks:Map<String,bind.Class.Type>;
+    var javaCallbacks:Map<String,bind.Class.Type>;
 }
 
 class Bind {
@@ -29,7 +30,8 @@ class Bind {
             currentFile: null,
             javaPath: null,
             javaCode: null,
-            nativeCallbacks: new Map()
+            nativeCallbacks: new Map(),
+            javaCallbacks: new Map()
         };
 
     } //createContext
@@ -123,8 +125,7 @@ class Bind {
         writeLineBreak(ctx);
 
         // Add properties
-        // TODO
-        /*for (property in ctx.javaClass.properties) {
+        for (property in ctx.javaClass.properties) {
 
             // Read-only?
             var readonly = property.orig != null && property.orig.readonly == true;
@@ -161,7 +162,7 @@ class Bind {
             writeLineBreak(ctx);
             writeLineBreak(ctx);
 
-        }*/
+        }
 
         // Add methods
         for (method in ctx.javaClass.methods) {
@@ -211,7 +212,7 @@ class Bind {
 
             // Whole method
             if (isGetter) {
-                write('function get_' + name + '(' + args.join(', ') + '):', ctx);
+                write('function get_' + method.orig.property.name + '(' + args.join(', ') + '):', ctx);
             } else if (isSetter) {
                 write('function set_' + method.orig.property.name + '(' + args.join(', ') + '):', ctx);
             } else if (isJavaConstructor) {
@@ -237,13 +238,13 @@ class Bind {
 
             if (isJavaConstructor) {
                 writeIndent(ctx);
-                write('_instance = new JObject(', ctx);
+                write('var _instance_pointer = ', ctx);
             } else if (isJavaFactory) {
                 writeIndent(ctx);
                 write('var ret = new ' + haxeName + '();', ctx);
                 writeLineBreak(ctx);
                 writeIndent(ctx);
-                write('ret._instance = new JObject(', ctx);
+                write('var _instance_pointer = ', ctx);
             } else {
                 switch (method.type) {
                     case Void(orig):
@@ -270,15 +271,14 @@ class Bind {
                 write(arg.name + '_jni_', ctx);
                 i++;
             }
-            if (isJavaConstructor || isJavaFactory) {
-                write(')', ctx);
-            }
             write(');', ctx);
             writeLineBreak(ctx);
             if (isJavaConstructor) {
-                writeLine('return this;', ctx);
+                writeLine('_instance = _instance_pointer != null ? new JObject(_instance_pointer) : null;', ctx);
+                writeLine('return _instance != null ? this : null;', ctx);
             } else if (isJavaFactory) {
-                writeLine('return ret;', ctx);
+                writeLine('ret._instance = _instance_pointer != null ? new JObject(_instance_pointer) : null;', ctx);
+                writeLine('return ret._instance != null ? ret : null;', ctx);
             } else if (isSetter) {
                 writeLine('return ' + method.orig.property.name + ';', ctx);
             }
@@ -305,7 +305,7 @@ class Bind {
                 jniSig += toJniSignatureType(arg.type, ctx);
             }
             jniSig += ')';
-            jniSig += toJniSignatureType(method.type, ctx);
+            jniSig += toJniFromJavaSignatureType(method.type, ctx);
 
             writeIndent(ctx);
             write('private static var _mid_' + name + ' = Support.resolveStaticJMethodID(', ctx);
@@ -318,6 +318,36 @@ class Bind {
             writeLineBreak(ctx);
 
             writeLineBreak(ctx);
+
+        }
+
+        // Expose java callbacks to haxe
+        for (key in ctx.javaCallbacks.keys()) {
+
+            var func = ctx.javaCallbacks.get(key);
+            
+            switch (func) {
+                case Function(args, ret, orig):
+                    var jniSig = '(';
+                    jniSig += toJniFromJavaSignatureType(func, ctx);
+                    for (funcArg in args) {
+                        jniSig += toJniSignatureType(funcArg.type, ctx);
+                    }
+                    jniSig += ')';
+                    jniSig += toJniFromJavaSignatureType(ret, ctx);
+
+                    writeIndent(ctx);
+                    write('private static var _mid_callJ_' + key + ' = Support.resolveStaticJMethodID(', ctx);
+                    write(Json.stringify(javaBindClassPath.replace('.', '/')), ctx);
+                    write(', ', ctx);
+                    write(Json.stringify('callJ_' + key), ctx);
+                    write(', ', ctx);
+                    write(Json.stringify(jniSig), ctx);
+                    write(');', ctx);
+                    writeLineBreak(ctx);
+
+                default:
+            }
 
         }
 
@@ -344,7 +374,7 @@ class Bind {
             var isJavaConstructor = isJavaConstructor(method, ctx);
 
             // Method return type
-            var ret = toHaxeBindType(method.type, ctx);
+            var ret = toHaxeBindFromJniType(method.type, ctx);
 
             // Method name
             var name = method.name;
@@ -388,6 +418,53 @@ class Bind {
 
             writeLineBreak(ctx);
             writeLineBreak(ctx);
+
+        }
+
+        // Expose java callbacks to haxe c++ extern
+        for (key in ctx.javaCallbacks.keys()) {
+
+            var func = ctx.javaCallbacks.get(key);
+            
+            switch (func) {
+                case Function(args, ret, orig):
+                    // C++ method
+                    writeIndent(ctx);
+                    write('@:native(\'', ctx);
+                    if (ctx.namespace != null && ctx.namespace.trim() != '') {
+                        write(ctx.namespace.trim() + '::', ctx);
+                    }
+                    write(ctx.javaClass.name + '_callJ_' + key, ctx);
+                    write('\')', ctx);
+                    writeLineBreak(ctx);
+
+                    writeIndent(ctx);
+
+                    var externArgs = [];
+
+                    // Class argument
+                    externArgs.push('class_:JClass');
+
+                    // Method argument
+                    externArgs.push('method_:JMethodID');
+
+                    // Callback handle
+                    externArgs.push('callback_:Pointer<Void>');
+
+                    for (funcArg in args) {
+                        externArgs.push(funcArg.name + ':' + toHaxeBindType(funcArg.type, ctx));
+                    }
+
+                    // Whole method
+                    write('static function callJ_' + key + '(' + externArgs.join(', ') + '):', ctx);
+                    write(toHaxeBindFromJniType(ret, ctx), ctx);
+                    write(';', ctx);
+
+                    writeLineBreak(ctx);
+                    writeLineBreak(ctx);
+
+                default:
+            }
 
         }
 
@@ -471,11 +548,17 @@ class Bind {
             writeLineBreak(ctx);
         }
 
-        // Add methods
-        for (method in ctx.javaClass.methods) {
+        function writeMethod(method:bind.Class.Method):Void {
 
             // Constructor?
             var isJavaConstructor = isJavaConstructor(method, ctx);
+
+            // Java callback called from native?
+            var isJavaCallback = method.orig != null && method.orig.javaCallback == true;
+            var javaCallbackType:String = null;
+            if (isJavaCallback) {
+                javaCallbackType = '' + method.orig.javaCallbackType;
+            }
 
             // Method return type
             var ret = toHxcppType(method.type, ctx);
@@ -491,8 +574,12 @@ class Bind {
             // Method handle
             args.push('::cpp::Pointer<void> method_');
 
+            // Callback handle
+            if (isJavaCallback) {
+                args.push('::cpp::Pointer<void> callback_');
+            }
             // Instance handle
-            if (method.instance && !isJavaConstructor) {
+            else if (method.instance && !isJavaConstructor) {
                 args.push('::cpp::Pointer<void> instance_');
             }
 
@@ -535,6 +622,36 @@ class Bind {
             writeLineBreak(ctx);
             writeLineBreak(ctx);
 
+        } //writeMethod
+
+        // Add methods
+        for (method in ctx.javaClass.methods) {
+
+            writeMethod(method);
+
+        }
+
+        // Expose java callbacks to c++
+        for (key in ctx.javaCallbacks.keys()) {
+
+            var func = ctx.javaCallbacks.get(key);
+            
+            switch (func) {
+                case Function(args, ret, orig):
+                    writeMethod({
+                        name: 'callJ_' + key,
+                        args: args,
+                        type: ret,
+                        instance: false,
+                        description: null,
+                        orig: {
+                            javaCallbackType: toJavaType(func, ctx),
+                            javaCallback: true
+                        }
+                    });
+                default:
+            }
+
         }
 
         // Close namespaces
@@ -566,7 +683,7 @@ class Bind {
                     if (javaPack != '') {
                         write(javaPack.replace('.', '_') + '_', ctx);
                     }
-                    write('bind_1' + ctx.javaClass.name + '_call_1' + key + '(JNIEnv *env, jlong address', ctx);
+                    write('bind_1' + ctx.javaClass.name + '_callN_1' + key + '(JNIEnv *env, jlong address', ctx);
 
                     var n = 1;
                     for (funcArg in args) {
@@ -690,8 +807,7 @@ class Bind {
         writeLine('}', ctx);
         writeLineBreak(ctx);
 
-        // Add methods
-        for (method in ctx.javaClass.methods) {
+        function writeMethod(method:bind.Class.Method) {
 
             // Constructor?
             var isJavaConstructor = isJavaConstructor(method, ctx);
@@ -703,8 +819,15 @@ class Bind {
             var isGetter = method.orig != null && method.orig.getter == true;
             var isSetter = method.orig != null && method.orig.setter == true;
 
+            // Java callback called from native?
+            var isJavaCallback = method.orig != null && method.orig.javaCallback == true;
+            var javaCallbackType:String = null;
+            if (isJavaCallback) {
+                javaCallbackType = '' + method.orig.javaCallbackType;
+            }
+
             // Method return type
-            var ret = toJavaBindType(isSetter ? method.args[0].type : method.type, ctx);
+            var ret = toJavaBindFromJavaType(method.type, ctx);
             if (isJavaConstructor) {
                 ret = ctx.javaClass.name;
             }
@@ -721,7 +844,15 @@ class Bind {
             var args = [];
 
             // Method args
-            if (method.instance && !isJavaConstructor) {
+            if (isJavaCallback) {
+                if (javaCallbackType == 'Runnable' || javaCallbackType == 'Func0<Void>') {
+                    args.push('final Object _callback');
+                }
+                else {
+                    args.push('final ' + javaCallbackType + ' _callback');
+                }
+            }
+            else if (method.instance && !isJavaConstructor) {
                 args.push('final ' + ctx.javaClass.name + ' _instance');
             }
             for (arg in method.args) {
@@ -767,7 +898,10 @@ class Bind {
             }
 
             var callArgs = [];
-            if (method.instance && !isJavaConstructor) {
+            if (isJavaCallback) {
+                callArgs.push('_callback');
+            }
+            else if (method.instance && !isJavaConstructor) {
                 callArgs.push('_instance');
             }
             for (arg in method.args) {
@@ -834,9 +968,39 @@ class Bind {
             writeLine('}', ctx);
             writeLineBreak(ctx);
 
+        } //writeMethod
+
+        // Add methods
+        for (method in ctx.javaClass.methods) {
+
+            writeMethod(method);
+
         }
 
-        // Native callbacks
+        // Expose java callbacks to native
+        for (key in ctx.javaCallbacks.keys()) {
+
+            var func = ctx.javaCallbacks.get(key);
+            
+            switch (func) {
+                case Function(args, ret, orig):
+                    writeMethod({
+                        name: 'callJ_' + key,
+                        args: args,
+                        type: ret,
+                        instance: false,
+                        description: null,
+                        orig: {
+                            javaCallbackType: toJavaType(func, ctx),
+                            javaCallback: true
+                        }
+                    });
+                default:
+            }
+
+        }
+
+        // Expose native callbacks to java
         for (key in ctx.nativeCallbacks.keys()) {
 
             var func = ctx.nativeCallbacks.get(key);
@@ -845,7 +1009,7 @@ class Bind {
                 case Function(args, ret, orig):
                     writeIndent(ctx);
                     var retType = toJavaBindType(ret, ctx);
-                    write('static native ' + retType + ' call_' + key + '(long address', ctx);
+                    write('static native ' + retType + ' callN_' + key + '(long address', ctx);
 
                     var n = 1;
                     for (funcArg in args) {
@@ -946,6 +1110,17 @@ class Bind {
 
     } //toHaxeBindType
 
+    static function toHaxeBindFromJniType(type:bind.Class.Type, ctx:BindContext):String {
+
+        var result = switch (type) {
+            case Function(args, ret, orig): 'Pointer<Void>';
+            default: toHaxeBindType(type, ctx);
+        }
+
+        return result;
+
+    } //toHaxeBindType
+
 /// Haxe -> HXCPP
 
     static function toHxcppType(type:bind.Class.Type, ctx:BindContext):String {
@@ -984,6 +1159,17 @@ class Bind {
 
     } //toJniType
 
+    static function toJniFromJavaType(type:bind.Class.Type, ctx:BindContext):String {
+
+        var result = switch (type) {
+            case Function(args, ret, orig): 'jobject';
+            default: toJniType(type, ctx);
+        }
+
+        return result;
+
+    } //toJniFromJavaType
+
     static function toJniSignatureType(type:bind.Class.Type, ctx:BindContext):String {
 
         var javaType = toJavaType(type, ctx);
@@ -1005,7 +1191,18 @@ class Bind {
 
         return result;
 
-    } //toJniType
+    } //toJniSignatureType
+
+    static function toJniFromJavaSignatureType(type:bind.Class.Type, ctx:BindContext):String {
+
+        var result = switch (type) {
+            case Function(args, ret, orig): 'Ljava/lang/Object;';
+            default: toJniSignatureType(type, ctx);
+        }
+
+        return result;
+
+    } //toJniFromJavaSignatureType
 
 /// HXCPP -> Java
 
@@ -1055,6 +1252,18 @@ class Bind {
         return result;
 
     } //toJavaBindType
+
+    static function toJavaBindFromJavaType(type:bind.Class.Type, ctx:BindContext):String {
+
+        var result = switch (type) {
+            case Function(args, ret, orig): 'Object';
+            default:
+                toJavaBindType(type, ctx);
+        }
+
+        return result;
+
+    } //toJavaBindFromJavaType
 
     static function toNativeCallPart(part:String):String {
 
@@ -1156,7 +1365,7 @@ class Bind {
                 if (hasReturn) {
                     write('return_jni_result_.value = ', ctx);
                 }
-                write('call_', ctx);
+                write('callN_', ctx);
 
                 i = 0;
                 var allParts = '';
@@ -1247,14 +1456,29 @@ class Bind {
 
     static function writeJavaBindArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
 
-        var type = toJavaBindType(arg.type, ctx);
+        var type = toJavaBindFromJavaType(arg.type, ctx);
         var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_jni_';
         var value = (arg.name != null ? arg.name : 'arg' + (index + 1)) + (index == -1 ? '_java_' : '');
 
         switch (arg.type) {
 
             case Function(args, ret, orig):
-                writeLine('final ' + type + ' ' + name + ' = null; // Not implemented yet', ctx);
+                writeLine('final ' + type + ' ' + name + ' = $value;', ctx);
+
+                var retType = toJavaType(ret, ctx);
+
+                var allParts = '';
+                for (funcArg in args) {
+                    var part = toJavaType(funcArg.type, ctx);
+                    part = toNativeCallPart(part);
+                    allParts += part;
+                }
+                var part = toNativeCallPart(retType);
+                allParts += part;
+
+                if (!ctx.javaCallbacks.exists(allParts)) {
+                    ctx.javaCallbacks.set(allParts, arg.type);
+                }
 
             case String(orig):
                 writeIndent(ctx);
@@ -1333,11 +1557,11 @@ class Bind {
                 writeLineBreak(ctx);
 
             case Object(orig):
-                write('$type $name = NULL; // Not implemented yet', ctx);
+                write('$type $name = (jobject) (hx::IsNotNull($value) ? $value.ptr : NULL);', ctx);
                 writeLineBreak(ctx);
 
             default:
-                write('$type $name = NULL; // Not implemented yet', ctx);
+                write('$type $name = NULL; // Not implemented', ctx);
                 writeLineBreak(ctx);
         }
 
@@ -1347,6 +1571,7 @@ class Bind {
 
         var hasReturn = false;
         var isJavaConstructor = isJavaConstructor(method, ctx);
+        var isJavaCallback = method.orig != null && method.orig.javaCallback == true;
 
         writeIndent(ctx);
         switch (method.type) {
@@ -1355,7 +1580,7 @@ class Bind {
                 hasReturn = true;
         }
         if (hasReturn) {
-            var jniType = toJniType(method.type, ctx);
+            var jniType = toJniFromJavaType(method.type, ctx);
             write(jniType + ' return_jni_ = ', ctx);
             if (jniType == 'jstring') {
                 write('(jstring) ', ctx);
@@ -1389,7 +1614,10 @@ class Bind {
         }
 
         write('Method((jclass) class_.ptr, (jmethodID) method_.ptr', ctx);
-        if (method.instance && !isJavaConstructor) {
+        if (isJavaCallback) {
+            write(', (jobject) callback_.ptr', ctx);
+        }
+        else if (method.instance && !isJavaConstructor) {
             write(', (jobject) instance_.ptr', ctx);
         }
         
@@ -1417,7 +1645,75 @@ class Bind {
         switch (arg.type) {
 
             case Function(args, ret, orig):
-                writeLine('var $name:Dynamic = null; // Not implemented yet', ctx);
+                writeLine('var $name:$type = null;', ctx);
+                writeLine('if ($value != null) {', ctx);
+                ctx.indent++;
+                writeLine('var ' + name + 'jobj_ = new JObject($value);', ctx);
+                writeIndent(ctx);
+                write('$name = function(', ctx);
+                var i = 0;
+                for (funcArg in args) {
+                    if (i++ > 0) write(', ', ctx);
+                    write(funcArg.name + '_cl:' + toHaxeType(funcArg.type, ctx), ctx);
+                }
+                write(') {', ctx);
+                writeLineBreak(ctx);
+                ctx.indent++;
+
+                i = 0;
+                for (funcArg in args) {
+                    writeHaxeBindArgAssign({
+                        name: funcArg.name + '_cl',
+                        type: funcArg.type,
+                        orig: funcArg.orig
+                    }, i++, ctx);
+                }
+
+                // Call
+                writeIndent(ctx);
+                var hasReturn = false;
+                switch (ret) {
+                    case Void(orig):
+                    default:
+                        hasReturn = true;
+                        write('var return_jni_ = ', ctx);
+                }
+                write(ctx.javaClass.name + '_Extern.callJ_', ctx);
+
+                var retType = toJavaType(ret, ctx);
+
+                var allParts = '';
+                for (funcArg in args) {
+                    var part = toJavaType(funcArg.type, ctx);
+                    part = toNativeCallPart(part);
+                    allParts += part;
+                }
+                var part = toNativeCallPart(retType);
+                allParts += part;
+
+                if (!ctx.javaCallbacks.exists(allParts)) {
+                    ctx.javaCallbacks.set(allParts, arg.type);
+                }
+
+                write(allParts + '(_jclass, _mid_callJ_' + allParts + ', ' + arg.name + '_haxe_jobj_.pointer', ctx);
+                for (funcArg in args) {
+                    write(', ', ctx);
+                    write(funcArg.name + '_cl_jni_', ctx);
+                }
+                write(');', ctx);
+                writeLineBreak(ctx);
+                if (hasReturn) {
+                    writeHaxeArgAssign({
+                        name: 'return',
+                        type: ret
+                    }, -1, ctx);
+                    writeLine('return return_haxe_;', ctx);
+                }
+
+                ctx.indent--;
+                writeLine('};', ctx);
+                ctx.indent--;
+                writeLine('}', ctx);
 
             case String(orig):
                 writeIndent(ctx);
@@ -1436,7 +1732,7 @@ class Bind {
 
             case Bool(orig):
                 writeIndent(ctx);
-                write('var $name = $value ? 1 : 0;', ctx);
+                write('var $name = $value != 0;', ctx);
                 writeLineBreak(ctx);
 
             case Array(itemType, orig):
@@ -1593,7 +1889,7 @@ class Bind {
 
             case Function(args, ret, orig):
                 writeIndent(ctx);
-                write('$type $name = ::cpp::Pointer<void>(::bind::jni::GetJNIEnv()->NewGlobalRef($value));', ctx);
+                write('$type $name = $value != NULL ? ::cpp::Pointer<void>(::bind::jni::GetJNIEnv()->NewGlobalRef($value)) : null();', ctx);
                 writeLineBreak(ctx);
 
             case String(orig):
@@ -1628,7 +1924,7 @@ class Bind {
 
             case Object(orig):
                 writeIndent(ctx);
-                write('$type $name = ::cpp::Pointer<void>(::bind::jni::GetJNIEnv()->NewGlobalRef($value));', ctx);
+                write('$type $name = $value != NULL ? ::cpp::Pointer<void>(::bind::jni::GetJNIEnv()->NewGlobalRef($value)) : null();', ctx);
                 writeLineBreak(ctx);
 
             default:
@@ -1643,6 +1939,10 @@ class Bind {
 
         var hasReturn = false;
         var isJavaConstructor = isJavaConstructor(method, ctx);
+        var isJavaCallback = method.orig != null && method.orig.javaCallback == true;
+        var isGetter = method.orig != null && method.orig.getter == true;
+        var isSetter = method.orig != null && method.orig.setter == true;
+        var isImplicit = method.orig != null && method.orig.implicit == true;
 
         writeIndent(ctx);
         switch (method.type) {
@@ -1653,13 +1953,52 @@ class Bind {
         if (hasReturn) {
             switch (method.type) {
                 case Function(args, ret, orig):
-                    write('Object return_java_ = ', ctx);
+                    write('final Object return_java_ = ', ctx);
                 default:
                     var javaType = toJavaType(method.type, ctx);
-                    write(javaType + ' return_java_ = ', ctx);
+                    write('final ' + javaType + ' return_java_ = ', ctx);
             }
         }
-        if (isJavaConstructor) {
+        if (isJavaCallback) {
+            var javaCallbackType = '' + method.orig.javaCallbackType;
+            if (javaCallbackType == 'Runnable' || javaCallbackType == 'Func0<Void>') {
+                write('Runnable _callback_runnable = null;', ctx);
+                writeLineBreak(ctx);
+                writeLine('if (_callback instanceof Func0) {', ctx);
+                ctx.indent++;
+                writeLine('final Func0<Void> _callback_func0 = (Func0<Void>) _callback;', ctx);
+                writeLine('_callback_runnable = new Runnable() {', ctx);
+                ctx.indent++;
+                writeLine('public void run() {', ctx);
+                ctx.indent++;
+                writeLine('_callback_func0.run();', ctx);
+                ctx.indent--;
+                writeLine('}', ctx);
+                ctx.indent--;
+                writeLine('};', ctx);
+                ctx.indent--;
+                writeLine('} else {', ctx);
+                ctx.indent++;
+                writeLine('_callback_runnable = (Runnable) _callback;', ctx);
+                ctx.indent--;
+                writeLine('}', ctx);
+                writeIndent(ctx);
+                write('_callback_runnable.run(', ctx);
+            } else {
+                write('_callback.run(', ctx);
+            }
+        }
+        else if (isImplicit) {
+            if (method.instance) {
+                write('_instance.' + method.orig.property.name, ctx);
+            } else {
+                write(ctx.javaClass.name + '.' + method.orig.property.name, ctx);
+            }
+            if (isSetter) {
+                write(' = ', ctx);
+            }
+        }
+        else if (isJavaConstructor) {
             write('new ' + ctx.javaClass.name + '(', ctx);
         } else if (method.instance) {
             write('_instance.' + method.name + '(', ctx);
@@ -1671,7 +2010,11 @@ class Bind {
             if (n++ > 0) write(', ', ctx);
             write(arg.name + '_java_', ctx);
         }
-        write(');', ctx);
+        if (isImplicit) {
+            write(';', ctx);
+        } else {
+            write(');', ctx);
+        }
         writeLineBreak(ctx);
         if (hasReturn) {
             if (isJavaConstructor) {

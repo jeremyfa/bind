@@ -9,11 +9,11 @@ class Main {
         // Print something from Haxe
         trace('Hello From Haxe');
 
-        testAndroid(function() {});
+        testAndroid();
 
     } //main
 
-    static function testAndroid(done:Void->Void):Void {
+    static function testAndroid():Void {
 
         Sys.println(' -- TEST ANDROID --');
 
@@ -39,10 +39,19 @@ class Main {
         var result = nativeAndroid.testTypes(aBool, anInt, aFloat, anArray, aMap);
         trace('Result on Haxe side: ' + result);
 
-        nativeAndroid.hello('Jérémy', function() {
-            trace('-- called back haxe from java --');
-            done();
+        nativeAndroid.lastName = 'Java';
+        nativeAndroid.hello('Dansons la', function() {
+            // Done
+            trace('Java done.');
         });
+
+        // Add some callback when app gets paused/resumed
+        nativeAndroid.onPause = function() {
+            trace('Activity.onPause');
+        };
+        nativeAndroid.onResume = function() {
+            trace('Activity.onResume');
+        };
 
     } //testAndroid
 

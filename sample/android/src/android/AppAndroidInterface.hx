@@ -16,10 +16,11 @@ class AppAndroidInterface {
     /** Android Context */
     public static var context(get,set):JObject;
 
-    /** If provided, will be called when main activity is started/resumed */
-    public var onResume(get,set):Bool->Void;
+    /** If provided, will be called when main activity is paused */
+    public var onPause(get,set):Void->Void;
 
-    public var onDone1(get,set):Void->Void;
+    /** If provided, will be called when main activity is resumed */
+    public var onResume(get,set):Void->Void;
 
     /** Define a last name for hello() */
     public var lastName(get,set):String;
@@ -53,24 +54,6 @@ class AppAndroidInterface {
         AppAndroidInterface_Extern.hello(_jclass, _mid_hello, _instance.pointer, name_jni_, done_jni_);
     }
     private static var _mid_hello = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "hello", "(Lyourcompany/androidsample/AppAndroidInterface;Ljava/lang/String;J)V");
-
-    /** hello */
-    public function callbackTest(callback:Array<Dynamic>->String->Float):String {
-        var callback_jni_:HObject = null;
-        if (callback != null) {
-            callback_jni_ = new HObject(function(arg1_cl:String, arg2_cl:String) {
-                var arg1_cl_haxe_:Array<Dynamic> = haxe.Json.parse(arg1_cl);
-                var arg2_cl_haxe_ = arg2_cl;
-                var return_haxe_ = callback(arg1_cl_haxe_, arg2_cl_haxe_);
-                var return_jni_ = return_haxe_;
-                return return_jni_;
-            });
-        }
-        var return_jni_ = AppAndroidInterface_Extern.callbackTest(_jclass, _mid_callbackTest, _instance.pointer, callback_jni_);
-        var return_haxe_ = return_jni_;
-        return return_haxe_;
-    }
-    private static var _mid_callbackTest = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "callbackTest", "(Lyourcompany/androidsample/AppAndroidInterface;J)Ljava/lang/String;");
 
     /** Get Android version string */
     public function androidVersionString():String {
@@ -117,37 +100,9 @@ class AppAndroidInterface {
     }
     private static var _mid_setContext = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "setContext", "(Ljava/lang/Object;)V");
 
-    /** If provided, will be called when main activity is started/resumed */
-    inline private function get_onResume():Bool->Void {
-        var return_jni_ = AppAndroidInterface_Extern.getOnResume(_jclass, _mid_getOnResume, _instance.pointer);
-        var return_haxe_:Bool->Void = null;
-        if (return_jni_ != null) {
-            var return_haxe_jobj_ = new JObject(return_jni_);
-            return_haxe_ = function(arg1_cl:Bool) {
-                var arg1_cl_jni_ = arg1_cl ? 1 : 0;
-                AppAndroidInterface_Extern.callJ_BooleanVoid(_jclass, _mid_callJ_BooleanVoid, return_haxe_jobj_.pointer, arg1_cl_jni_);
-            };
-        }
-        return return_haxe_;
-    }
-    private static var _mid_getOnResume = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "getOnResume", "(Lyourcompany/androidsample/AppAndroidInterface;)Ljava/lang/Object;");
-
-    /** If provided, will be called when main activity is started/resumed */
-    inline private function set_onResume(onResume:Bool->Void):Bool->Void {
-        var onResume_jni_:HObject = null;
-        if (onResume != null) {
-            onResume_jni_ = new HObject(function(arg1_cl:Int) {
-                var arg1_cl_haxe_ = arg1_cl != 0;
-                onResume(arg1_cl_haxe_);
-            });
-        }
-        AppAndroidInterface_Extern.setOnResume(_jclass, _mid_setOnResume, _instance.pointer, onResume_jni_);
-        return onResume;
-    }
-    private static var _mid_setOnResume = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "setOnResume", "(Lyourcompany/androidsample/AppAndroidInterface;J)V");
-
-    inline private function get_onDone1():Void->Void {
-        var return_jni_ = AppAndroidInterface_Extern.getOnDone1(_jclass, _mid_getOnDone1, _instance.pointer);
+    /** If provided, will be called when main activity is paused */
+    inline private function get_onPause():Void->Void {
+        var return_jni_ = AppAndroidInterface_Extern.getOnPause(_jclass, _mid_getOnPause, _instance.pointer);
         var return_haxe_:Void->Void = null;
         if (return_jni_ != null) {
             var return_haxe_jobj_ = new JObject(return_jni_);
@@ -157,19 +112,47 @@ class AppAndroidInterface {
         }
         return return_haxe_;
     }
-    private static var _mid_getOnDone1 = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "getOnDone1", "(Lyourcompany/androidsample/AppAndroidInterface;)Ljava/lang/Object;");
+    private static var _mid_getOnPause = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "getOnPause", "(Lyourcompany/androidsample/AppAndroidInterface;)Ljava/lang/Object;");
 
-    inline private function set_onDone1(onDone1:Void->Void):Void->Void {
-        var onDone1_jni_:HObject = null;
-        if (onDone1 != null) {
-            onDone1_jni_ = new HObject(function() {
-                onDone1();
+    /** If provided, will be called when main activity is paused */
+    inline private function set_onPause(onPause:Void->Void):Void->Void {
+        var onPause_jni_:HObject = null;
+        if (onPause != null) {
+            onPause_jni_ = new HObject(function() {
+                onPause();
             });
         }
-        AppAndroidInterface_Extern.setOnDone1(_jclass, _mid_setOnDone1, _instance.pointer, onDone1_jni_);
-        return onDone1;
+        AppAndroidInterface_Extern.setOnPause(_jclass, _mid_setOnPause, _instance.pointer, onPause_jni_);
+        return onPause;
     }
-    private static var _mid_setOnDone1 = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "setOnDone1", "(Lyourcompany/androidsample/AppAndroidInterface;J)V");
+    private static var _mid_setOnPause = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "setOnPause", "(Lyourcompany/androidsample/AppAndroidInterface;J)V");
+
+    /** If provided, will be called when main activity is resumed */
+    inline private function get_onResume():Void->Void {
+        var return_jni_ = AppAndroidInterface_Extern.getOnResume(_jclass, _mid_getOnResume, _instance.pointer);
+        var return_haxe_:Void->Void = null;
+        if (return_jni_ != null) {
+            var return_haxe_jobj_ = new JObject(return_jni_);
+            return_haxe_ = function() {
+                AppAndroidInterface_Extern.callJ_Void(_jclass, _mid_callJ_Void, return_haxe_jobj_.pointer);
+            };
+        }
+        return return_haxe_;
+    }
+    private static var _mid_getOnResume = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "getOnResume", "(Lyourcompany/androidsample/AppAndroidInterface;)Ljava/lang/Object;");
+
+    /** If provided, will be called when main activity is resumed */
+    inline private function set_onResume(onResume:Void->Void):Void->Void {
+        var onResume_jni_:HObject = null;
+        if (onResume != null) {
+            onResume_jni_ = new HObject(function() {
+                onResume();
+            });
+        }
+        AppAndroidInterface_Extern.setOnResume(_jclass, _mid_setOnResume, _instance.pointer, onResume_jni_);
+        return onResume;
+    }
+    private static var _mid_setOnResume = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "setOnResume", "(Lyourcompany/androidsample/AppAndroidInterface;J)V");
 
     /** Define a last name for hello() */
     inline private function get_lastName():String {
@@ -187,7 +170,6 @@ class AppAndroidInterface {
     }
     private static var _mid_setLastName = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "setLastName", "(Lyourcompany/androidsample/AppAndroidInterface;Ljava/lang/String;)V");
 
-    private static var _mid_callJ_BooleanVoid = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "callJ_BooleanVoid", "(Ljava/lang/Object;I)V");
     private static var _mid_callJ_Void = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "callJ_Void", "(Ljava/lang/Object;)V");
 }
 
@@ -209,9 +191,6 @@ private extern class AppAndroidInterface_Extern {
     @:native('android::AppAndroidInterface_hello')
     static function hello(class_:JClass, method_:JMethodID, instance_:Pointer<Void>, name:String, done:HObject):Void;
 
-    @:native('android::AppAndroidInterface_callbackTest')
-    static function callbackTest(class_:JClass, method_:JMethodID, instance_:Pointer<Void>, callback:HObject):String;
-
     @:native('android::AppAndroidInterface_androidVersionString')
     static function androidVersionString(class_:JClass, method_:JMethodID, instance_:Pointer<Void>):String;
 
@@ -227,26 +206,23 @@ private extern class AppAndroidInterface_Extern {
     @:native('android::AppAndroidInterface_setContext')
     static function setContext(class_:JClass, method_:JMethodID, context:Pointer<Void>):Void;
 
+    @:native('android::AppAndroidInterface_getOnPause')
+    static function getOnPause(class_:JClass, method_:JMethodID, instance_:Pointer<Void>):Pointer<Void>;
+
+    @:native('android::AppAndroidInterface_setOnPause')
+    static function setOnPause(class_:JClass, method_:JMethodID, instance_:Pointer<Void>, onPause:HObject):Void;
+
     @:native('android::AppAndroidInterface_getOnResume')
     static function getOnResume(class_:JClass, method_:JMethodID, instance_:Pointer<Void>):Pointer<Void>;
 
     @:native('android::AppAndroidInterface_setOnResume')
     static function setOnResume(class_:JClass, method_:JMethodID, instance_:Pointer<Void>, onResume:HObject):Void;
 
-    @:native('android::AppAndroidInterface_getOnDone1')
-    static function getOnDone1(class_:JClass, method_:JMethodID, instance_:Pointer<Void>):Pointer<Void>;
-
-    @:native('android::AppAndroidInterface_setOnDone1')
-    static function setOnDone1(class_:JClass, method_:JMethodID, instance_:Pointer<Void>, onDone1:HObject):Void;
-
     @:native('android::AppAndroidInterface_getLastName')
     static function getLastName(class_:JClass, method_:JMethodID, instance_:Pointer<Void>):String;
 
     @:native('android::AppAndroidInterface_setLastName')
     static function setLastName(class_:JClass, method_:JMethodID, instance_:Pointer<Void>, lastName:String):Void;
-
-    @:native('android::AppAndroidInterface_callJ_BooleanVoid')
-    static function callJ_BooleanVoid(class_:JClass, method_:JMethodID, callback_:Pointer<Void>, arg1:Int):Void;
 
     @:native('android::AppAndroidInterface_callJ_Void')
     static function callJ_Void(class_:JClass, method_:JMethodID, callback_:Pointer<Void>):Void;

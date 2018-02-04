@@ -22,4 +22,19 @@ public class MainActivity extends AppCompatActivity {
         HXCPP.run("Main");
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        AppAndroidInterface appInterface = AppAndroidInterface.sharedInterface();
+        if (appInterface.onPause != null) appInterface.onPause.run();
+    }
+
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+
+        AppAndroidInterface appInterface = AppAndroidInterface.sharedInterface();
+        if (appInterface.onResume != null) appInterface.onResume.run();
+    }
 }

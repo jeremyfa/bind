@@ -7,15 +7,12 @@ import android.os.Looper;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONStringer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Java support file for bind.
@@ -106,6 +103,7 @@ public class Support {
 
             try {
                 // TODO use ReferenceQueue/PhantomReferences instead of finalize()
+                // (but it's ok as is for now)
                 Support.notifyFinalize(address);
             }
             finally {

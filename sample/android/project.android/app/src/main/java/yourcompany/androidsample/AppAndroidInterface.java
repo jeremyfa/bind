@@ -44,11 +44,14 @@ public class AppAndroidInterface {
     } //SharedInterface
 
     /**
-     * If provided, will be called when main activity is started/resumed
+     * If provided, will be called when main activity is paused
      */
-    public Func1<Boolean,Void> onResume = null;
+    public Runnable onPause = null;
 
-    public Runnable onDone1 = null;
+    /**
+     * If provided, will be called when main activity is resumed
+     */
+    public Runnable onResume = null;
 
     /**
      * Define a last name for hello()
@@ -79,19 +82,6 @@ public class AppAndroidInterface {
                 .show();
 
     } //hello
-
-    public String callbackTest(final Func2<List<String>,String,Float> callback) {
-
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                float result = callback.run(Arrays.asList("a", "b", "c", "d"), "test");
-            }
-        }, 1000);
-
-        return "wait 1 second.";
-
-    } //callbackTest
 
     /**
      * Get Android version string

@@ -52,6 +52,9 @@ class Bind {
             if (options.javaCode != null) ctx.javaCode = options.javaCode;
         }
 
+        // Copy Java support file
+        copyJavaSupportFile(ctx);
+
         // Generate Haxe file
         generateHaxeFile(ctx);
 
@@ -795,7 +798,7 @@ class Bind {
             writeComment(ctx.javaClass.description, ctx);
         }
 
-        writeLine('@SuppressWarnings("all")', ctx);
+        writeLine('@SuppressWarnings("all,unchecked")', ctx);
         writeLine('class ' + bindingName + ' {', ctx);
         ctx.indent++;
         writeLineBreak(ctx);
@@ -845,12 +848,7 @@ class Bind {
 
             // Method args
             if (isJavaCallback) {
-                if (javaCallbackType == 'Runnable' || javaCallbackType == 'Func0<Void>') {
-                    args.push('final Object _callback');
-                }
-                else {
-                    args.push('final ' + javaCallbackType + ' _callback');
-                }
+                args.push('final Object _callback');
             }
             else if (method.instance && !isJavaConstructor) {
                 args.push('final ' + ctx.javaClass.name + ' _instance');
@@ -1035,6 +1033,20 @@ class Bind {
         ctx.currentFile = null;
 
     } //generateJavaFile
+
+    public static function copyJavaSupportFile(ctx:BindContext):Void {
+
+        if (ctx.javaPath == null) return;
+
+        ctx.currentFile = {
+            path: Path.join(['java', 'bind', 'Support.java']),
+            content: '' + sys.io.File.getContent(Path.join([Path.directory(Sys.programPath()), 'support/java/bind/Support.java']))
+        };
+
+        ctx.files.push(ctx.currentFile);
+        ctx.currentFile = null;
+
+    } //copyObjcHeaderFile
 
 /// Java -> Haxe
 
@@ -1985,7 +1997,7 @@ class Bind {
                 writeIndent(ctx);
                 write('_callback_runnable.run(', ctx);
             } else {
-                write('_callback.run(', ctx);
+                write('(($javaCallbackType)_callback).run(', ctx);
             }
         }
         else if (isImplicit) {

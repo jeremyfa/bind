@@ -13,7 +13,7 @@ import java.util.Map;
 import bind.Support.*;
 
 /** Java/Android interface */
-@SuppressWarnings("all")
+@SuppressWarnings("all,unchecked")
 class bind_AppAndroidInterface {
 
     private static class bind_Result {
@@ -108,56 +108,6 @@ class bind_AppAndroidInterface {
                 }
             };
             _instance.hello(name_java_, done_java_);
-        }
-    }
-
-    /** hello */
-    public static String callbackTest(final AppAndroidInterface _instance, final long callback) {
-        if (!bind.Support.isUIThread()) {
-            final BindResult _bind_result = new BindResult();
-            bind.Support.getUIThreadHandler().post(new Runnable() {
-                public void run() {
-                    synchronized(_bind_result) {
-                        try {
-                            _bind_result.value = bind_AppAndroidInterface.callbackTest(_instance, callback);
-                        } catch (Throwable e) {
-                            e.printStackTrace();
-                        }
-                        _bind_result.resolved = true;
-                        _bind_result.notifyAll();
-                    }
-                }
-            });
-            synchronized(_bind_result) {
-                if (!_bind_result.resolved) {
-                    try {
-                        _bind_result.wait();
-                    } catch (Throwable e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            return (String) _bind_result.value;
-        } else {
-            final HaxeObject callback_java_hobj_ = callback == 0 ? null : new HaxeObject(callback);
-            final Func2<List<String>,String,Float> callback_java_ = callback == 0 ? null : new Func2<List<String>,String,Float>() {
-                public Float run(final List<String> arg1, final String arg2) {
-                    final String arg1_jni_ = bind.Support.toJSONString(arg1);
-                    final String arg2_jni_ = arg2;
-                    final BindResult return_jni_result_ = new BindResult();
-                    bind.Support.runInNativeThreadSync(new Runnable() {
-                        public void run() {
-                            return_jni_result_.value = callN_ListStringFloat(callback_java_hobj_.address, arg1_jni_, arg2_jni_);
-                        }
-                    });
-                    float return_jni_ = (float) return_jni_result_.value;
-                    final Float return_java_ = return_jni_;
-                    return return_java_;
-                }
-            };
-            final String return_java_ = _instance.callbackTest(callback_java_);
-            final String return_jni_ = return_java_;
-            return return_jni_;
         }
     }
 
@@ -316,7 +266,64 @@ class bind_AppAndroidInterface {
         }
     }
 
-    /** If provided, will be called when main activity is started/resumed */
+    /** If provided, will be called when main activity is paused */
+    public static Object getOnPause(final AppAndroidInterface _instance) {
+        if (!bind.Support.isUIThread()) {
+            final BindResult _bind_result = new BindResult();
+            bind.Support.getUIThreadHandler().post(new Runnable() {
+                public void run() {
+                    synchronized(_bind_result) {
+                        try {
+                            _bind_result.value = bind_AppAndroidInterface.getOnPause(_instance);
+                        } catch (Throwable e) {
+                            e.printStackTrace();
+                        }
+                        _bind_result.resolved = true;
+                        _bind_result.notifyAll();
+                    }
+                }
+            });
+            synchronized(_bind_result) {
+                if (!_bind_result.resolved) {
+                    try {
+                        _bind_result.wait();
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return (Object) _bind_result.value;
+        } else {
+            final Object return_java_ = _instance.onPause;
+            final Object return_jni_ = return_java_;
+            return return_jni_;
+        }
+    }
+
+    /** If provided, will be called when main activity is paused */
+    public static void setOnPause(final AppAndroidInterface _instance, final long onPause) {
+        if (!bind.Support.isUIThread()) {
+            bind.Support.getUIThreadHandler().post(new Runnable() {
+                public void run() {
+                    bind_AppAndroidInterface.setOnPause(_instance, onPause);
+                }
+            });
+        } else {
+            final HaxeObject onPause_java_hobj_ = onPause == 0 ? null : new HaxeObject(onPause);
+            final Runnable onPause_java_ = onPause == 0 ? null : new Runnable() {
+                public void run() {
+                    bind.Support.runInNativeThread(new Runnable() {
+                        public void run() {
+                            callN_Void(onPause_java_hobj_.address);
+                        }
+                    });
+                }
+            };
+            _instance.onPause = onPause_java_;
+        }
+    }
+
+    /** If provided, will be called when main activity is resumed */
     public static Object getOnResume(final AppAndroidInterface _instance) {
         if (!bind.Support.isUIThread()) {
             final BindResult _bind_result = new BindResult();
@@ -350,7 +357,7 @@ class bind_AppAndroidInterface {
         }
     }
 
-    /** If provided, will be called when main activity is started/resumed */
+    /** If provided, will be called when main activity is resumed */
     public static void setOnResume(final AppAndroidInterface _instance, final long onResume) {
         if (!bind.Support.isUIThread()) {
             bind.Support.getUIThreadHandler().post(new Runnable() {
@@ -360,73 +367,16 @@ class bind_AppAndroidInterface {
             });
         } else {
             final HaxeObject onResume_java_hobj_ = onResume == 0 ? null : new HaxeObject(onResume);
-            final Func1<Boolean,Void> onResume_java_ = onResume == 0 ? null : new Func1<Boolean,Void>() {
-                public Void run(final Boolean arg1) {
-                    final int arg1_jni_ = arg1 ? 1 : 0;
+            final Runnable onResume_java_ = onResume == 0 ? null : new Runnable() {
+                public void run() {
                     bind.Support.runInNativeThread(new Runnable() {
                         public void run() {
-                            callN_BooleanVoid(onResume_java_hobj_.address, arg1_jni_);
+                            callN_Void(onResume_java_hobj_.address);
                         }
                     });
-                    return null;
                 }
             };
             _instance.onResume = onResume_java_;
-        }
-    }
-
-    public static Object getOnDone1(final AppAndroidInterface _instance) {
-        if (!bind.Support.isUIThread()) {
-            final BindResult _bind_result = new BindResult();
-            bind.Support.getUIThreadHandler().post(new Runnable() {
-                public void run() {
-                    synchronized(_bind_result) {
-                        try {
-                            _bind_result.value = bind_AppAndroidInterface.getOnDone1(_instance);
-                        } catch (Throwable e) {
-                            e.printStackTrace();
-                        }
-                        _bind_result.resolved = true;
-                        _bind_result.notifyAll();
-                    }
-                }
-            });
-            synchronized(_bind_result) {
-                if (!_bind_result.resolved) {
-                    try {
-                        _bind_result.wait();
-                    } catch (Throwable e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            return (Object) _bind_result.value;
-        } else {
-            final Object return_java_ = _instance.onDone1;
-            final Object return_jni_ = return_java_;
-            return return_jni_;
-        }
-    }
-
-    public static void setOnDone1(final AppAndroidInterface _instance, final long onDone1) {
-        if (!bind.Support.isUIThread()) {
-            bind.Support.getUIThreadHandler().post(new Runnable() {
-                public void run() {
-                    bind_AppAndroidInterface.setOnDone1(_instance, onDone1);
-                }
-            });
-        } else {
-            final HaxeObject onDone1_java_hobj_ = onDone1 == 0 ? null : new HaxeObject(onDone1);
-            final Runnable onDone1_java_ = onDone1 == 0 ? null : new Runnable() {
-                public void run() {
-                    bind.Support.runInNativeThread(new Runnable() {
-                        public void run() {
-                            callN_Void(onDone1_java_hobj_.address);
-                        }
-                    });
-                }
-            };
-            _instance.onDone1 = onDone1_java_;
         }
     }
 
@@ -478,19 +428,6 @@ class bind_AppAndroidInterface {
         }
     }
 
-    public static void callJ_BooleanVoid(final Func1<Boolean,Void> _callback, final int arg1) {
-        if (!bind.Support.isUIThread()) {
-            bind.Support.getUIThreadHandler().post(new Runnable() {
-                public void run() {
-                    bind_AppAndroidInterface.callJ_BooleanVoid(_callback, arg1);
-                }
-            });
-        } else {
-            final Boolean arg1_java_ = arg1 != 0;
-            _callback.run(arg1_java_);
-        }
-    }
-
     public static void callJ_Void(final Object _callback) {
         if (!bind.Support.isUIThread()) {
             bind.Support.getUIThreadHandler().post(new Runnable() {
@@ -515,10 +452,6 @@ class bind_AppAndroidInterface {
     }
 
     static native void callN_Void(long address);
-
-    static native float callN_ListStringFloat(long address, String arg1, String arg2);
-
-    static native void callN_BooleanVoid(long address, int arg1);
 
 }
 

@@ -1,5 +1,8 @@
 #include "linc_JNI.h"
 #include "linc_AppAndroidInterface.h"
+#ifndef INCLUDED_bind_java_HObject
+#include <bind/java/HObject.h>
+#endif
 
 /** Java/Android interface */
 namespace android {
@@ -57,6 +60,32 @@ namespace android {
         jstring return_jni_ = (jstring) ::bind::jni::GetJNIEnv()->CallStaticObjectMethod((jclass) class_.ptr, (jmethodID) method_.ptr, (jobject) instance_.ptr, aBool_jni_, anInt_jni_, aFloat_jni_, aList_jni_, aMap_jni_);
         ::String return_hxcpp_ = ::bind::jni::JStringToHxcpp(return_jni_);
         return return_hxcpp_;
+    }
+
+}
+
+extern "C" {
+
+    JNIEXPORT void Java_yourcompany_androidsample_bind_1AppAndroidInterface_call_1Void(JNIEnv *env, jlong address) {
+        int haxe_stack_ = 99;
+        hx::SetTopOfStack(&haxe_stack_, true);
+        ::Dynamic func_hobject_ = ::bind::jni::JLongToHObject(address);
+        ::Dynamic func_unwrapped_ = ::bind::java::HObject_obj::unwrap(func_hobject_);
+        func_unwrapped_->__run();
+        hx::SetTopOfStack((int *)0, true);
+    }
+
+    JNIEXPORT jfloat Java_yourcompany_androidsample_bind_1AppAndroidInterface_call_1ListStringFloat(JNIEnv *env, jlong address, jstring arg1, jstring arg2) {
+        int haxe_stack_ = 99;
+        hx::SetTopOfStack(&haxe_stack_, true);
+        ::String arg1_hxcpp_ = ::bind::jni::JStringToHxcpp(arg1);
+        ::String arg2_hxcpp_ = ::bind::jni::JStringToHxcpp(arg2);
+        ::Dynamic func_hobject_ = ::bind::jni::JLongToHObject(address);
+        ::Dynamic func_unwrapped_ = ::bind::java::HObject_obj::unwrap(func_hobject_);
+        jfloat return_jni_ = func_unwrapped_->__run(arg1_hxcpp_, arg2_hxcpp_);
+        double return_hxcpp_ = (double) return_jni_;
+        return return_hxcpp_;
+        hx::SetTopOfStack((int *)0, true);
     }
 
 }

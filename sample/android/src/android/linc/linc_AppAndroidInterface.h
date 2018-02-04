@@ -27,3 +27,11 @@ namespace android {
 
 }
 
+extern "C" {
+
+    JNIEXPORT void Java_yourcompany_androidsample_bind_1AppAndroidInterface_call_1Void(JNIEnv *env, jlong address);
+
+    JNIEXPORT jfloat Java_yourcompany_androidsample_bind_1AppAndroidInterface_call_1ListStringFloat(JNIEnv *env, jlong address, jstring arg1, jstring arg2);
+
+}
+

@@ -91,13 +91,13 @@ namespace bind {
                 hx::Object *objPointer = hobjectRef.mPtr;
                 return (jlong)(void*)objPointer;
             }
-            return (jlong) NULL;
+            return 0;
 
         } //HObjectToJLong
 
         ::Dynamic JLongToHObject(jlong address) {
 
-            if (address == ((jlong) NULL)) {
+            if (address == 0) {
                 return null();
             }
             ::Dynamic result = ::Dynamic();
@@ -119,11 +119,16 @@ extern "C" {
     } //init
 
     JNIEXPORT void JNICALL Java_bind_Support_releaseHaxeObject(JNIEnv *env, jlong address) {
-        
+
+        int haxe_stack_ = 99;
+        hx::SetTopOfStack(&haxe_stack_, true);
+
         ::Dynamic hobjectRef = ::bind::jni::JLongToHObject(address);
         if (hx::IsNotNull(hobjectRef)) {
             ((::bind::java::HObject)hobjectRef)->destroy();
         }
+
+        hx::SetTopOfStack((int *)0, true);
 
     } //releaseHaxeObject
  

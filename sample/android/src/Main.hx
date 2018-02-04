@@ -39,7 +39,10 @@ class Main {
         var result = nativeAndroid.testTypes(aBool, anInt, aFloat, anArray, aMap);
         trace('Result on Haxe side: ' + result);
 
-        done();
+        nativeAndroid.hello('Jérémy', function() {
+            trace('-- called back haxe from java --');
+            done();
+        });
 
     } //testAndroid
 

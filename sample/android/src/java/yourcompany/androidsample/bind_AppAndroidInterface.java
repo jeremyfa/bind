@@ -49,7 +49,7 @@ class bind_AppAndroidInterface {
             return (AppAndroidInterface) _bind_result.value;
         } else {
             AppAndroidInterface return_java_ = AppAndroidInterface.sharedInterface();
-            AppAndroidInterface return_jni_ = (AppAndroidInterface) return_java_;
+            final AppAndroidInterface return_jni_ = (AppAndroidInterface) return_java_;
             return return_jni_;
         }
     }
@@ -96,11 +96,15 @@ class bind_AppAndroidInterface {
                 }
             });
         } else {
-            String name_java_ = name;
-            final HaxeObject done_java_hobj_ = new HaxeObject(done);
-            Runnable done_java_ = new Runnable() {
+            final String name_java_ = name;
+            final HaxeObject done_java_hobj_ = done == 0 ? null : new HaxeObject(done);
+            final Runnable done_java_ = done == 0 ? null : new Runnable() {
                 public void run() {
-                    call_Void(done_java_hobj_.address);
+                    bind.Support.runInNativeThread(new Runnable() {
+                        public void run() {
+                            call_Void(done_java_hobj_.address);
+                        }
+                    });
                 }
             };
             _instance.hello(name_java_, done_java_);
@@ -135,18 +139,24 @@ class bind_AppAndroidInterface {
             }
             return (String) _bind_result.value;
         } else {
-            final HaxeObject callback_java_hobj_ = new HaxeObject(callback);
-            Func2<List<String>,String,Float> callback_java_ = new Func2<List<String>,String,Float>() {
+            final HaxeObject callback_java_hobj_ = callback == 0 ? null : new HaxeObject(callback);
+            final Func2<List<String>,String,Float> callback_java_ = callback == 0 ? null : new Func2<List<String>,String,Float>() {
                 public Float run(final List<String> arg1, final String arg2) {
-                    String arg1_jni_ = bind.Support.toJSONString(arg1);
-                    String arg2_jni_ = arg2;
-                    float return_jni_ = call_ListStringFloat(callback_java_hobj_.address, arg1_jni_, arg2_jni_);
-                    Float return_java_ = return_jni_;
+                    final String arg1_jni_ = bind.Support.toJSONString(arg1);
+                    final String arg2_jni_ = arg2;
+                    final BindResult return_jni_result_ = new BindResult();
+                    bind.Support.runInNativeThreadSync(new Runnable() {
+                        public void run() {
+                            return_jni_result_.value = call_ListStringFloat(callback_java_hobj_.address, arg1_jni_, arg2_jni_);
+                        }
+                    });
+                    float return_jni_ = (float) return_jni_result_.value;
+                    final Float return_java_ = return_jni_;
                     return return_java_;
                 }
             };
             String return_java_ = _instance.callbackTest(callback_java_);
-            String return_jni_ = return_java_;
+            final String return_jni_ = return_java_;
             return return_jni_;
         }
     }
@@ -180,7 +190,7 @@ class bind_AppAndroidInterface {
             return (String) _bind_result.value;
         } else {
             String return_java_ = _instance.androidVersionString();
-            String return_jni_ = return_java_;
+            final String return_jni_ = return_java_;
             return return_jni_;
         }
     }
@@ -214,7 +224,7 @@ class bind_AppAndroidInterface {
             return (int) _bind_result.value;
         } else {
             int return_java_ = _instance.androidVersionNumber();
-            int return_jni_ = return_java_;
+            final int return_jni_ = return_java_;
             return return_jni_;
         }
     }
@@ -247,13 +257,13 @@ class bind_AppAndroidInterface {
             }
             return (String) _bind_result.value;
         } else {
-            boolean aBool_java_ = aBool != 0;
-            int anInt_java_ = anInt;
-            float aFloat_java_ = aFloat;
-            List<Object> aList_java_ = (List<Object>) bind.Support.fromJSONString(aList);
-            Map<String,Object> aMap_java_ = (Map<String,Object>) bind.Support.fromJSONString(aMap);
+            final boolean aBool_java_ = aBool != 0;
+            final int anInt_java_ = anInt;
+            final float aFloat_java_ = aFloat;
+            final List<Object> aList_java_ = (List<Object>) bind.Support.fromJSONString(aList);
+            final Map<String,Object> aMap_java_ = (Map<String,Object>) bind.Support.fromJSONString(aMap);
             List<Object> return_java_ = _instance.testTypes(aBool_java_, anInt_java_, aFloat_java_, aList_java_, aMap_java_);
-            String return_jni_ = bind.Support.toJSONString(return_java_);
+            final String return_jni_ = bind.Support.toJSONString(return_java_);
             return return_jni_;
         }
     }

@@ -443,7 +443,11 @@ class Bind {
         } else {
             writeLine('#include "linc_JNI.h"', ctx);
             writeLine('#include "linc_' + ctx.javaClass.name + '.h"', ctx);
+            writeLine('#ifndef INCLUDED_bind_java_HObject', ctx);
+            writeLine('#include <bind/java/HObject.h>', ctx);
+            writeLine('#endif', ctx);
         }
+
 
         writeLineBreak(ctx);
 
@@ -535,6 +539,100 @@ class Bind {
 
         // Close namespaces
         for (name in namespaceEntries) {
+            ctx.indent--;
+            writeLine('}', ctx);
+            writeLineBreak(ctx);
+        }
+
+        // Native callbacks exposed to JNI
+        var hasNativeCallbacks = false;
+        for (key in ctx.nativeCallbacks.keys()) {
+
+            if (!hasNativeCallbacks) {
+                hasNativeCallbacks = true;
+                writeLine('extern "C" {', ctx);
+                writeLineBreak(ctx);
+                ctx.indent++;
+            }
+
+            var func = ctx.nativeCallbacks.get(key);
+
+            switch (func) {
+                case Function(args, ret, orig):
+                    writeIndent(ctx);
+                    var retType = toJniType(ret, ctx);
+                    write('JNIEXPORT ' + retType + ' Java_', ctx);
+                    var javaPack = (''+ctx.javaClass.orig.pack);
+                    if (javaPack != '') {
+                        write(javaPack.replace('.', '_') + '_', ctx);
+                    }
+                    write('bind_1' + ctx.javaClass.name + '_call_1' + key + '(JNIEnv *env, jlong address', ctx);
+
+                    var n = 1;
+                    for (funcArg in args) {
+                        var argType = toJniType(funcArg.type, ctx);
+                        write(', $argType arg' + (n++), ctx);
+                    }
+
+                    if (header) {
+                        write(');', ctx);
+                        writeLineBreak(ctx);
+                    }
+                    else {
+                        write(') {', ctx);
+                        writeLineBreak(ctx);
+                        ctx.indent++;
+
+                        writeLine('int haxe_stack_ = 99;', ctx);
+                        writeLine('hx::SetTopOfStack(&haxe_stack_, true);', ctx);
+
+                        var i = 0;
+                        for (funcArg in args) {
+                            writeHxcppArgAssign(funcArg, i++, ctx);
+                        }
+
+                        // Call
+                        var hasReturn = false;
+                        writeLine('::Dynamic func_hobject_ = ::bind::jni::JLongToHObject(address);', ctx);
+                        writeLine('::Dynamic func_unwrapped_ = ::bind::java::HObject_obj::unwrap(func_hobject_);', ctx);
+                        writeIndent(ctx);
+                        switch (ret) {
+                            case Void(orig):
+                            default:
+                                hasReturn = true;
+                                write(toJniType(ret, ctx) + ' return_jni_ = ', ctx);
+                        }
+                        write('func_unwrapped_->__run(', ctx);
+                        i = 0;
+                        for (funcArg in args) {
+                            if (i++ > 0) write(', ', ctx);
+                            write(funcArg.name + '_hxcpp_', ctx);
+                        }
+                        write(');', ctx);
+                        writeLineBreak(ctx);
+
+                        if (hasReturn) {
+                            writeHxcppArgAssign({
+                                name: 'return',
+                                type: ret
+                            }, -1, ctx);
+                            writeLine('return return_hxcpp_;', ctx);
+                        }
+
+                        writeLine('hx::SetTopOfStack((int *)0, true);', ctx);
+
+                        ctx.indent--;
+                        writeLine('}', ctx);
+                    }
+
+                    writeLineBreak(ctx);
+
+                default:
+            }
+
+        }
+
+        if (hasNativeCallbacks) {
             ctx.indent--;
             writeLine('}', ctx);
             writeLineBreak(ctx);
@@ -900,7 +998,7 @@ class Bind {
             case Array(itemType, orig): 'Ljava/lang/String;';
             case Map(itemType, orig): 'Ljava/lang/String;';
             case Object(orig): 'Ljava/lang/Object;';
-            case Function(args, ret, orig): 'Ljava/lang/Object;';
+            case Function(args, ret, orig): 'J';
         }
 
         return result;
@@ -1013,8 +1111,10 @@ class Bind {
 
             case Function(args, ret, orig):
                 var retType = toJavaType(ret, ctx);
-                writeLine('final HaxeObject ' + name + 'hobj_ = new HaxeObject($value);', ctx);
-                writeLine(type + ' ' + name + ' = new ' + type + '() {', ctx);
+                var hasReturn = retType != 'void' && retType != 'Void';
+
+                writeLine('final HaxeObject ' + name + 'hobj_ = $value == 0 ? null : new HaxeObject($value);', ctx);
+                writeLine('final ' + type + ' ' + name + ' = $value == 0 ? null : new ' + type + '() {', ctx);
                 ctx.indent++;
                 writeIndent(ctx);
                 write('public $retType run(', ctx);
@@ -1039,13 +1139,21 @@ class Bind {
                     i++;
                 }
 
+                if (hasReturn) {
+                    writeLine('final BindResult return_jni_result_ = new BindResult();', ctx);
+                    writeLine('bind.Support.runInNativeThreadSync(new Runnable() {', ctx);
+                } else {
+                    writeLine('bind.Support.runInNativeThread(new Runnable() {', ctx);
+                }
+                ctx.indent++;
+                writeLine('public void run() {', ctx);
+                ctx.indent++;
+
                 // Call
                 writeIndent(ctx);
-
-                if (retType != 'void' && retType != 'Void') {
-                    write(toJavaBindType(ret, ctx) + ' return_jni_ = ', ctx);
+                if (hasReturn) {
+                    write('return_jni_result_.value = ', ctx);
                 }
-
                 write('call_', ctx);
 
                 i = 0;
@@ -1074,10 +1182,17 @@ class Bind {
                 write(');', ctx);
                 writeLineBreak(ctx);
 
+                ctx.indent--;
+                writeLine('}', ctx);
+                ctx.indent--;
+                writeLine('});', ctx);
+
                 if (retType == 'Void') {
                     writeLine('return null;', ctx);
                 }
                 else if (retType != 'void') {
+                    var javaBindRetType = toJavaBindType(ret, ctx);
+                    writeLine(javaBindRetType + ' return_jni_ = ($javaBindRetType) return_jni_result_.value;', ctx);
                     writeJavaArgAssign({
                         name: 'return',
                         type: ret
@@ -1092,37 +1207,37 @@ class Bind {
 
             case String(orig):
                 writeIndent(ctx);
-                write('$type $name = $value;', ctx);
+                write('final $type $name = $value;', ctx);
                 writeLineBreak(ctx);
 
             case Int(orig):
                 writeIndent(ctx);
-                write('$type $name = $value;', ctx);
+                write('final $type $name = $value;', ctx);
                 writeLineBreak(ctx);
 
             case Float(orig):
                 writeIndent(ctx);
-                write('$type $name = $value;', ctx);
+                write('final $type $name = $value;', ctx);
                 writeLineBreak(ctx);
 
             case Bool(orig):
                 writeIndent(ctx);
-                write('$type $name = $value != 0;', ctx);
+                write('final $type $name = $value != 0;', ctx);
                 writeLineBreak(ctx);
 
             case Array(itemType, orig):
                 writeIndent(ctx);
-                write('$type $name = ($type) bind.Support.fromJSONString($value);', ctx);
+                write('final $type $name = ($type) bind.Support.fromJSONString($value);', ctx);
                 writeLineBreak(ctx);
 
             case Map(itemType, orig):
                 writeIndent(ctx);
-                write('$type $name = ($type) bind.Support.fromJSONString($value);', ctx);
+                write('final $type $name = ($type) bind.Support.fromJSONString($value);', ctx);
                 writeLineBreak(ctx);
 
             default:
                 writeIndent(ctx);
-                write('$type $name = ($type) $value;', ctx);
+                write('final $type $name = ($type) $value;', ctx);
                 writeLineBreak(ctx);
         }
 
@@ -1137,41 +1252,41 @@ class Bind {
         switch (arg.type) {
 
             case Function(args, ret, orig):
-                writeLine(type + ' ' + name + ' = null; // Not implemented yet', ctx);
+                writeLine('final ' + type + ' ' + name + ' = null; // Not implemented yet', ctx);
 
             case String(orig):
                 writeIndent(ctx);
-                write('$type $name = $value;', ctx);
+                write('final $type $name = $value;', ctx);
                 writeLineBreak(ctx);
 
             case Int(orig):
                 writeIndent(ctx);
-                write('$type $name = $value;', ctx);
+                write('final $type $name = $value;', ctx);
                 writeLineBreak(ctx);
 
             case Float(orig):
                 writeIndent(ctx);
-                write('$type $name = $value;', ctx);
+                write('final $type $name = $value;', ctx);
                 writeLineBreak(ctx);
 
             case Bool(orig):
                 writeIndent(ctx);
-                write('$type $name = $value ? 1 : 0;', ctx);
+                write('final $type $name = $value ? 1 : 0;', ctx);
                 writeLineBreak(ctx);
 
             case Array(itemType, orig):
                 writeIndent(ctx);
-                write('$type $name = bind.Support.toJSONString($value);', ctx);
+                write('final $type $name = bind.Support.toJSONString($value);', ctx);
                 writeLineBreak(ctx);
 
             case Map(itemType, orig):
                 writeIndent(ctx);
-                write('$type $name = bind.Support.toJSONString($value);', ctx);
+                write('final $type $name = bind.Support.toJSONString($value);', ctx);
                 writeLineBreak(ctx);
 
             default:
                 writeIndent(ctx);
-                write('$type $name = ($type) $value;', ctx);
+                write('final $type $name = ($type) $value;', ctx);
                 writeLineBreak(ctx);
         }
 
@@ -1364,7 +1479,55 @@ class Bind {
         switch (arg.type) {
 
             case Function(args, ret, orig):
-                writeLine('var $name = $value != null ? new HObject($value) : null;', ctx);
+                writeLine('var $name:HObject = null;', ctx);
+                writeLine('if ($value != null) {', ctx);
+                ctx.indent++;
+                writeIndent(ctx);
+                write('$name = new HObject(function(', ctx);
+                var i = 0;
+                for (funcArg in args) {
+                    if (i++ > 0) write(', ', ctx);
+                    write(funcArg.name + ':' + toHaxeBindType(funcArg.type, ctx), ctx);
+                }
+                write(') {', ctx);
+                writeLineBreak(ctx);
+                ctx.indent++;
+
+                i = 0;
+                for (funcArg in args) {
+                    writeHaxeArgAssign(funcArg, i++, ctx);
+                }
+
+                // Call
+                writeIndent(ctx);
+                var hasReturn = false;
+                switch (ret) {
+                    case Void(orig):
+                    default:
+                        hasReturn = true;
+                        write('var return_haxe_ = ', ctx);
+                }
+                write(arg.name + '(', ctx);
+                i = 0;
+                for (funcArg in args) {
+                    if (i++ > 0) write(', ', ctx);
+                    write(funcArg.name + '_haxe_', ctx);
+                }
+                write(');', ctx);
+                writeLineBreak(ctx);
+                if (hasReturn) {
+                    writeHaxeBindArgAssign({
+                        name: 'return',
+                        type: ret
+                    }, -1, ctx);
+                    writeLine('return return_jni_;', ctx);
+                }
+
+                ctx.indent--;
+                writeLine('});', ctx);
+                ctx.indent--;
+                writeLine('}', ctx);
+                //writeLine('var $name = $value != null ? new HObject($value) : null;', ctx);
 
             case String(orig):
                 writeIndent(ctx);

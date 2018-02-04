@@ -31,19 +31,33 @@ class AppAndroidInterface {
     /** Say hello to `name` with a native Android dialog. Add a last name if any is known. */
     public function hello(name:String, done:Void->Void):Void {
         var name_jni_ = name;
-        var done_jni_ = done != null ? new HObject(done) : null;
+        var done_jni_:HObject = null;
+        if (done != null) {
+            done_jni_ = new HObject(function() {
+                done();
+            });
+        }
         AppAndroidInterface_Extern.hello(_jclass, _mid_hello, _instance.pointer, name_jni_, done_jni_);
     }
-    private static var _mid_hello = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "hello", "(Lyourcompany/androidsample/AppAndroidInterface;Ljava/lang/String;Ljava/lang/Object;)V");
+    private static var _mid_hello = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "hello", "(Lyourcompany/androidsample/AppAndroidInterface;Ljava/lang/String;J)V");
 
     /** hello */
     public function callbackTest(callback:Array<Dynamic>->String->Float):String {
-        var callback_jni_ = callback != null ? new HObject(callback) : null;
+        var callback_jni_:HObject = null;
+        if (callback != null) {
+            callback_jni_ = new HObject(function(arg1:String, arg2:String) {
+                var arg1_haxe_:Array<Dynamic> = haxe.Json.parse(arg1);
+                var arg2_haxe_ = arg2;
+                var return_haxe_ = callback(arg1_haxe_, arg2_haxe_);
+                var return_jni_ = return_haxe_;
+                return return_jni_;
+            });
+        }
         var return_jni_ = AppAndroidInterface_Extern.callbackTest(_jclass, _mid_callbackTest, _instance.pointer, callback_jni_);
         var return_haxe_ = return_jni_;
         return return_haxe_;
     }
-    private static var _mid_callbackTest = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "callbackTest", "(Lyourcompany/androidsample/AppAndroidInterface;Ljava/lang/Object;)Ljava/lang/String;");
+    private static var _mid_callbackTest = Support.resolveStaticJMethodID("yourcompany/androidsample/bind_AppAndroidInterface", "callbackTest", "(Lyourcompany/androidsample/AppAndroidInterface;J)Ljava/lang/String;");
 
     /** Get Android version string */
     public function androidVersionString():String {

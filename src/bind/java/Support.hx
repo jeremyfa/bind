@@ -1,6 +1,7 @@
 package bind.java;
 
 import cpp.Pointer;
+import cpp.vm.Mutex;
 
 typedef JClass = Pointer<Void>;
 typedef JMethodID = Pointer<Void>;
@@ -39,6 +40,8 @@ class JObject {
 /** A wrapper to keep any haxe object in memory until destroy() is called. */
 class HObject {
 
+    static var mutex = new Mutex();
+
     public var obj:Dynamic = null;
 
     public function new(obj:Dynamic) {
@@ -47,7 +50,9 @@ class HObject {
 
         // This will prevent this object from being destroyed
         // until destroy() is called explicitly
+        mutex.acquire();
         @:privateAccess Support.hobjects.set(this, true);
+        mutex.release();
 
     } //new
 
@@ -55,10 +60,20 @@ class HObject {
 
         trace('BIND DESTROY HOBJECT ' + this.obj);
 
+        mutex.acquire();
         @:privateAccess Support.hobjects.remove(this);
+        mutex.release();
         obj = null;
 
     } //destroy
+
+    public static function unwrap(wrapped:Dynamic):Dynamic {
+
+        if (wrapped == null || !Std.is(wrapped, HObject)) return null;
+        var wrappedTyped:HObject = wrapped;
+        return wrappedTyped.obj;
+
+    } //unwrap
 
 } //HObject
 

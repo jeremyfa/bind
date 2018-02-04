@@ -283,6 +283,36 @@ public class Support {
 
     } //runInNativeThread
 
+    public static void runInNativeThreadSync(final Runnable r) {
+
+        if (!isNativeThread()) {
+            final BindResult result = new BindResult();
+            runInNativeThread(new Runnable() {
+                @Override
+                public void run() {
+                    synchronized(result) {
+                        r.run();
+                        result.resolved = true;
+                        result.notifyAll();
+                    }
+                }
+            });
+            synchronized(result) {
+                if (!result.resolved) {
+                    try {
+                        result.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        else {
+            r.run();
+        }
+
+    } //runInNativeThreadSync
+
     public static void runInUIThread(Runnable r) {
 
         if (!isUIThread()) {
@@ -293,6 +323,36 @@ public class Support {
         }
 
     } //runInUIThread
+
+    public static void runInUIThreadSync(final Runnable r) {
+
+        if (!isUIThread()) {
+            final BindResult result = new BindResult();
+            sUIThreadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    synchronized(result) {
+                        r.run();
+                        result.resolved = true;
+                        result.notifyAll();
+                    }
+                }
+            });
+            synchronized(result) {
+                if (!result.resolved) {
+                    try {
+                        result.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        else {
+            r.run();
+        }
+
+    } //runInUIThreadSync
 
     /**
      * If provided, calls to JNI will be done on this GLSurfaceView's renderer thread.

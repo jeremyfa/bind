@@ -798,7 +798,7 @@ class Bind {
             writeComment(ctx.javaClass.description, ctx);
         }
 
-        writeLine('@SuppressWarnings("all,unchecked")', ctx);
+        writeLine('@SuppressWarnings("all")', ctx);
         writeLine('class ' + bindingName + ' {', ctx);
         ctx.indent++;
         writeLineBreak(ctx);

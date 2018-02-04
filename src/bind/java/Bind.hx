@@ -600,7 +600,7 @@ class Bind {
                             case Void(orig):
                             default:
                                 hasReturn = true;
-                                write(toJniType(ret, ctx) + ' return_jni_ = ', ctx);
+                                write(toHxcppType(ret, ctx) + ' return_hxcpp_ = ', ctx);
                         }
                         write('func_unwrapped_->__run(', ctx);
                         i = 0;
@@ -612,14 +612,16 @@ class Bind {
                         writeLineBreak(ctx);
 
                         if (hasReturn) {
-                            writeHxcppArgAssign({
+                            writeJniArgAssign({
                                 name: 'return',
                                 type: ret
                             }, -1, ctx);
-                            writeLine('return return_hxcpp_;', ctx);
+                            writeLine('hx::SetTopOfStack((int *)0, true);', ctx);
+                            writeLine('return return_jni_;', ctx);
                         }
-
-                        writeLine('hx::SetTopOfStack((int *)0, true);', ctx);
+                        else {
+                            writeLine('hx::SetTopOfStack((int *)0, true);', ctx);
+                        }
 
                         ctx.indent--;
                         writeLine('}', ctx);

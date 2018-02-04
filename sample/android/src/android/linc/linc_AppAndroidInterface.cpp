@@ -82,10 +82,10 @@ extern "C" {
         ::String arg2_hxcpp_ = ::bind::jni::JStringToHxcpp(arg2);
         ::Dynamic func_hobject_ = ::bind::jni::JLongToHObject(address);
         ::Dynamic func_unwrapped_ = ::bind::java::HObject_obj::unwrap(func_hobject_);
-        jfloat return_jni_ = func_unwrapped_->__run(arg1_hxcpp_, arg2_hxcpp_);
-        double return_hxcpp_ = (double) return_jni_;
-        return return_hxcpp_;
+        double return_hxcpp_ = func_unwrapped_->__run(arg1_hxcpp_, arg2_hxcpp_);
+        jfloat return_jni_ = (jfloat) return_hxcpp_;
         hx::SetTopOfStack((int *)0, true);
+        return return_jni_;
     }
 
 }

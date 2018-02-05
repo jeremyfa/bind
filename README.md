@@ -82,7 +82,7 @@ This will obviously only work on a mac, with haxe, bind library and xcode proper
 
 ## Java/JNI on Android
 
-Check out an example of [bound Java class file](https://github.com/jeremyfa/bind/blob/master/sample/android/project.android/app/src/main/java/yourcompany/androidsample/AppAndroidInterface.javah) that you can use as reference to see which subset of Java can be handled by _bind_. This file can be tested with the provided sample Java/Android project.
+Check out an example of [bound Java class file](https://github.com/jeremyfa/bind/blob/master/sample/android/project.android/app/src/main/java/yourcompany/androidsample/AppAndroidInterface.java) that you can use as reference to see which subset of Java can be handled by _bind_. This file can be tested with the provided sample Java/Android project.
 
 #### Supported Java types
 

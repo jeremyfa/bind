@@ -131,5 +131,6 @@ Project will also work on Windows in the future.
 * [x] Parse `Java` classes, with methods, properties and comments in java files
 * [x] Generate Haxe (`C++`) to `Java`/`JNI` bindings from parsed informations
 * [ ] Handle standard `Android` events through `bind.Support`
+* [ ] Design a `bind.json` file format allowing to create `iOS`/`Android` extensions with external dependencies
 * [ ] Make Android Studio project sample work on Windows machines (only works on Mac/Linux for now)
 * [ ] Generate single Haxe class from `Objective-C` + `Java`/`JNI` bindings having the same methods and properties

@@ -130,5 +130,6 @@ Project will also work on Windows in the future.
 * [x] Add an option to write generated and support files to disk at a target directory to make them _ready to use_
 * [x] Parse `Java` classes, with methods, properties and comments in java files
 * [x] Generate Haxe (`C++`) to `Java`/`JNI` bindings from parsed informations
+* [ ] Handle standard `Android` events through `bind.Support`
 * [ ] Make Android Studio project sample work on Windows machines (only works on Mac/Linux for now)
 * [ ] Generate single Haxe class from `Objective-C` + `Java`/`JNI` bindings having the same methods and properties

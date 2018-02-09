@@ -40,12 +40,13 @@ class JObject {
 /** A wrapper to keep any haxe object in memory until destroy() is called. */
 class HObject {
 
-    static var mutex = new Mutex();
-
     static var nextId:haxe.Int64 = 1;
 
     public var obj:Dynamic = null;
 
+    /** An HObject instance is identified by its `id` field, which is a string.
+        When java needs to reference an HObject instance, it needs to use this `id`.
+        This could be optimized in the future. */
     public var id:String = null;
 
     public function new(obj:Dynamic) {
@@ -54,18 +55,15 @@ class HObject {
 
         // This will prevent this object from being destroyed
         // until destroy() is called explicitly
-        mutex.acquire();
         id = '' + (nextId++);
         @:privateAccess Support.hobjects.set(id, this);
-        mutex.release();
 
     } //new
 
     public function destroy():Void {
 
-        mutex.acquire();
+        // This will allow underlying object to be destroyed (if there is no other reference to it)
         @:privateAccess Support.hobjects.remove(id);
-        mutex.release();
         obj = null;
 
     } //destroy
@@ -86,9 +84,7 @@ class HObject {
 
     public static function getById(id:String):HObject {
 
-        mutex.acquire();
         var result = @:privateAccess Support.hobjects.get(id);
-        mutex.release();
         return result;
 
     } //getById

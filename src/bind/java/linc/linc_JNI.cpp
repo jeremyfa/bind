@@ -21,12 +21,6 @@ namespace bind {
         /** Java classes cache */
         std::map<std::string, jclass> jclasses;
 
-        /** A counter to provide addresses as long type */
-        std::atomic<int64_t> nextAddress(2);
-
-        /** Mapping of kepts Haxe object pointers */
-        std::map<int64_t,hx::Object*> hobjectMap;
-
         /** Whether Runnable instances are waiting to be executed from Haxe/Native thread */
         std::atomic<bool> hasNativeRunnables(false);
 
@@ -122,16 +116,6 @@ namespace bind {
         jstring HObjectToJString(::Dynamic hobjectRef) {
 
             if (hx::IsNotNull(hobjectRef)) {
-                /*int64_t address = nextAddress++;
-                while (hobjectMap.find(address) != hobjectMap.end()) {
-                    address = nextAddress++;
-                }
-                __android_log_print(ANDROID_LOG_ERROR, "BIND", "NEW ADDRESS: %lld", (unsigned long long)address);
-                hx::Object *objPointer = hobjectRef.mPtr;
-                hobjectMap[address] = objPointer;
-                jlong addr = (jlong) address;
-                __android_log_print(ANDROID_LOG_ERROR, "BIND", "NEW ADDRESS: %lld", (unsigned long long)addr);
-                return addr;*/
                 return HxcppToJString(::bind::java::HObject_obj::idOf(hobjectRef));
             }
             return NULL;
@@ -141,17 +125,6 @@ namespace bind {
         ::Dynamic JStringToHObject(jstring address) {
 
             if (address == NULL) return null();
-
-            /*int64_t address = (int64_t) addr;
-             __android_log_print(ANDROID_LOG_ERROR, "BIND", "GET FROM ADDR: %lld", (unsigned long long)address);
-
-            if (address == 0) {
-                return null();
-            }
-            hx::Object *objPointer = hobjectMap[address];
-            ::Dynamic result = ::Dynamic();
-            result.mPtr = objPointer;
-            return result;*/
 
             return ::bind::java::HObject_obj::getById(JStringToHxcpp(address));
 
@@ -214,7 +187,6 @@ extern "C" {
         hx::SetTopOfStack(&haxe_stack_, true);
 
         ::Dynamic hobjectRef = ::bind::jni::JStringToHObject(address);
-        //::bind::jni::hobjectMap.erase(address);
         if (hx::IsNotNull(hobjectRef)) {
             ((::bind::java::HObject)hobjectRef)->destroy();
         }

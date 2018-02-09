@@ -1,5 +1,6 @@
 package;
 
+import bind.java.Support;
 import android.AppAndroidInterface;
 
 class Main {
@@ -40,15 +41,18 @@ class Main {
         trace('Result on Haxe side: ' + result);
 
         nativeAndroid.lastName = 'Java';
+        trace('Did set last name to: Java, will say hello');
         nativeAndroid.hello('Dansons la', function() {
             // Done
             trace('Java done.');
         });
 
+        trace('Will set onPause');
         // Add some callback when app gets paused/resumed
         nativeAndroid.onPause = function() {
             trace('Activity.onPause');
         };
+        trace('Will set onResume');
         nativeAndroid.onResume = function() {
             trace('Activity.onResume');
         };

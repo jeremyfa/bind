@@ -42,7 +42,11 @@ class HObject {
 
     static var mutex = new Mutex();
 
+    static var nextId:haxe.Int64 = 1;
+
     public var obj:Dynamic = null;
+
+    public var id:String = null;
 
     public function new(obj:Dynamic) {
 
@@ -51,7 +55,8 @@ class HObject {
         // This will prevent this object from being destroyed
         // until destroy() is called explicitly
         mutex.acquire();
-        @:privateAccess Support.hobjects.set(this, true);
+        id = '' + (nextId++);
+        @:privateAccess Support.hobjects.set(id, this);
         mutex.release();
 
     } //new
@@ -59,7 +64,7 @@ class HObject {
     public function destroy():Void {
 
         mutex.acquire();
-        @:privateAccess Support.hobjects.remove(this);
+        @:privateAccess Support.hobjects.remove(id);
         mutex.release();
         obj = null;
 
@@ -79,6 +84,22 @@ class HObject {
 
     } //wrap
 
+    public static function getById(id:String):HObject {
+
+        mutex.acquire();
+        var result = @:privateAccess Support.hobjects.get(id);
+        mutex.release();
+        return result;
+
+    } //getById
+
+    public static function idOf(wrapped:Dynamic):String {
+
+        var wrappedTyped:HObject = wrapped;
+        return wrappedTyped.id;
+
+    } //idOf
+
 } //HObject
 
 @:keep
@@ -86,9 +107,13 @@ class Support {
 
     static var jclasses:Map<String,JClass> = new Map();
 
-    static var hobjects:Map<HObject,Bool> = new Map();
+    static var hobjects:Map<String,HObject> = new Map();
 
-    public inline static function resolveJClass(className:String):JClass {
+    static var onceReadyCallbacks:Array<Void->Void> = [];
+
+    private static var _jclass = Support.resolveJClass("bind/Support");
+
+    public #if !debug inline #end static function resolveJClass(className:String):JClass {
 
         if (jclasses.exists(className)) return jclasses.get(className);
 
@@ -99,11 +124,54 @@ class Support {
 
     } //resolveJClass
 
-    public inline static function resolveStaticJMethodID(className:String, name:String, signature:String):JMethodID {
+    public #if !debug inline #end static function resolveStaticJMethodID(className:String, name:String, signature:String):JMethodID {
 
         return Support_Extern.resolveStaticJMethodID(resolveJClass(className), name, signature);
 
     } //resolveJClass
+
+    public static function onceReady(callback:Void->Void):Void {
+
+        trace('ONCE READY');
+
+        if (Support_Extern.isInitialized()) {
+            callback();
+        }
+        else {
+            onceReadyCallbacks.push(callback);
+        }
+
+    } //onceReady
+
+    @:noCompletion
+    public static function notifyReady():Void {
+
+        trace('NOTIFY READY');
+
+        var callbacks = onceReadyCallbacks;
+        onceReadyCallbacks = [];
+
+        for (cb in callbacks) {
+            cb();
+        }
+
+    } //notifyReady
+
+/// Native runnable logic
+
+    private static var _mid_runRunnables:JMethodID = null;
+
+    #if !debug inline #end public static function flushRunnables():Void {
+
+        if (!Support_Extern.hasNativeRunnables()) return;
+
+        if (_mid_runRunnables == null) {
+            _mid_runRunnables = Support.resolveStaticJMethodID("bind/Support", "runAwaitingNativeRunnables", "()V");
+        }
+
+        Support_Extern.runAwaitingRunnables(_jclass, _mid_runRunnables);
+
+    } //flushRunnables
 
 } //Support
 
@@ -124,5 +192,17 @@ private extern class Support_Extern {
 
     @:native('bind::jni::ReleaseJObject')
     static function releaseJObject(jobjectRef:Pointer<Void>):Void;
+
+    @:native('bind::jni::SetHasNativeRunnables')
+    static function setHasNativeRunnables(value:Bool):Void;
+
+    @:native('bind::jni::HasNativeRunnables')
+    static function hasNativeRunnables():Bool;
+
+    @:native('bind::jni::RunAwaitingRunnables')
+    static function runAwaitingRunnables(class_:JClass, method_:JMethodID):Void;
+
+    @:native('bind::jni::IsInitialized')
+    static function isInitialized():Bool;
 
 } //Support_Extern

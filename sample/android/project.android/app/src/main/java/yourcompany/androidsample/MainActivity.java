@@ -8,6 +8,8 @@ import android.util.Log;
 
 import org.haxe.HXCPP;
 
+import bind.Support;
+
 public class MainActivity extends AppCompatActivity {
 
     static final String TAG = "MainActivity";
@@ -17,15 +19,15 @@ public class MainActivity extends AppCompatActivity {
      * This is useful to test generated bindings cope well
      * when Haxe runs in a separate thread than main Android's UI Thread.
      */
-    static final boolean HAXE_IN_BACKGROUND = true;
+    static final boolean HAXE_IN_BACKGROUND = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Set correct android context
-        AppAndroidInterface.context = this;
+        // Keep android context
+        bind.Support.setContext(this);
 
         // Start Haxe
         if (HAXE_IN_BACKGROUND) {
@@ -33,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
             handlerThread.start();
             Handler handler = new Handler(handlerThread.getLooper());
             bind.Support.setNativeThreadHandler(handler);
-            bind.Support.runInNativeThread(new Runnable() {
+            handler.post(new Runnable() {
                 @Override
                 public void run() {
                     Log.i(TAG, "Run Haxe in background thread (isUIThread=" + bind.Support.isUIThread() + " isNativeThread=" + bind.Support.isNativeThread() + ")");

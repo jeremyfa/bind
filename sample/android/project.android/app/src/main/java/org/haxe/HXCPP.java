@@ -3,7 +3,6 @@ package org.haxe;
 /**
  * Created by jeremyfa on 30/01/2018.
  */
-
 public class HXCPP {
 
     private static boolean sInit = false;

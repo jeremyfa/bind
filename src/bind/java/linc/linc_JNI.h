@@ -17,9 +17,17 @@ namespace bind {
 
         void ReleaseJObject(::cpp::Pointer<void> jobjectRef);
 
-        jlong HObjectToJLong(::Dynamic hobjectRef);
+        jstring HObjectToJString(::Dynamic hobjectRef);
 
-        ::Dynamic JLongToHObject(jlong jlongValue);
+        ::Dynamic JStringToHObject(jstring address);
+
+        void SetHasNativeRunnables(bool value);
+
+        bool HasNativeRunnables();
+
+        void RunAwaitingRunnables(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_);
+
+        bool IsInitialized();
 
     }
 
@@ -27,8 +35,12 @@ namespace bind {
 
 extern "C" {
 
-    JNIEXPORT void JNICALL Java_bind_Support_init(JNIEnv *env);
+    JNIEXPORT void JNICALL Java_bind_Support_nativeInit(JNIEnv *env, jclass clazz);
     
-    JNIEXPORT void JNICALL Java_bind_Support_releaseHaxeObject(JNIEnv *env, jlong address);
+    JNIEXPORT void JNICALL Java_bind_Support_releaseHaxeObject(JNIEnv *env, jclass clazz, jstring address);
+
+    JNIEXPORT void JNICALL Java_bind_Support_nativeSetHasRunnables(JNIEnv *env, jclass clazz, jint value);
+
+    JNIEXPORT void JNICALL Java_bind_Support_notifyReady(JNIEnv *env, jclass clazz);
  
 }

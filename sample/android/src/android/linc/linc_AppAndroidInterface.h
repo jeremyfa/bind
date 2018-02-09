@@ -22,12 +22,6 @@ namespace android {
     /** Dummy method to get Haxe types converted to Java types that then get returned back as an array. */
     ::String AppAndroidInterface_testTypes(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_, int aBool, int anInt, double aFloat, ::String aList, ::String aMap);
 
-    /** Android Context */
-    ::cpp::Pointer<void> AppAndroidInterface_getContext(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_);
-
-    /** Android Context */
-    void AppAndroidInterface_setContext(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> context);
-
     /** If provided, will be called when main activity is paused */
     ::Dynamic AppAndroidInterface_getOnPause(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_);
 
@@ -52,7 +46,7 @@ namespace android {
 
 extern "C" {
 
-    JNIEXPORT void Java_yourcompany_androidsample_bind_1AppAndroidInterface_callN_1Void(JNIEnv *env, jlong address);
+    JNIEXPORT void Java_yourcompany_androidsample_bind_1AppAndroidInterface_callN_1Void(JNIEnv *env, jclass clazz, jstring address);
 
 }
 

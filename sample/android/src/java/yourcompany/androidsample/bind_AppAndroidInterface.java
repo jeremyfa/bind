@@ -1,16 +1,16 @@
 package yourcompany.androidsample;
 // This file was generated with bind library
 
+import bind.Support.*;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Build;
-import android.os.Handler;
 import android.util.Log;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import bind.Support.*;
+import bind.Support;
 
 /** Java/Android interface */
 @SuppressWarnings("all")
@@ -88,7 +88,7 @@ class bind_AppAndroidInterface {
     }
 
     /** Say hello to `name` with a native Android dialog. Add a last name if any is known. */
-    public static void hello(final AppAndroidInterface _instance, final String name, final long done) {
+    public static void hello(final AppAndroidInterface _instance, final String name, final String done) {
         if (!bind.Support.isUIThread()) {
             bind.Support.getUIThreadHandler().post(new Runnable() {
                 public void run() {
@@ -97,12 +97,12 @@ class bind_AppAndroidInterface {
             });
         } else {
             final String name_java_ = name;
-            final HaxeObject done_java_hobj_ = done == 0 ? null : new HaxeObject(done);
-            final Runnable done_java_ = done == 0 ? null : new Runnable() {
+            final HaxeObject done_java_hobj_ = done == null ? null : new HaxeObject(done);
+            final Runnable done_java_ = done == null ? null : new Runnable() {
                 public void run() {
                     bind.Support.runInNativeThread(new Runnable() {
                         public void run() {
-                            callN_Void(done_java_hobj_.address);
+                            bind_AppAndroidInterface.callN_Void(done_java_hobj_.address);
                         }
                     });
                 }
@@ -218,54 +218,6 @@ class bind_AppAndroidInterface {
         }
     }
 
-    /** Android Context */
-    public static Object getContext() {
-        if (!bind.Support.isUIThread()) {
-            final BindResult _bind_result = new BindResult();
-            bind.Support.getUIThreadHandler().post(new Runnable() {
-                public void run() {
-                    synchronized(_bind_result) {
-                        try {
-                            _bind_result.value = bind_AppAndroidInterface.getContext();
-                        } catch (Throwable e) {
-                            e.printStackTrace();
-                        }
-                        _bind_result.resolved = true;
-                        _bind_result.notifyAll();
-                    }
-                }
-            });
-            synchronized(_bind_result) {
-                if (!_bind_result.resolved) {
-                    try {
-                        _bind_result.wait();
-                    } catch (Throwable e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            return (Object) _bind_result.value;
-        } else {
-            final Context return_java_ = AppAndroidInterface.context;
-            final Object return_jni_ = (Object) return_java_;
-            return return_jni_;
-        }
-    }
-
-    /** Android Context */
-    public static void setContext(final Object context) {
-        if (!bind.Support.isUIThread()) {
-            bind.Support.getUIThreadHandler().post(new Runnable() {
-                public void run() {
-                    bind_AppAndroidInterface.setContext(context);
-                }
-            });
-        } else {
-            final Context context_java_ = (Context) context;
-            AppAndroidInterface.context = context_java_;
-        }
-    }
-
     /** If provided, will be called when main activity is paused */
     public static Object getOnPause(final AppAndroidInterface _instance) {
         if (!bind.Support.isUIThread()) {
@@ -301,7 +253,7 @@ class bind_AppAndroidInterface {
     }
 
     /** If provided, will be called when main activity is paused */
-    public static void setOnPause(final AppAndroidInterface _instance, final long onPause) {
+    public static void setOnPause(final AppAndroidInterface _instance, final String onPause) {
         if (!bind.Support.isUIThread()) {
             bind.Support.getUIThreadHandler().post(new Runnable() {
                 public void run() {
@@ -309,12 +261,12 @@ class bind_AppAndroidInterface {
                 }
             });
         } else {
-            final HaxeObject onPause_java_hobj_ = onPause == 0 ? null : new HaxeObject(onPause);
-            final Runnable onPause_java_ = onPause == 0 ? null : new Runnable() {
+            final HaxeObject onPause_java_hobj_ = onPause == null ? null : new HaxeObject(onPause);
+            final Runnable onPause_java_ = onPause == null ? null : new Runnable() {
                 public void run() {
                     bind.Support.runInNativeThread(new Runnable() {
                         public void run() {
-                            callN_Void(onPause_java_hobj_.address);
+                            bind_AppAndroidInterface.callN_Void(onPause_java_hobj_.address);
                         }
                     });
                 }
@@ -358,7 +310,7 @@ class bind_AppAndroidInterface {
     }
 
     /** If provided, will be called when main activity is resumed */
-    public static void setOnResume(final AppAndroidInterface _instance, final long onResume) {
+    public static void setOnResume(final AppAndroidInterface _instance, final String onResume) {
         if (!bind.Support.isUIThread()) {
             bind.Support.getUIThreadHandler().post(new Runnable() {
                 public void run() {
@@ -366,12 +318,12 @@ class bind_AppAndroidInterface {
                 }
             });
         } else {
-            final HaxeObject onResume_java_hobj_ = onResume == 0 ? null : new HaxeObject(onResume);
-            final Runnable onResume_java_ = onResume == 0 ? null : new Runnable() {
+            final HaxeObject onResume_java_hobj_ = onResume == null ? null : new HaxeObject(onResume);
+            final Runnable onResume_java_ = onResume == null ? null : new Runnable() {
                 public void run() {
                     bind.Support.runInNativeThread(new Runnable() {
                         public void run() {
-                            callN_Void(onResume_java_hobj_.address);
+                            bind_AppAndroidInterface.callN_Void(onResume_java_hobj_.address);
                         }
                     });
                 }
@@ -451,7 +403,7 @@ class bind_AppAndroidInterface {
         }
     }
 
-    static native void callN_Void(long address);
+    static native void callN_Void(String address);
 
 }
 

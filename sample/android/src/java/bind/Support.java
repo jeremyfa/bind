@@ -1,5 +1,6 @@
 package bind;
 
+import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.os.Handler;
 import android.os.Looper;
@@ -82,19 +83,44 @@ public class Support {
 
     } //Func9
 
+/// Android context
+
+    private static Object sContext = null;
+
+    public static void setContext(Context context) {
+        sContext = context;
+    }
+
+    public static Context getContext() {
+        if (sContext == null) return null;
+        return (Context) sContext;
+    }
+
+/// Initialize
+
+    public static void init() {
+
+        nativeInit();
+
+    } //init
+
 /// Native calls
 
-    public static native void init();
+    /** Utility to let java side notify native (haxe) side that it is ready and can call JNI stuff.
+        This is not always necessary and is just a convenience when the setup requires it. */
+    public static native void notifyReady();
 
-    public static native void releaseHaxeObject(long address);
+    static native void nativeInit();
+
+    static native void releaseHaxeObject(String address);
 
 /// Helpers for native
 
     public static class HaxeObject {
 
-        public long address;
+        public String address;
 
-        public HaxeObject(long address) {
+        public HaxeObject(String address) {
             this.address = address;
         }
 
@@ -114,7 +140,7 @@ public class Support {
 
     } //HaxeObject
 
-    static void notifyFinalize(final long address) {
+    static void notifyFinalize(final String address) {
 
         runInNativeThread(new Runnable() {
             public void run() {
@@ -123,8 +149,6 @@ public class Support {
         });
 
     } //notifyFinalize
-
-    static native void javaObjectDidFinalize(int objectId);
 
 /// Converters
 
@@ -265,7 +289,10 @@ public class Support {
 
     public static void runInNativeThread(Runnable r) {
 
-        if (sGLSurfaceView != null) {
+        if (sUseNativeRunnableStack) {
+            pushNativeRunnable(r);
+        }
+        else if (sGLSurfaceView != null) {
             ((GLSurfaceView)sGLSurfaceView).queueEvent(r);
         }
         else if (sNativeThreadHandler != null) {
@@ -353,10 +380,54 @@ public class Support {
     } //runInUIThreadSync
 
     /**
+     * If set to `true`, native side will take care of executing
+     * Runnable instances that need to be run in native thread.
+     */
+    static boolean sUseNativeRunnableStack = false;
+    static List<Runnable> sNativeRunnables = new ArrayList<>();
+    static volatile Thread sNativeRunnableStackThread = null;
+
+    public static void setUseNativeRunnableStack(boolean value) {
+        sUseNativeRunnableStack = value;
+        sNativeRunnableStackThread = null;
+    }
+
+    public static boolean isUseNativeRunnableStack() {
+        return sUseNativeRunnableStack;
+    }
+
+    static void pushNativeRunnable(final Runnable r) {
+
+        synchronized (sNativeRunnables) {
+            sNativeRunnables.add(r);
+            nativeSetHasRunnables(1);
+        }
+
+    } //pushNativeRunnable
+
+    /** Inform native/JNI that some Runnable instances are waiting to be run frpù native thread. */
+    static native void nativeSetHasRunnables(int value);
+
+    /** Called by native/JNI to run a Runnable from its thread */
+    public static void runAwaitingNativeRunnables() {
+
+        synchronized (sNativeRunnables) {
+            if (sNativeRunnableStackThread == null) sNativeRunnableStackThread = Thread.currentThread();
+            nativeSetHasRunnables(0);
+            List<Runnable> toRun = sNativeRunnables;
+            sNativeRunnables = new ArrayList<>();
+            for (Runnable r : toRun) {
+                r.run();
+            }
+        }
+
+    } //runRunnable
+
+    /**
      * If provided, calls to JNI will be done on this GLSurfaceView's renderer thread.
      */
     static Object sGLSurfaceView = null;
-    static Thread sGLSurfaceViewThread = null;
+    static volatile Thread sGLSurfaceViewThread = null;
 
     public static GLSurfaceView getGLSurfaceView() {
         return (GLSurfaceView) sGLSurfaceView;
@@ -364,29 +435,14 @@ public class Support {
 
     public static void setGLSurfaceView(GLSurfaceView surfaceView) {
         sGLSurfaceView = surfaceView;
-        if (sGLSurfaceView == null) {
-            sGLSurfaceViewThread = null;
-        } else {
-            final Object lock = new Object();
-            sGLSurfaceViewThread = null;
+        sGLSurfaceViewThread = null;
+        if (sGLSurfaceView != null) {
             ((GLSurfaceView)sGLSurfaceView).queueEvent(new Runnable() {
                 @Override
                 public void run() {
-                    synchronized(lock) {
-                        sGLSurfaceViewThread = Thread.currentThread();
-                        lock.notifyAll();
-                    }
+                    sGLSurfaceViewThread = Thread.currentThread();
                 }
             });
-            synchronized(lock) {
-                if (sGLSurfaceViewThread == null) {
-                    try {
-                        lock.wait();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
         }
     }
 
@@ -417,7 +473,12 @@ public class Support {
     }
 
     public static boolean isNativeThread() {
-        if (sGLSurfaceView != null) {
+        if (sUseNativeRunnableStack) {
+            if (sNativeRunnableStackThread != null) return !isUIThread();
+            return sNativeRunnableStackThread == Thread.currentThread();
+        }
+        else if (sGLSurfaceView != null) {
+            if (sGLSurfaceViewThread != null) return !isUIThread();
             return sGLSurfaceViewThread == Thread.currentThread();
         }
         else if (sNativeThreadHandler != null) {

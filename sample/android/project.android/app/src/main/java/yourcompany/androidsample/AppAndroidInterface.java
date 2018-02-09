@@ -4,14 +4,13 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Build;
-import android.os.Handler;
 import android.util.Log;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import bind.Support.*;
+import bind.Support;
 
 /**
  * Java/Android interface
@@ -21,11 +20,6 @@ public class AppAndroidInterface {
     static final String TAG = "AppJavaInterface";
 
     static AppAndroidInterface sSharedInterface = null;
-
-    /**
-     * Android Context
-     */
-    public static Context context = null;
 
     /**
      * Get shared instance
@@ -69,7 +63,7 @@ public class AppAndroidInterface {
             sentence += " " + lastName;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        AlertDialog.Builder builder = new AlertDialog.Builder(Support.getContext());
         builder.setTitle("Native Android")
                 .setMessage(sentence)
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {

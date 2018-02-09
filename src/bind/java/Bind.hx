@@ -118,7 +118,8 @@ class Bind {
         ctx.indent++;
         writeLineBreak(ctx);
 
-        writeLine('private static var _jclass = Support.resolveJClass(' + Json.stringify(javaBindClassPath.replace('.', '/')) + ');', ctx);
+        writeLine('private static var _jclassSignature = ' + Json.stringify(javaBindClassPath.replace('.', '/')) + ';', ctx);
+        writeLine('private static var _jclass:JClass = null;', ctx);
         writeLineBreak(ctx);
 
         writeLine('private var _instance:JObject = null;', ctx);
@@ -234,6 +235,28 @@ class Bind {
             writeLineBreak(ctx);
             ctx.indent++;
 
+            var jniSig = '(';
+            if (method.instance && !isJavaConstructor) {
+                jniSig += 'L' + javaClassPath.replace('.', '/') + ';';
+            }
+            for (arg in method.args) {
+                jniSig += toJniSignatureType(arg.type, ctx);
+            }
+            jniSig += ')';
+            jniSig += toJniFromJavaSignatureType(method.type, ctx);
+
+            writeLine('if (_jclass == null) _jclass = Support.resolveJClass(_jclassSignature);', ctx);
+
+            writeIndent(ctx);
+            write('if (_mid_' + name + ' == null) _mid_' + name + ' = Support.resolveStaticJMethodID(', ctx);
+            write(Json.stringify(javaBindClassPath.replace('.', '/')), ctx);
+            write(', ', ctx);
+            write(Json.stringify(method.name), ctx);
+            write(', ', ctx);
+            write(Json.stringify(jniSig), ctx);
+            write(');', ctx);
+            writeLineBreak(ctx);
+
             var index = 0;
             for (arg in method.args) {
                 writeHaxeBindArgAssign(arg, index++, ctx);
@@ -300,24 +323,8 @@ class Bind {
             ctx.indent--;
             writeLine('}', ctx);
 
-            var jniSig = '(';
-            if (method.instance && !isJavaConstructor) {
-                jniSig += 'L' + javaClassPath.replace('.', '/') + ';';
-            }
-            for (arg in method.args) {
-                jniSig += toJniSignatureType(arg.type, ctx);
-            }
-            jniSig += ')';
-            jniSig += toJniFromJavaSignatureType(method.type, ctx);
-
             writeIndent(ctx);
-            write('private static var _mid_' + name + ' = Support.resolveStaticJMethodID(', ctx);
-            write(Json.stringify(javaBindClassPath.replace('.', '/')), ctx);
-            write(', ', ctx);
-            write(Json.stringify(method.name), ctx);
-            write(', ', ctx);
-            write(Json.stringify(jniSig), ctx);
-            write(');', ctx);
+            write('private static var _mid_' + name + ':JMethodID = null;', ctx);
             writeLineBreak(ctx);
 
             writeLineBreak(ctx);
@@ -686,7 +693,7 @@ class Bind {
                     if (javaPack != '') {
                         write(javaPack.replace('.', '_') + '_', ctx);
                     }
-                    write('bind_1' + ctx.javaClass.name + '_callN_1' + key + '(JNIEnv *env, jlong address', ctx);
+                    write('bind_1' + ctx.javaClass.name + '_callN_1' + key + '(JNIEnv *env, jclass clazz, jstring address', ctx);
 
                     var n = 1;
                     for (funcArg in args) {
@@ -713,7 +720,7 @@ class Bind {
 
                         // Call
                         var hasReturn = false;
-                        writeLine('::Dynamic func_hobject_ = ::bind::jni::JLongToHObject(address);', ctx);
+                        writeLine('::Dynamic func_hobject_ = ::bind::jni::JStringToHObject(address);', ctx);
                         writeLine('::Dynamic func_unwrapped_ = ::bind::java::HObject_obj::unwrap(func_hobject_);', ctx);
                         writeIndent(ctx);
                         switch (ret) {
@@ -1007,7 +1014,7 @@ class Bind {
                 case Function(args, ret, orig):
                     writeIndent(ctx);
                     var retType = toJavaBindType(ret, ctx);
-                    write('static native ' + retType + ' callN_' + key + '(long address', ctx);
+                    write('static native ' + retType + ' callN_' + key + '(String address', ctx);
 
                     var n = 1;
                     for (funcArg in args) {
@@ -1164,7 +1171,7 @@ class Bind {
             case Array(itemType, orig): 'jstring';
             case Map(itemType, orig): 'jstring';
             case Object(orig): 'jobject';
-            case Function(args, ret, orig): 'jlong';
+            case Function(args, ret, orig): 'jstring';
         }
 
         return result;
@@ -1198,7 +1205,7 @@ class Bind {
             case Array(itemType, orig): 'Ljava/lang/String;';
             case Map(itemType, orig): 'Ljava/lang/String;';
             case Object(orig): 'Ljava/lang/Object;';
-            case Function(args, ret, orig): 'J';
+            case Function(args, ret, orig): 'Ljava/lang/String;';
         }
 
         return result;
@@ -1258,7 +1265,7 @@ class Bind {
             case Array(itemType, orig): 'String';
             case Map(itemType, orig): 'String';
             case Object(orig): 'Object';
-            case Function(args, ret, orig): 'long';
+            case Function(args, ret, orig): 'String';
         }
 
         return result;
@@ -1336,8 +1343,8 @@ class Bind {
                 var retType = toJavaType(ret, ctx);
                 var hasReturn = retType != 'void' && retType != 'Void';
 
-                writeLine('final HaxeObject ' + name + 'hobj_ = $value == 0 ? null : new HaxeObject($value);', ctx);
-                writeLine('final ' + type + ' ' + name + ' = $value == 0 ? null : new ' + type + '() {', ctx);
+                writeLine('final HaxeObject ' + name + 'hobj_ = $value == null ? null : new HaxeObject($value);', ctx);
+                writeLine('final ' + type + ' ' + name + ' = $value == null ? null : new ' + type + '() {', ctx);
                 ctx.indent++;
                 writeIndent(ctx);
                 write('public $retType run(', ctx);
@@ -1377,7 +1384,7 @@ class Bind {
                 if (hasReturn) {
                     write('return_jni_result_.value = ', ctx);
                 }
-                write('callN_', ctx);
+                write('bind_' + ctx.javaClass.name + '.callN_', ctx);
 
                 i = 0;
                 var allParts = '';
@@ -1541,7 +1548,7 @@ class Bind {
         switch (arg.type) {
 
             case Function(args, ret, orig):
-                write('$type $name = ::bind::jni::HObjectToJLong($value);', ctx);
+                write('$type $name = ::bind::jni::HObjectToJString($value);', ctx);
                 writeLineBreak(ctx);
 
             case String(orig):

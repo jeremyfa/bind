@@ -1,0 +1,22 @@
+{
+    "files.associations": {
+        "*.ect": "eco",
+        "*.YAML-tmLanguage": "yaml",
+        "*.cproj": "json",
+        "*.scenes": "json",
+        "*.ceramic": "json",
+        "*.fragments": "json",
+        "*.flow": "plaintext",
+        "string": "cpp",
+        "iterator": "cpp",
+        "memory": "cpp",
+        "__bit_reference": "cpp",
+        "__string": "cpp",
+        "__tree": "cpp",
+        "algorithm": "cpp",
+        "map": "cpp",
+        "string_view": "cpp",
+        "vector": "cpp",
+        "functional": "cpp"
+    }
+}

@@ -24,7 +24,7 @@ namespace android {
     /** Say hello to `name` with a native Android dialog. Add a last name if any is known. */
     void AppAndroidInterface_hello(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_, ::String name, ::Dynamic done) {
         jstring name_jni_ = ::bind::jni::HxcppToJString(name);
-        jlong done_jni_ = ::bind::jni::HObjectToJLong(done);
+        jstring done_jni_ = ::bind::jni::HObjectToJString(done);
         ::bind::jni::GetJNIEnv()->CallStaticVoidMethod((jclass) class_.ptr, (jmethodID) method_.ptr, (jobject) instance_.ptr, name_jni_, done_jni_);
     }
 
@@ -54,19 +54,6 @@ namespace android {
         return return_hxcpp_;
     }
 
-    /** Android Context */
-    ::cpp::Pointer<void> AppAndroidInterface_getContext(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_) {
-        jobject return_jni_ = ::bind::jni::GetJNIEnv()->CallStaticObjectMethod((jclass) class_.ptr, (jmethodID) method_.ptr);
-        ::cpp::Pointer<void> return_hxcpp_ = return_jni_ != NULL ? ::cpp::Pointer<void>(::bind::jni::GetJNIEnv()->NewGlobalRef(return_jni_)) : null();
-        return return_hxcpp_;
-    }
-
-    /** Android Context */
-    void AppAndroidInterface_setContext(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> context) {
-        jobject context_jni_ = (jobject) (hx::IsNotNull(context) ? context.ptr : NULL);
-        ::bind::jni::GetJNIEnv()->CallStaticVoidMethod((jclass) class_.ptr, (jmethodID) method_.ptr, context_jni_);
-    }
-
     /** If provided, will be called when main activity is paused */
     ::Dynamic AppAndroidInterface_getOnPause(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_) {
         jobject return_jni_ = ::bind::jni::GetJNIEnv()->CallStaticObjectMethod((jclass) class_.ptr, (jmethodID) method_.ptr, (jobject) instance_.ptr);
@@ -76,7 +63,7 @@ namespace android {
 
     /** If provided, will be called when main activity is paused */
     void AppAndroidInterface_setOnPause(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_, ::Dynamic onPause) {
-        jlong onPause_jni_ = ::bind::jni::HObjectToJLong(onPause);
+        jstring onPause_jni_ = ::bind::jni::HObjectToJString(onPause);
         ::bind::jni::GetJNIEnv()->CallStaticVoidMethod((jclass) class_.ptr, (jmethodID) method_.ptr, (jobject) instance_.ptr, onPause_jni_);
     }
 
@@ -89,7 +76,7 @@ namespace android {
 
     /** If provided, will be called when main activity is resumed */
     void AppAndroidInterface_setOnResume(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_, ::cpp::Pointer<void> instance_, ::Dynamic onResume) {
-        jlong onResume_jni_ = ::bind::jni::HObjectToJLong(onResume);
+        jstring onResume_jni_ = ::bind::jni::HObjectToJString(onResume);
         ::bind::jni::GetJNIEnv()->CallStaticVoidMethod((jclass) class_.ptr, (jmethodID) method_.ptr, (jobject) instance_.ptr, onResume_jni_);
     }
 
@@ -114,10 +101,10 @@ namespace android {
 
 extern "C" {
 
-    JNIEXPORT void Java_yourcompany_androidsample_bind_1AppAndroidInterface_callN_1Void(JNIEnv *env, jlong address) {
+    JNIEXPORT void Java_yourcompany_androidsample_bind_1AppAndroidInterface_callN_1Void(JNIEnv *env, jclass clazz, jstring address) {
         int haxe_stack_ = 99;
         hx::SetTopOfStack(&haxe_stack_, true);
-        ::Dynamic func_hobject_ = ::bind::jni::JLongToHObject(address);
+        ::Dynamic func_hobject_ = ::bind::jni::JStringToHObject(address);
         ::Dynamic func_unwrapped_ = ::bind::java::HObject_obj::unwrap(func_hobject_);
         func_unwrapped_->__run();
         hx::SetTopOfStack((int *)0, true);

@@ -136,3 +136,8 @@ Project will also work on Windows in the future.
 * [ ] Design a `bind.json` file format allowing to create `iOS`/`Android` extensions with external dependencies
 * [ ] Make Android Studio project sample work on Windows machines (only works on Mac/Linux for now)
 * [ ] Generate single Haxe class from `Objective-C` + `Java`/`JNI` bindings having the same methods and properties
+
+## Thanks to
+
+* [HaxeFoundation/HXCPP](https://github.com/HaxeFoundation/hxcpp) repository where most of Objective-C/HXCCP type conversion helpers code come from.
+

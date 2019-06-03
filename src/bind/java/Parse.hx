@@ -76,12 +76,11 @@ class Parse {
             var openBraces = 0;
             var openParens = 0;
             var openBrackets = 0;
-            var openLts = 0;
             
             while (i < len) {
                 c = cleanedCode.charAt(i);
 
-                if (openBraces <= 0 && openParens <= 0 && openBrackets <= 0 && openLts <= 0) {
+                if (openBraces <= 0 && openParens <= 0 && openBrackets <= 0) {
                     if (c == until) {
                         i++;
                         break;
@@ -105,12 +104,6 @@ class Parse {
                 }
                 else if (c == ']') {
                     openBrackets--;
-                }
-                else if (c == '<') {
-                    openLts++;
-                }
-                else if (c == '>') {
-                    openLts--;
                 }
 
                 i++;

@@ -6,6 +6,7 @@ import cpp.vm.Mutex;
 typedef JClass = Pointer<Void>;
 typedef JMethodID = Pointer<Void>;
 
+@:keep
 class JObject {
 
     public var pointer:Pointer<Void> = null;
@@ -18,7 +19,7 @@ class JObject {
 
     } //new
 
-    public function destroy():Void {
+    @:keep public function destroy():Void {
 
         if (pointer == null) return;
 
@@ -38,6 +39,7 @@ class JObject {
 } //JObject
 
 /** A wrapper to keep any haxe object in memory until destroy() is called. */
+@:keep
 class HObject {
 
     static var nextId:haxe.Int64 = 1;
@@ -60,7 +62,7 @@ class HObject {
 
     } //new
 
-    public function destroy():Void {
+    @:keep public function destroy():Void {
 
         // This will allow underlying object to be destroyed (if there is no other reference to it)
         @:privateAccess Support.hobjects.remove(id);
@@ -68,7 +70,7 @@ class HObject {
 
     } //destroy
 
-    public static function unwrap(wrapped:Dynamic):Dynamic {
+    @:keep public static function unwrap(wrapped:Dynamic):Dynamic {
 
         if (wrapped == null || !Std.is(wrapped, HObject)) return null;
         var wrappedTyped:HObject = wrapped;
@@ -76,20 +78,20 @@ class HObject {
 
     } //unwrap
 
-    public static function wrap(obj:Dynamic):Dynamic {
+    @:keep public static function wrap(obj:Dynamic):Dynamic {
 
         return new HObject(obj);
 
     } //wrap
 
-    public static function getById(id:String):HObject {
+    @:keep public static function getById(id:String):HObject {
 
         var result = @:privateAccess Support.hobjects.get(id);
         return result;
 
     } //getById
 
-    public static function idOf(wrapped:Dynamic):String {
+    @:keep public static function idOf(wrapped:Dynamic):String {
 
         var wrappedTyped:HObject = wrapped;
         return wrappedTyped.id;
@@ -128,8 +130,6 @@ class Support {
 
     public static function onceReady(callback:Void->Void):Void {
 
-        trace('ONCE READY');
-
         if (Support_Extern.isInitialized()) {
             callback();
         }
@@ -141,8 +141,6 @@ class Support {
 
     @:noCompletion
     public static function notifyReady():Void {
-
-        trace('NOTIFY READY');
 
         var callbacks = onceReadyCallbacks;
         onceReadyCallbacks = [];

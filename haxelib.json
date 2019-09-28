@@ -4,9 +4,9 @@
   "license": "MIT",
   "tags": ["cross", "bindings"],
   "description": "Bind Objective-C and Java (JNI) code to Haxe without writing glue code manually.",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "classPath": "src/",
-  "releasenote": "Fix lowerthan symbol messing java parsing up",
+  "releasenote": "Ensure it works, event when -dce full is used.",
   "contributors": ["jeremyfa"],
   "dependencies": {}
 }

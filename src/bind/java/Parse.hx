@@ -331,9 +331,9 @@ class Parse {
                                 comment = null;
 
                                 result.methods.push(method);
-                            }
 
-                            if (end != ';') consumeBlock();
+                                if (end != ';') consumeBlock();
+                            }
 
                         }
                         else {

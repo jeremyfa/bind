@@ -4,9 +4,9 @@
   "license": "MIT",
   "tags": ["cross", "bindings"],
   "description": "Bind Objective-C and Java (JNI) code to Haxe without writing glue code manually.",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "classPath": "src/",
-  "releasenote": "Fix invalid Func3 type in bind Support java class",
+  "releasenote": "Fix JSON encoding of nested arrays & maps in java",
   "contributors": ["jeremyfa"],
   "dependencies": {}
 }

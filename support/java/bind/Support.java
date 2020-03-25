@@ -163,10 +163,10 @@ public class Support {
 
         if (value == null) return null;
         if (value instanceof List) {
-            return toJSONArray((List<Object>)value).toString();
+            return toJSONArray((List<Object>)value);
         }
         else if (value instanceof Map) {
-            return toJSONObject((Map<String,Object>)value).toString();
+            return toJSONObject((Map<String,Object>)value);
         }
         else {
             return value;

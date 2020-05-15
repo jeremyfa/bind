@@ -44,7 +44,7 @@
                           if (done) done();
                       }]];
     
-    UIViewController *viewController = [[UIApplication sharedApplication] delegate].window.rootViewController;
+    UIViewController *viewController = [[UIApplication sharedApplication] keyWindow].rootViewController;
     [viewController presentViewController:alert animated:YES completion:nil];
     
 } //hello

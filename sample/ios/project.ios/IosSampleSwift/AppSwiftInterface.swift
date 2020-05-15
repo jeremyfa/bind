@@ -38,7 +38,7 @@ import UIKit
             }
         }))
         
-        if let viewController = UIApplication.shared.delegate?.window??.rootViewController {
+        if let viewController = UIApplication.shared.keyWindow?.rootViewController {
             viewController.present(alert, animated: true, completion: nil)
         }
         

@@ -483,7 +483,7 @@ class Parse {
                     type = Bool({
                         type: javaType
                     });
-                case 'short', 'byte', 'int', 'long', 'char', 'Short', 'Byte', 'Int', 'Long', 'Char':
+                case 'short', 'byte', 'int', 'long', 'char', 'Short', 'Byte', 'Integer', 'Long', 'Char':
                     type = Int({
                         type: javaType
                     });

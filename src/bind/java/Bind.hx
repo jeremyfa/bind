@@ -1259,7 +1259,10 @@ class Bind {
         var result = switch (type) {
             case Void(orig): 'void';
             case Int(orig): 'int';
-            case Float(orig): 'float';
+            case Float(orig): 
+                orig != null && (orig.type == 'Double' || orig.type == 'double')
+                ? 'double'
+                : 'float';
             case Bool(orig): 'int';
             case String(orig): 'String';
             case Array(itemType, orig): 'String';

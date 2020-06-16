@@ -614,7 +614,7 @@ class Parse {
                     // We resolve an implicit property from its public getters and setters
                     var readonly = true;
                     var getterType = toJavaType(getter.type);
-                    if (getter != null) {
+                    if (getter != null && setter != null) {
                         // Ensure setter shares the same type as getter
                         if (setter.args.length == 1) {
                             var setterType = toJavaType(setter.args[0].type);
@@ -630,6 +630,11 @@ class Parse {
                             canImplyProperty = false;
                         }
                     }
+
+                    // Disable this feature for now by default, because it has bugs
+                    #if !bind_java_implicit_properties
+                    canImplyProperty = false;
+                    #end
 
                     if (canImplyProperty) {
                         // Add implicit property

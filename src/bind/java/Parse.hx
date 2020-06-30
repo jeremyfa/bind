@@ -613,8 +613,8 @@ class Parse {
                 if (!existingProperties.exists(propertyName)) {
                     // We resolve an implicit property from its public getters and setters
                     var readonly = true;
-                    var getterType = toJavaType(getter.type);
                     if (getter != null && setter != null) {
+                        var getterType = toJavaType(getter.type);
                         // Ensure setter shares the same type as getter
                         if (setter.args.length == 1) {
                             var setterType = toJavaType(setter.args[0].type);

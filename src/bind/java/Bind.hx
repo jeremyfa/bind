@@ -1165,7 +1165,10 @@ class Bind {
         var result = switch (type) {
             case Void(orig): 'void';
             case Int(orig): 'jint';
-            case Float(orig): 'jfloat';
+            case Float(orig): 
+                orig != null && (orig.type == 'Double' || orig.type == 'double')
+                ? 'jdouble'
+                : 'jfloat';
             case Bool(orig): 'jint';
             case String(orig): 'jstring';
             case Array(itemType, orig): 'jstring';
@@ -1199,7 +1202,10 @@ class Bind {
         var result = switch (type) {
             case Void(orig): 'V';
             case Int(orig): 'I';
-            case Float(orig): 'F';
+            case Float(orig): 
+                orig != null && (orig.type == 'Double' || orig.type == 'double')
+                ? 'D'
+                : 'F';
             case Bool(orig): 'I';
             case String(orig): 'Ljava/lang/String;';
             case Array(itemType, orig): 'Ljava/lang/String;';

@@ -4,9 +4,9 @@
   "license": "MIT",
   "tags": ["cross", "bindings"],
   "description": "Bind Objective-C and Java (JNI) code to Haxe without writing glue code manually.",
-  "version": "0.4.9",
+  "version": "0.4.10",
   "classPath": "src/",
-  "releasenote": "Fix java parsing failing when class has public properties",
+  "releasenote": "Better handling of java double type in JNI",
   "contributors": ["jeremyfa"],
   "dependencies": {}
 }

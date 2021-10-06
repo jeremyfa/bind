@@ -35,13 +35,20 @@ namespace bind {
 
         JNIEnv *GetJNIEnv() {
 
-            if (env == NULL) {
-                JNIEnv *env_;
-                int status = jvm->AttachCurrentThread(&env_, NULL);
+            JNIEnv *env = NULL;
+
+            int stat = jvm->GetEnv((void **)&env, JNI_VERSION_1_6);
+            if (stat == JNI_EDETACHED) {
+                int status = jvm->AttachCurrentThread(&env, NULL);
                 if (status < 0) {
                     return NULL;
                 }
-                env = env_;
+            }
+            else if (stat == JNI_OK) {
+                // Alright
+            }
+            else if (stat == JNI_EVERSION) {
+                // Version not supported?
             }
 
             return env;
@@ -71,30 +78,30 @@ namespace bind {
         } //JStringToHxcpp
 
         ::cpp::Pointer<void> ResolveJClass(::String className) {
-            
+
             jclass globalRef;
             std::string cppClassName(className.c_str());
 
             if (jclasses.find(cppClassName) != jclasses.end()) {
                 return ::cpp::Pointer<void>(jclasses[cppClassName]);
             }
-                
+
             jclass result = GetJNIEnv()->FindClass(className.c_str());
-            
+
             if (!result) {
                 return null();
             }
-            
+
             globalRef = (jclass)GetJNIEnv()->NewGlobalRef(result);
             jclasses[cppClassName] = globalRef;
             GetJNIEnv()->DeleteLocalRef(result);
-            
+
             return ::cpp::Pointer<void>(globalRef);
-            
+
         } //ResolveJClass
 
         ::cpp::Pointer<void> ResolveStaticJMethodID(::cpp::Pointer<void> jclassRef, ::String name, ::String signature) {
-            
+
             jclass cls = (jclass) jclassRef.ptr;
             jmethodID mid = GetJNIEnv()->GetStaticMethodID(cls, name.c_str(), signature.c_str());
 
@@ -103,7 +110,7 @@ namespace bind {
             }
 
             return ::cpp::Pointer<void>(mid);
-            
+
         } //ResolveStaticJMethodID
 
         void ReleaseJObject(::cpp::Pointer<void> jobjectRef) {
@@ -200,5 +207,5 @@ extern "C" {
         ::bind::jni::SetHasNativeRunnables(value != 0);
 
     } //nativeSetHasRunnables
- 
+
 }

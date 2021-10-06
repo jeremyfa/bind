@@ -4,9 +4,9 @@
   "license": "MIT",
   "tags": ["cross", "bindings"],
   "description": "Bind Objective-C and Java (JNI) code to Haxe without writing glue code manually.",
-  "version": "0.4.10",
+  "version": "0.4.11",
   "classPath": "src/",
-  "releasenote": "Better handling of java double type in JNI",
+  "releasenote": "Fix GetJNIEnv() returning wrong env instance when using it from a background thread",
   "contributors": ["jeremyfa"],
   "dependencies": {}
 }

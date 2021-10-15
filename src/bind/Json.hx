@@ -25,7 +25,7 @@ class Json {
         if (input == null) {
             return null;
         }
-        else if (Std.is(input, Array)) {
+        else if (Std.isOfType(input, Array)) {
             var array:Array<Dynamic> = input;
             var result = [];
             for (item in array) {
@@ -33,7 +33,7 @@ class Json {
             }
             return result;
         }
-        else if (Std.is(input, String) || Std.is(input, Int) || Std.is(input, Float) || Std.is(input, Bool)) {
+        else if (Std.isOfType(input, String) || Std.isOfType(input, Int) || Std.isOfType(input, Float) || Std.isOfType(input, Bool)) {
             return input;
         }
         else {
@@ -90,7 +90,7 @@ class Json {
         if (input == null) {
             return null;
         }
-        else if (Std.is(input, Array)) {
+        else if (Std.isOfType(input, Array)) {
             var array:Array<Dynamic> = input;
             var result = [];
             for (item in array) {
@@ -98,7 +98,7 @@ class Json {
             }
             return result;
         }
-        else if (Std.is(input, String) || Std.is(input, Int) || Std.is(input, Float) || Std.is(input, Bool)) {
+        else if (Std.isOfType(input, String) || Std.isOfType(input, Int) || Std.isOfType(input, Float) || Std.isOfType(input, Bool)) {
             return input;
         }
         else {
@@ -111,11 +111,11 @@ class Json {
 
                 if (key == 'type'
                 && value != null
-                && !Std.is(value, String)
-                && !Std.is(input, Int)
-                && !Std.is(input, Float)
-                && !Std.is(input, Bool)
-                && !Std.is(input, Array)) {
+                && !Std.isOfType(value, String)
+                && !Std.isOfType(input, Int)
+                && !Std.isOfType(input, Float)
+                && !Std.isOfType(input, Bool)
+                && !Std.isOfType(input, Array)) {
 
                     var subKeys = Reflect.fields(value);
                     if (subKeys.length == 1

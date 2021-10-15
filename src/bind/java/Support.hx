@@ -24,7 +24,7 @@ class JObject {
         if (pointer == null) return;
 
         Support_Extern.releaseJObject(pointer);
-        
+
         pointer = null;
 
     } //destroy
@@ -72,7 +72,7 @@ class HObject {
 
     @:keep public static function unwrap(wrapped:Dynamic):Dynamic {
 
-        if (wrapped == null || !Std.is(wrapped, HObject)) return null;
+        if (wrapped == null || !Std.isOfType(wrapped, HObject)) return null;
         var wrappedTyped:HObject = wrapped;
         return wrappedTyped.obj;
 

@@ -867,6 +867,14 @@ class Bind {
                 ctx.indent++;
                 writeLineBreak(ctx);
 
+                // Ensure we keep track of hxcpp/gc stack when getting back to haxe context
+                writeIndent(ctx);
+                write('int haxe_stack_ = 99;', ctx);
+                writeLineBreak(ctx);
+                writeIndent(ctx);
+                write('hx::SetTopOfStack(&haxe_stack_, false);', ctx);
+                writeLineBreak(ctx);
+
                 // Convert objc args into haxe args
                 i = 0;
                 for (blockArg in args) {

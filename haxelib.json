@@ -4,9 +4,9 @@
   "license": "MIT",
   "tags": ["cross", "bindings"],
   "description": "Bind Objective-C and Java (JNI) code to Haxe without writing glue code manually.",
-  "version": "0.4.11",
+  "version": "0.4.12",
   "classPath": "src/",
-  "releasenote": "Fix GetJNIEnv() returning wrong env instance when using it from a background thread",
+  "releasenote": "Add missing hx::SetTopOfStack() calls on callback wrappers.",
   "contributors": ["jeremyfa"],
   "dependencies": {}
 }

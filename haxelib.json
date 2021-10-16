@@ -4,7 +4,7 @@
   "license": "MIT",
   "tags": ["cross", "bindings"],
   "description": "Bind Objective-C and Java (JNI) code to Haxe without writing glue code manually.",
-  "version": "0.4.12",
+  "version": "0.4.13",
   "classPath": "src/",
   "releasenote": "Add missing hx::SetTopOfStack() calls on callback wrappers.",
   "contributors": ["jeremyfa"],

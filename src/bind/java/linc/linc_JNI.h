@@ -1,6 +1,22 @@
 #include <hxcpp.h>
 #include <jni.h>
 
+#ifndef BIND_JNI_CONCAT_INTERNAL
+#define BIND_JNI_CONCAT_INTERNAL(a, b) a##b
+#endif
+
+#ifndef BIND_JNI_CONCAT
+#define BIND_JNI_CONCAT(a, b) BIND_JNI_CONCAT_INTERNAL(a, b)
+#endif
+
+#ifndef BIND_JNI_SUPPORT
+#define BIND_JNI_SUPPORT bind_Support
+#endif
+
+#ifndef BIND_JNI_FUNCTION
+#define BIND_JNI_FUNCTION(package, function) BIND_JNI_CONCAT(Java_, BIND_JNI_CONCAT(package, BIND_JNI_CONCAT(_, function)))
+#endif
+
 namespace bind {
 
     namespace jni {
@@ -35,12 +51,12 @@ namespace bind {
 
 extern "C" {
 
-    JNIEXPORT void JNICALL Java_bind_Support_nativeInit(JNIEnv *env, jclass clazz);
-    
-    JNIEXPORT void JNICALL Java_bind_Support_releaseHaxeObject(JNIEnv *env, jclass clazz, jstring address);
+    JNIEXPORT void JNICALL BIND_JNI_FUNCTION(BIND_JNI_SUPPORT, nativeInit)(JNIEnv *env, jclass clazz);
 
-    JNIEXPORT void JNICALL Java_bind_Support_nativeSetHasRunnables(JNIEnv *env, jclass clazz, jint value);
+    JNIEXPORT void JNICALL BIND_JNI_FUNCTION(BIND_JNI_SUPPORT, releaseHObject)(JNIEnv *env, jclass clazz, jstring address);
 
-    JNIEXPORT void JNICALL Java_bind_Support_notifyReady(JNIEnv *env, jclass clazz);
- 
+    JNIEXPORT void JNICALL BIND_JNI_FUNCTION(BIND_JNI_SUPPORT, nativeSetHasRunnables)(JNIEnv *env, jclass clazz, jint value);
+
+    JNIEXPORT void JNICALL BIND_JNI_FUNCTION(BIND_JNI_SUPPORT, notifyReady)(JNIEnv *env, jclass clazz);
+
 }

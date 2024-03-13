@@ -1,7 +1,6 @@
 package bind.java;
 
 import haxe.io.Path;
-
 using StringTools;
 
 typedef BindContext = {
@@ -15,6 +14,7 @@ typedef BindContext = {
     var javaCode:String;
     var nativeCallbacks:Map<String,bind.Class.Type>;
     var javaCallbacks:Map<String,bind.Class.Type>;
+    var bindSupport:String;
 }
 
 class Bind {
@@ -31,7 +31,8 @@ class Bind {
             javaPath: null,
             javaCode: null,
             nativeCallbacks: new Map(),
-            javaCallbacks: new Map()
+            javaCallbacks: new Map(),
+            bindSupport: 'bind.Support'
         };
 
     } //createContext
@@ -40,7 +41,7 @@ class Bind {
         To bind the related Java class to Haxe.
         The files are returned as an array of bind.File objects.
         Nothing is written to disk at this stage. */
-    public static function bindClass(javaClass:bind.Class, ?options:{?namespace:String, ?pack:String, ?javaPath:String, ?javaCode:String}):Array<bind.File> {
+    public static function bindClass(javaClass:bind.Class, ?options:{?namespace:String, ?pack:String, ?javaPath:String, ?javaCode:String, ?bindSupport:String}):Array<bind.File> {
 
         var ctx = createContext();
         ctx.javaClass = javaClass;
@@ -50,6 +51,7 @@ class Bind {
             if (options.pack != null) ctx.pack = options.pack;
             if (options.javaPath != null) ctx.javaPath = options.javaPath;
             if (options.javaCode != null) ctx.javaCode = options.javaCode;
+            if (options.bindSupport != null) ctx.bindSupport = options.bindSupport;
         }
 
         // Copy Java support file
@@ -335,7 +337,7 @@ class Bind {
         for (key in ctx.javaCallbacks.keys()) {
 
             var func = ctx.javaCallbacks.get(key);
-            
+
             switch (func) {
                 case Function(args, ret, orig):
                     var jniSig = '(';
@@ -435,7 +437,7 @@ class Bind {
         for (key in ctx.javaCallbacks.keys()) {
 
             var func = ctx.javaCallbacks.get(key);
-            
+
             switch (func) {
                 case Function(args, ret, orig):
                     // C++ method
@@ -645,7 +647,7 @@ class Bind {
         for (key in ctx.javaCallbacks.keys()) {
 
             var func = ctx.javaCallbacks.get(key);
-            
+
             switch (func) {
                 case Function(args, ret, orig):
                     writeMethod({
@@ -791,11 +793,16 @@ class Bind {
         writeLineBreak(ctx);
 
         // Imports
-        if (imports.indexOf('bind.Support.*') == -1) {
-            writeLine('import bind.Support.*;', ctx);
+        if (imports.indexOf('bind.Support.*') == -1 && imports.indexOf('${ctx.bindSupport}.*') == -1) {
+            writeLine('import ${ctx.bindSupport}.*;', ctx);
         }
         for (imp in imports) {
-            writeLine('import $imp;', ctx);
+            if (imp == 'bind.Support' || imp.startsWith('bind.Support.')) {
+                writeLine('import ${ctx.bindSupport}${imp.substr('bind.Support'.length)};', ctx);
+            }
+            else {
+                writeLine('import $imp;', ctx);
+            }
         }
 
         writeLineBreak(ctx);
@@ -880,12 +887,12 @@ class Bind {
             writeLineBreak(ctx);
             ctx.indent++;
 
-            writeLine('if (!bind.Support.isUIThread()) {', ctx);
+            writeLine('if (!${ctx.bindSupport}.isUIThread()) {', ctx);
             ctx.indent++;
             if (hasReturn) {
                 writeLine('final BindResult _bind_result = new BindResult();', ctx);
             }
-            writeLine('bind.Support.getUIThreadHandler().post(new Runnable() {', ctx);
+            writeLine('${ctx.bindSupport}.getUIThreadHandler().post(new Runnable() {', ctx);
             ctx.indent++;
             writeLine('public void run() {', ctx);
             ctx.indent++;
@@ -986,7 +993,7 @@ class Bind {
         for (key in ctx.javaCallbacks.keys()) {
 
             var func = ctx.javaCallbacks.get(key);
-            
+
             switch (func) {
                 case Function(args, ret, orig):
                     writeMethod({
@@ -1045,9 +1052,15 @@ class Bind {
 
         if (ctx.javaPath == null) return;
 
+        var pack = ctx.bindSupport.split('.');
+        pack.pop();
+
+        var javaContent = sys.io.File.getContent(Path.join([Path.directory(Sys.programPath()), 'support/java/bind/Support.java']));
+        javaContent = javaContent.replace('package bind;', 'package ${pack.join('.')};');
+
         ctx.currentFile = {
-            path: Path.join(['java', 'bind', 'Support.java']),
-            content: '' + sys.io.File.getContent(Path.join([Path.directory(Sys.programPath()), 'support/java/bind/Support.java']))
+            path: Path.join(['java', '${ctx.bindSupport.replace('.', '/')}.java']),
+            content: '' + javaContent
         };
 
         ctx.files.push(ctx.currentFile);
@@ -1165,7 +1178,7 @@ class Bind {
         var result = switch (type) {
             case Void(orig): 'void';
             case Int(orig): 'jint';
-            case Float(orig): 
+            case Float(orig):
                 orig != null && (orig.type == 'Double' || orig.type == 'double')
                 ? 'jdouble'
                 : 'jfloat';
@@ -1202,7 +1215,7 @@ class Bind {
         var result = switch (type) {
             case Void(orig): 'V';
             case Int(orig): 'I';
-            case Float(orig): 
+            case Float(orig):
                 orig != null && (orig.type == 'Double' || orig.type == 'double')
                 ? 'D'
                 : 'F';
@@ -1265,7 +1278,7 @@ class Bind {
         var result = switch (type) {
             case Void(orig): 'void';
             case Int(orig): 'int';
-            case Float(orig): 
+            case Float(orig):
                 orig != null && (orig.type == 'Double' || orig.type == 'double')
                 ? 'double'
                 : 'float';
@@ -1380,9 +1393,9 @@ class Bind {
 
                 if (hasReturn) {
                     writeLine('final BindResult return_jni_result_ = new BindResult();', ctx);
-                    writeLine('bind.Support.runInNativeThreadSync(new Runnable() {', ctx);
+                    writeLine('${ctx.bindSupport}.runInNativeThreadSync(new Runnable() {', ctx);
                 } else {
-                    writeLine('bind.Support.runInNativeThread(new Runnable() {', ctx);
+                    writeLine('${ctx.bindSupport}.runInNativeThread(new Runnable() {', ctx);
                 }
                 ctx.indent++;
                 writeLine('public void run() {', ctx);
@@ -1466,12 +1479,12 @@ class Bind {
 
             case Array(itemType, orig):
                 writeIndent(ctx);
-                write('final $type $name = ($type) bind.Support.fromJSONString($value);', ctx);
+                write('final $type $name = ($type) ${ctx.bindSupport}.fromJSONString($value);', ctx);
                 writeLineBreak(ctx);
 
             case Map(itemType, orig):
                 writeIndent(ctx);
-                write('final $type $name = ($type) bind.Support.fromJSONString($value);', ctx);
+                write('final $type $name = ($type) ${ctx.bindSupport}.fromJSONString($value);', ctx);
                 writeLineBreak(ctx);
 
             default:
@@ -1530,12 +1543,12 @@ class Bind {
 
             case Array(itemType, orig):
                 writeIndent(ctx);
-                write('final $type $name = bind.Support.toJSONString($value);', ctx);
+                write('final $type $name = ${ctx.bindSupport}.toJSONString($value);', ctx);
                 writeLineBreak(ctx);
 
             case Map(itemType, orig):
                 writeIndent(ctx);
-                write('final $type $name = bind.Support.toJSONString($value);', ctx);
+                write('final $type $name = ${ctx.bindSupport}.toJSONString($value);', ctx);
                 writeLineBreak(ctx);
 
             default:
@@ -1648,7 +1661,7 @@ class Bind {
         else if (method.instance && !isJavaConstructor) {
             write(', (jobject) instance_.ptr', ctx);
         }
-        
+
         for (arg in method.args) {
             write(', ' + arg.name + '_jni_', ctx);
         }

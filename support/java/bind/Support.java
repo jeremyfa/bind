@@ -112,7 +112,7 @@ public class Support {
 
     static native void nativeInit();
 
-    static native void releaseHaxeObject(String address);
+    static native void releaseHObject(String address);
 
 /// Helpers for native
 
@@ -144,7 +144,7 @@ public class Support {
 
         runInNativeThread(new Runnable() {
             public void run() {
-                Support.releaseHaxeObject(address);
+                Support.releaseHObject(address);
             }
         });
 

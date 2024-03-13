@@ -167,7 +167,7 @@ namespace bind {
 
 extern "C" {
 
-    JNIEXPORT void JNICALL Java_bind_Support_nativeInit(JNIEnv *env, jclass clazz) {
+    JNIEXPORT void JNICALL BIND_JNI_FUNCTION(BIND_JNI_SUPPORT, nativeInit)(JNIEnv *env, jclass clazz) {
 
         // Keep java VM instance to get JNIEnv instance later on the correct thread
         JavaVM *jvm_;
@@ -176,7 +176,7 @@ extern "C" {
 
     } //init
 
-    JNIEXPORT void JNICALL Java_bind_Support_notifyReady(JNIEnv *env, jclass clazz) {
+    JNIEXPORT void JNICALL BIND_JNI_FUNCTION(BIND_JNI_SUPPORT, notifyReady)(JNIEnv *env, jclass clazz) {
 
         int haxe_stack_ = 99;
         hx::SetTopOfStack(&haxe_stack_, true);
@@ -188,7 +188,7 @@ extern "C" {
 
     } //notifyReady
 
-    JNIEXPORT void JNICALL Java_bind_Support_releaseHaxeObject(JNIEnv *env, jclass clazz, jstring address) {
+    JNIEXPORT void JNICALL BIND_JNI_FUNCTION(BIND_JNI_SUPPORT, releaseHObject)(JNIEnv *env, jclass clazz, jstring address) {
 
         int haxe_stack_ = 99;
         hx::SetTopOfStack(&haxe_stack_, true);
@@ -200,9 +200,9 @@ extern "C" {
 
         hx::SetTopOfStack((int *)0, true);
 
-    } //releaseHaxeObject
+    } //releaseHObject
 
-    JNIEXPORT void JNICALL Java_bind_Support_nativeSetHasRunnables(JNIEnv *env, jclass clazz, jint value) {
+    JNIEXPORT void JNICALL BIND_JNI_FUNCTION(BIND_JNI_SUPPORT, nativeSetHasRunnables)(JNIEnv *env, jclass clazz, jint value) {
 
         ::bind::jni::SetHasNativeRunnables(value != 0);
 

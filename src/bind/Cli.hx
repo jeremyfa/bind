@@ -1,10 +1,9 @@
 package bind;
 
 import Sys.println;
-import sys.io.File;
-import sys.FileSystem;
 import haxe.io.Path;
-
+import sys.FileSystem;
+import sys.io.File;
 using StringTools;
 
 class Cli {
@@ -33,7 +32,8 @@ class Cli {
             parseOnly: false,
             pretty: false,
             export: null,
-            mute: false
+            mute: false,
+            bindSupport: 'bind.Support'
         };
         var bindClassOptions:Dynamic = {};
         var fileArgs = [];
@@ -52,8 +52,12 @@ class Cli {
                     options.json = true;
                 }
                 else if (arg == '--mute') {
-                    i++;
                     options.mute = true;
+                }
+                else if (arg == '--bind-support') {
+                    i++;
+                    options.bindSupport = args[i];
+                    bindClassOptions.bindSupport = args[i];
                 }
                 else if (arg == '--namespace') {
                     i++;
@@ -200,7 +204,15 @@ class Cli {
                         FileSystem.createDirectory(Path.directory(filePath));
                     }
 
-                    File.saveContent(filePath, fileInfo.content);
+                    if (FileSystem.exists(filePath)) {
+                        var existing = File.getContent(filePath);
+                        if (existing != fileInfo.content) {
+                            File.saveContent(filePath, fileInfo.content);
+                        }
+                    }
+                    else {
+                        File.saveContent(filePath, fileInfo.content);
+                    }
                 }
 
             }

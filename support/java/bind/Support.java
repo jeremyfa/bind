@@ -411,14 +411,15 @@ public class Support {
     /** Called by native/JNI to run a Runnable from its thread */
     public static void runAwaitingNativeRunnables() {
 
+        ArrayList<Runnable> toRun = new ArrayList<>();
         synchronized (sNativeRunnables) {
             if (sNativeRunnableStackThread == null) sNativeRunnableStackThread = Thread.currentThread();
             nativeSetHasRunnables(0);
-            List<Runnable> toRun = sNativeRunnables;
-            sNativeRunnables = new ArrayList<>();
-            for (Runnable r : toRun) {
-                r.run();
-            }
+            toRun.addAll(sNativeRunnables);
+            sNativeRunnables.clear();
+        }
+        for (Runnable r : toRun) {
+            r.run();
         }
 
     }

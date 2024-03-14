@@ -17,7 +17,7 @@ class Cli {
         this.args = args;
         this.cwd = cwd;
 
-    } //new
+    }
 
     public function run():Void {
 
@@ -136,7 +136,7 @@ class Cli {
                 }
             }
 
-        } //objc
+        }
 
         else if (kind == 'java') {
 
@@ -185,7 +185,7 @@ class Cli {
                 }
             }
 
-        } //java
+        }
 
         if (options.json) {
             if (options.export != null) {
@@ -230,6 +230,6 @@ class Cli {
             }
         }
 
-    } //run
+    }
 
-} //Cli
+}

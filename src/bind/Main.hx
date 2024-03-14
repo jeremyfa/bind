@@ -17,13 +17,13 @@ class Main {
 
         new bind.Cli(cast args, cwd).run();
 
-    } //main
+    }
 
     static function args():Array<String> {
 
         var args = [].concat(Sys.args());
         return args;
 
-    } //args
+    }
 
 }

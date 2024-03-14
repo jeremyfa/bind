@@ -1,7 +1,6 @@
 package bind.objc;
 
 import Sys.println;
-
 using StringTools;
 
 typedef ParseContext = {
@@ -277,7 +276,7 @@ class Parse {
             return null;
         }
 
-    } //getClass
+    }
 
     public static function parseProperty(code:String, ?ctx:ParseContext):bind.Class.Property {
 
@@ -321,7 +320,7 @@ class Parse {
                 var objcArgs = RE_PROPERTY.matched(5) != null && RE_PROPERTY.matched(5).trim() != ''
                     ? RE_PROPERTY.matched(5).split(',').map(function(s) return s.trim())
                     : [];
-                
+
                 // Void case
                 if (objcArgs.length == 1 && objcArgs[0] == 'void') {
                     objcArgs = [];
@@ -373,7 +372,7 @@ class Parse {
             return null;
         }
 
-    } //parseProperty
+    }
 
     public static function parseMethod(code:String, ?ctx:ParseContext):bind.Class.Method {
 
@@ -516,7 +515,7 @@ class Parse {
             args: args
         };
 
-    } //parseMethod
+    }
 
     public static function parseArg(objcArg:String, parentCtx:ParseContext):bind.Class.Arg {
 
@@ -539,7 +538,7 @@ class Parse {
 
         return null;
 
-    } //parseArg
+    }
 
     public static function parseType(objcType:String, ?ctx:ParseContext):bind.Class.Type {
 
@@ -576,7 +575,7 @@ class Parse {
                 var objcArgs = RE_TYPE.matched(6) != null && RE_TYPE.matched(6).trim() != ''
                     ? RE_TYPE.matched(6).split(',').map(function(s) return s.trim())
                     : [];
-                
+
                 // Void case
                 if (objcArgs.length == 1 && objcArgs[0] == 'void') {
                     objcArgs = [];
@@ -593,7 +592,7 @@ class Parse {
                 // Standard type
                 var objcType = removeSpacesForType(removeNullabilityForType(RE_TYPE.matched(1)));
                 var objcNullability = RE_TYPE.matched(4);
-                
+
                 var objcModifiers = [];
                 if (RE_TYPE.matched(2) != null) {
                     for (part in RE_TYPE.matched(2).replace("\t", ' ').split(' ')) {
@@ -606,7 +605,7 @@ class Parse {
                     else if (objcModifiers.indexOf('nonnull') != -1) objcNullability = 'nonnull';
                     else if (objcModifiers.indexOf('__nonnull') != -1) objcNullability = '__nonnull';
                 }
-                
+
                 var notNonNull = objcNullability != '_Nonnull' && objcNullability != 'nonnull' && objcNullability != '__nonnull';
                 var hasNullable = objcNullability == '_Nullable' || objcNullability == 'nullable' || objcNullability == '__nullable';
 
@@ -695,7 +694,7 @@ class Parse {
 
         return null;
 
-    } //parseType
+    }
 
     public static function parseTypedef(code:String, ?ctx:ParseContext):bind.Class.Type {
 
@@ -743,7 +742,7 @@ class Parse {
 
         return null;
 
-    } //parseTypedef
+    }
 
     public static function parseClassName(code:String, ?ctx:ParseContext):String {
 
@@ -768,7 +767,7 @@ class Parse {
 
         return null;
 
-    } //parseClassName
+    }
 
 /// Internal
 
@@ -777,7 +776,7 @@ class Parse {
         var code = extractCtx.code;
         var i = code.indexOf(';');
         if (i == -1) i = code.length;
-        
+
         var subset = code.substring(0, i);
 
         if (RE_LAST_NULLABILITY.match(subset)) {
@@ -791,12 +790,12 @@ class Parse {
             extractCtx.code = code;
         }
 
-    } //extractLastNullability
+    }
 
     static function ensureDefaultInit(result:bind.Class):Void {
 
         var existingMethods:Map<String,bind.Class.Method> = new Map();
-        
+
         for (method in result.methods) {
             existingMethods.set(method.name, method);
         }
@@ -817,12 +816,12 @@ class Parse {
             });
         }
 
-    } //ensureDefaultInit
+    }
 
     static function extractPropertyMethods(result:bind.Class):Void {
 
         var existingMethods:Map<String,bind.Class.Method> = new Map();
-        
+
         for (method in result.methods) {
             existingMethods.set(method.name, method);
         }
@@ -891,7 +890,7 @@ class Parse {
             }
         }
 
-    } //extractPropertyMethods
+    }
 
     static function extendOrig(orig:Dynamic, extension:Dynamic):Dynamic {
 
@@ -907,14 +906,14 @@ class Parse {
 
         return result;
 
-    } //extendOrig
+    }
 
     static function removeSpaces(input:String):String {
 
         if (input == null) return null;
         return RE_ALL_SPACES.replace(input, '');
 
-    } //removeSpaces
+    }
 
     static function removeSpacesForType(input:String):String {
 
@@ -957,7 +956,7 @@ class Parse {
 
         return result.trim();
 
-    } //removeSpacesForType
+    }
 
     static function removeNullabilityForType(input:String):String {
 
@@ -969,7 +968,7 @@ class Parse {
             .replace('_Null_unspecified', '').replace('__null_unspecified', '')
             ;
 
-    } //removeSpacesForType
+    }
 
     static function getCodeWithEmptyComments(input:String):String {
 
@@ -1029,7 +1028,7 @@ class Parse {
 
         return output;
 
-    } //getCodeWithEmptyComments
+    }
 
     static function cleanComment(comment:String):String {
 
@@ -1063,6 +1062,6 @@ class Parse {
 
         return lines.join("\n").trim();
 
-    } //cleanComment
+    }
 
-} //Parse
+}

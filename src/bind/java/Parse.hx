@@ -1,7 +1,6 @@
 package bind.java;
 
 import Sys.println;
-
 using StringTools;
 
 typedef ParseContext = {
@@ -48,7 +47,7 @@ class Parse {
 
         var inSingleLineComment = false;
         var inMultilineComment = false;
-        
+
         var inClass = false;
 
         var comment = null;
@@ -76,7 +75,7 @@ class Parse {
             var openBraces = 0;
             var openParens = 0;
             var openBrackets = 0;
-            
+
             while (i < len) {
                 c = cleanedCode.charAt(i);
 
@@ -109,19 +108,19 @@ class Parse {
                 i++;
             }
 
-        } //consumeUntil
-        
+        }
+
         function consumeBlock() {
 
             consumeUntil('}');
 
-        } //consumeBlock
-        
+        }
+
         function consumeStatement() {
 
             consumeUntil(';');
 
-        } //consumeStatement
+        }
 
         // Parse class
         var lastI = -1;
@@ -206,7 +205,7 @@ class Parse {
 
                 // Class
                 if (word != '' && RE_DECL.match(after)) {
-                    
+
                     var modifiers = extractModifiers(RE_DECL.matched(1));
                     var name = RE_DECL.matched(3).trim();
 
@@ -301,7 +300,7 @@ class Parse {
                             }
 
                             consumeBlock();
-                            
+
                         }
                         // Method
                         else if (RE_METHOD.match(after)) {
@@ -311,7 +310,7 @@ class Parse {
                             var type = parseType(RE_METHOD.matched(2));
                             var args = extractArgs(RE_METHOD.matched(4));
                             var end = RE_METHOD.matched(5);
-                            
+
                             i += RE_METHOD.matched(0).length;
 
                             // Skip private/protected/abstract stuff
@@ -363,10 +362,10 @@ class Parse {
                     if (!RE_IMPORT.match(after)) {
                         throw 'Failed to parse import';
                     }
-                    
+
                     var pack = RE_IMPORT.matched(2);
                     result.orig.imports.push(pack);
-                    
+
                     i += RE_IMPORT.matched(0).length;
 
                 }
@@ -388,7 +387,7 @@ class Parse {
             return result;
         }
 
-    } //parseClass
+    }
 
     public static function parseType(input:String, ?ctx:ParseContext, inTypeParam = false):bind.Class.Type {
 
@@ -450,7 +449,7 @@ class Parse {
                 baseType += c;
                 i++;
             }
-            
+
             endI = i;
         }
 
@@ -519,13 +518,13 @@ class Parse {
             return type;
         }
 
-    } //parseType
+    }
 
     static function extractPropertyMethods(result:bind.Class):Void {
 
         var existingMethods:Map<String,bind.Class.Method> = new Map();
         var existingProperties:Map<String,bind.Class.Property> = new Map();
-        
+
         for (method in result.methods) {
             existingMethods.set(method.name, method);
         }
@@ -653,7 +652,7 @@ class Parse {
             }
         }
 
-    } //extractPropertyMethods
+    }
 
     static function extendOrig(orig:Dynamic, extension:Dynamic):Dynamic {
 
@@ -669,7 +668,7 @@ class Parse {
 
         return result;
 
-    } //extendOrig
+    }
 
     static function toJavaType(type:bind.Class.Type):String {
 
@@ -693,7 +692,7 @@ class Parse {
 
         return orig.type;
 
-    } //toJavaType
+    }
 
 /// Internal
 
@@ -712,7 +711,7 @@ class Parse {
 
         return modifiers;
 
-    } //extractModifiers
+    }
 
     static function extractArgs(inArgs:String):Array<bind.Class.Arg> {
 
@@ -753,7 +752,7 @@ class Parse {
 
         return args;
 
-    } //extractArgs
+    }
 
     static function getCodeWithEmptyCommentsAndStrings(input:String):String {
 
@@ -822,7 +821,7 @@ class Parse {
 
         return output;
 
-    } //getCodeWithEmptyComments
+    }
 
     static function removeSpacesForType(input:String):String {
 
@@ -865,7 +864,7 @@ class Parse {
 
         return result.trim();
 
-    } //removeSpacesForType
+    }
 
     static function cleanComment(comment:String):String {
 
@@ -899,6 +898,6 @@ class Parse {
 
         return lines.join("\n").trim();
 
-    } //cleanComment
+    }
 
-} //Parse
+}

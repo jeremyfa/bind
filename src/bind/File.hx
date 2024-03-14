@@ -6,4 +6,4 @@ typedef File = {
 
     var content:String;
 
-} //File
+}

@@ -1,11 +1,10 @@
 package bind;
 
 import haxe.io.Path;
-import haxe.macro.Expr;
 import haxe.macro.Context;
-
+import haxe.macro.Expr;
+using StringTools;
 using haxe.macro.PositionTools;
-
 
 class Linc {
 
@@ -24,7 +23,7 @@ class Linc {
 
         return _fields;
 
-    } //touch
+    }
 
         /** Adds a @:buildXml meta node with a linc <set> and an <import> tag.
             The set is named LINC_${_lib}_PATH, and points to the root folder of the library.
@@ -54,10 +53,15 @@ class Linc {
         var _import_path = '$${$_linc_lib_var}linc/linc_${_lib}.xml';
         var _import = '<include name="$_import_path" />';
 
+        final bindSupportValue = Context.definedValue("bind_support");
+        if (bindSupportValue != null) {
+            _define += '<set name="BIND_SUPPORT_IDENTIFIER" value="${bindSupportValue.replace('/', '_')}"/>';
+        }
+
         _class.get().meta.add(":buildXml", [{ expr:EConst( CString( '$_define\n$_import' ) ), pos:_pos }], _pos );
 
         return Context.getBuildFields();
 
-    } //xml
+    }
 
-} //Linc
+}

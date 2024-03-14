@@ -14,7 +14,7 @@ typedef Class = {
 
     @:optional var orig:Dynamic;
 
-} //Class
+}
 
 typedef Property = {
 
@@ -28,7 +28,7 @@ typedef Property = {
 
     @:optional var orig:Dynamic;
 
-} //Property
+}
 
 typedef Method = {
 
@@ -44,7 +44,7 @@ typedef Method = {
 
     @:optional var orig:Dynamic;
 
-} //Method
+}
 
 typedef Arg = {
 
@@ -54,7 +54,7 @@ typedef Arg = {
 
     @:optional var orig:Dynamic;
 
-} //Arg
+}
 
 enum Type {
 
@@ -76,4 +76,4 @@ enum Type {
 
     Function(args:Array<bind.Arg>, ret:bind.Type, ?orig:Dynamic);
 
-} //Type
+}

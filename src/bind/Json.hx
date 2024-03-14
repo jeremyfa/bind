@@ -9,14 +9,14 @@ class Json {
 
         return haxe.Json.stringify(toJson(input), null, pretty ? '    ' : null);
 
-    } //stringify
+    }
 
     /** Parse JSON input and restores bind.Class.Type enum instances */
     public static function parse(input:String):Dynamic {
 
         return fromJson(haxe.Json.parse(input));
 
-    } //parse
+    }
 
 /// Internal (to json)
 
@@ -61,7 +61,7 @@ class Json {
             return result;
         }
 
-    } //toJson
+    }
 
     static function typeEnumToJson(value:bind.Class.Type):Dynamic {
 
@@ -81,7 +81,7 @@ class Json {
 
         return res;
 
-    } //typeEnumToJson
+    }
 
 /// Internal (to json)
 
@@ -137,7 +137,7 @@ class Json {
             return result;
         }
 
-    } //fromJson
+    }
 
     static function typeEnumFromJson(value:Dynamic):bind.Class.Type {
 
@@ -157,6 +157,6 @@ class Json {
             default: null;
         }
 
-    } //typeEnumFromJson
+    }
 
-} //Json
+}

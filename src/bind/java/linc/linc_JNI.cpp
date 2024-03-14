@@ -53,7 +53,7 @@ namespace bind {
 
             return env;
 
-        } //GetJNIEnv
+        }
 
         jstring HxcppToJString(::String str) {
 
@@ -62,7 +62,7 @@ namespace bind {
             }
             return NULL;
 
-        } //HxcppToJString
+        }
 
         ::String JStringToHxcpp(jstring str) {
 
@@ -75,7 +75,7 @@ namespace bind {
             }
             return null();
 
-        } //JStringToHxcpp
+        }
 
         ::cpp::Pointer<void> ResolveJClass(::String className) {
 
@@ -98,7 +98,7 @@ namespace bind {
 
             return ::cpp::Pointer<void>(globalRef);
 
-        } //ResolveJClass
+        }
 
         ::cpp::Pointer<void> ResolveStaticJMethodID(::cpp::Pointer<void> jclassRef, ::String name, ::String signature) {
 
@@ -111,14 +111,14 @@ namespace bind {
 
             return ::cpp::Pointer<void>(mid);
 
-        } //ResolveStaticJMethodID
+        }
 
         void ReleaseJObject(::cpp::Pointer<void> jobjectRef) {
 
             jobject obj = (jobject) jobjectRef.ptr;
             GetJNIEnv()->DeleteGlobalRef(obj);
 
-        } //ReleaseJObject
+        }
 
         jstring HObjectToJString(::Dynamic hobjectRef) {
 
@@ -127,7 +127,7 @@ namespace bind {
             }
             return NULL;
 
-        } //HObjectToJString
+        }
 
         ::Dynamic JStringToHObject(jstring address) {
 
@@ -135,31 +135,31 @@ namespace bind {
 
             return ::bind::java::HObject_obj::getById(JStringToHxcpp(address));
 
-        } //JStringToHObject
+        }
 
         void SetHasNativeRunnables(bool value) {
 
             hasNativeRunnables = value;
 
-        } //SetHasNativeRunnables
+        }
 
         bool HasNativeRunnables() {
 
             return hasNativeRunnables.load();
 
-        } //HasNativeRunnables
+        }
 
         void RunAwaitingRunnables(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_) {
 
             ::bind::jni::GetJNIEnv()->CallStaticVoidMethod((jclass) class_.ptr, (jmethodID) method_.ptr);
 
-        } //RunAndReleaseRunnable
+        }
 
         bool IsInitialized() {
 
             return isInitialized.load();
 
-        } //IsInitialized
+        }
 
     }
 
@@ -174,7 +174,7 @@ extern "C" {
         env->GetJavaVM(&jvm_);
         ::bind::jni::jvm = jvm_;
 
-    } //init
+    }
 
     JNIEXPORT void JNICALL BIND_JNI_FUNCTION(BIND_JNI_SUPPORT, notifyReady)(JNIEnv *env, jclass clazz) {
 
@@ -186,7 +186,7 @@ extern "C" {
 
         hx::SetTopOfStack((int *)0, true);
 
-    } //notifyReady
+    }
 
     JNIEXPORT void JNICALL BIND_JNI_FUNCTION(BIND_JNI_SUPPORT, releaseHObject)(JNIEnv *env, jclass clazz, jstring address) {
 
@@ -200,12 +200,12 @@ extern "C" {
 
         hx::SetTopOfStack((int *)0, true);
 
-    } //releaseHObject
+    }
 
     JNIEXPORT void JNICALL BIND_JNI_FUNCTION(BIND_JNI_SUPPORT, nativeSetHasRunnables)(JNIEnv *env, jclass clazz, jint value) {
 
         ::bind::jni::SetHasNativeRunnables(value != 0);
 
-    } //nativeSetHasRunnables
+    }
 
 }

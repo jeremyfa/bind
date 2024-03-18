@@ -25,7 +25,7 @@ class Parse {
     static var RE_NOT_SEPARATOR = ~/[a-zA-Z0-9_]/g;
     static var RE_GETTER = ~/^get([A-Z][a-zA-Z0-9_]*)$/;
 
-    static var RE_FUNC = ~/^Func([0-9])$/;
+    static var RE_FUNC = ~/^Func([0-9]+)$/;
     static var RE_FINAL = ~/^\s*final\s+/;
 
     public static function createContext():ParseContext {
@@ -490,7 +490,7 @@ class Parse {
                     type = Float({
                         type: javaType
                     });
-                case 'Func0', 'Func1', 'Func2', 'Func3', 'Func4', 'Func5', 'Func6', 'Func7', 'Func8', 'Func9':
+                case 'Func0', 'Func1', 'Func2', 'Func3', 'Func4', 'Func5', 'Func6', 'Func7', 'Func8', 'Func9', 'Func10', 'Func11', 'Func12', 'Func13', 'Func14', 'Func15', 'Func16':
                     RE_FUNC.match(baseType);
                     var numArgs = Std.parseInt(RE_FUNC.matched(1));
                     var args = [];

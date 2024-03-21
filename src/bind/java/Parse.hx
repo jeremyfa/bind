@@ -26,7 +26,9 @@ class Parse {
     static var RE_GETTER = ~/^get([A-Z][a-zA-Z0-9_]*)$/;
 
     static var RE_FUNC = ~/^Func([0-9]+)$/;
+    static var RE_FUNC_OPEN = ~/^Func([0-9]+)\s*</;
     static var RE_FINAL = ~/^\s*final\s+/;
+    static var RE_TYPE_PARAM_COMMENT = ~/\/\*+\s*([a-zA-Z][a-zA-Z0-9_]*)\s*\*+\/\s*(,|>)?$/;
 
     public static function createContext():ParseContext {
         return { i: 0, types: new Map() };
@@ -243,6 +245,7 @@ class Parse {
 
                             var modifiers = extractModifiers(RE_PROPERTY.matched(1));
                             var name = RE_PROPERTY.matched(3);
+                            var javaTypeWithComments = code.substr(i + after.indexOf(RE_METHOD.matched(2)), RE_METHOD.matched(2).length);
                             var javaType = RE_PROPERTY.matched(2);
                             var end = RE_PROPERTY.matched(4);
 
@@ -255,7 +258,7 @@ class Parse {
                             else {
                                 // Add property info
                                 var property:bind.Class.Property = {
-                                    type: parseType(javaType),
+                                    type: parseType(javaType, javaTypeWithComments),
                                     orig: {},
                                     name: name,
                                     instance: !modifiers.exists('static'),
@@ -275,8 +278,9 @@ class Parse {
 
                             var modifiers = extractModifiers(RE_CONSTRUCTOR.matched(1));
                             var name = 'constructor';
-                            var type = parseType(RE_CONSTRUCTOR.matched(2));
-                            var args = extractArgs(RE_CONSTRUCTOR.matched(3));
+                            var type = parseType(RE_CONSTRUCTOR.matched(2), null);
+                            var argsWithComments = code.substr(i + after.indexOf(RE_METHOD.matched(3)), RE_METHOD.matched(3).length);
+                            var args = extractArgs(RE_CONSTRUCTOR.matched(3), argsWithComments);
 
                             i += RE_CONSTRUCTOR.matched(0).length;
 
@@ -307,8 +311,10 @@ class Parse {
 
                             var modifiers = extractModifiers(RE_METHOD.matched(1));
                             var name = RE_METHOD.matched(3);
-                            var type = parseType(RE_METHOD.matched(2));
-                            var args = extractArgs(RE_METHOD.matched(4));
+                            var typeWithComments = code.substr(i + after.indexOf(RE_METHOD.matched(2)), RE_METHOD.matched(2).length);
+                            var type = parseType(RE_METHOD.matched(2), typeWithComments);
+                            var argsWithComments = code.substr(i + after.indexOf(RE_METHOD.matched(4)), RE_METHOD.matched(4).length);
+                            var args = extractArgs(RE_METHOD.matched(4), argsWithComments);
                             var end = RE_METHOD.matched(5);
 
                             i += RE_METHOD.matched(0).length;
@@ -389,12 +395,12 @@ class Parse {
 
     }
 
-    public static function parseType(input:String, ?ctx:ParseContext, inTypeParam = false):bind.Class.Type {
+    public static function parseType(input:String, inputWithComments:String, ?ctx:ParseContext, inTypeParam = false):bind.Class.Type {
 
         if (ctx == null) ctx = createContext();
 
         var baseType = '';
-        var typeParameters = [];
+        var typeParameters:Array<{type:bind.Class.Type, name:String}> = [];
         var len = input.length;
         var i = ctx.i;
         var startI = i;
@@ -413,10 +419,20 @@ class Parse {
 
                 if (c == '<') i++;
                 ctx.i = i;
-                var typeParam = parseType(input, ctx, true);
+                var typeParam = parseType(input, inputWithComments, ctx, true);
                 if (typeParam == null) return null;
+                var name = null;
+                var typeParamWithComments = inputWithComments.substring(i, ctx.i);
+                trace('MATCH? |$typeParamWithComments|');
+                if (RE_TYPE_PARAM_COMMENT.match(typeParamWithComments)) {
+                    trace('YES MATCH!');
+                    name = RE_TYPE_PARAM_COMMENT.matched(1);
+                }
                 i = ctx.i;
-                typeParameters.push(typeParam);
+                typeParameters.push({
+                    type: typeParam,
+                    name: name
+                });
                 before = input.substring(0, i).rtrim();
 
                 if (before.endsWith('>')) {
@@ -471,11 +487,11 @@ class Parse {
                         type: javaType
                     });
                 case 'List', 'AbstractList', 'ArrayList', 'AbstractSequentialList', 'AttributeList', 'CopyOnWriteArrayList', 'LinkedList', 'Stack', 'Vector':
-                    type = Array(typeParameters.length > 0 ? typeParameters[0] : null, {
+                    type = Array(typeParameters.length > 0 ? typeParameters[0].type : null, {
                         type: javaType
                     });
                 case 'Map', 'Attributes', 'ConcurrentHashMap', 'HashMap', 'Hashtable', 'LinkedHashMap', 'TreeMap':
-                    type = Map(typeParameters.length > 1 ? typeParameters[1] : null, {
+                    type = Map(typeParameters.length > 1 ? typeParameters[1].type : null, {
                         type: javaType
                     });
                 case 'boolean', 'Boolean':
@@ -496,11 +512,12 @@ class Parse {
                     var args = [];
                     for (n in 0...numArgs) {
                         args.push({
-                            type: typeParameters[n],
-                            name: 'arg' + (n + 1)
+                            type: typeParameters[n].type,
+                            name: typeParameters[n].name != null ? typeParameters[n].name : 'arg' + (n + 1)
                         });
                     }
-                    var ret = typeParameters[numArgs];
+                    trace('numArgs=$numArgs baseType=$baseType javaType=$javaType typeParams=${typeParameters} len=${typeParameters.length} ret=${typeParameters[numArgs]}');
+                    var ret = typeParameters[numArgs].type;
                     type = Function(args, ret, {
                         type: javaType
                     });
@@ -713,7 +730,7 @@ class Parse {
 
     }
 
-    static function extractArgs(inArgs:String):Array<bind.Class.Arg> {
+    static function extractArgs(inArgs:String, inArgsWithComments:String):Array<bind.Class.Arg> {
 
         var args = [];
 
@@ -733,7 +750,7 @@ class Parse {
 
             var ctx = createContext();
             ctx.i = i;
-            type = parseType(inArgs, ctx);
+            type = parseType(inArgs, inArgsWithComments, ctx);
             i = ctx.i;
 
             if (type == null) break;

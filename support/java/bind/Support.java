@@ -1,4 +1,4 @@
-package bind;
+package gadsme.bind;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
@@ -256,7 +256,7 @@ public class Support {
             Iterator<String> keys = json.keys();
             while (keys.hasNext()) {
                 String key = keys.next();
-                Object value = json.get(key);
+                Object value = json.isNull(key) ? null : json.get(key);
                 if (value instanceof JSONArray) {
                     map.put(key, fromJSONArray((JSONArray)value));
                 }
@@ -282,7 +282,7 @@ public class Support {
             int len = json.length();
             List<Object> list = new ArrayList<>(len);
             for (int i = 0; i < len; i++) {
-                Object value = json.get(i);
+                Object value = json.isNull(i) ? null : json.get(i);
                 if (value instanceof JSONArray) {
                     list.add(fromJSONArray((JSONArray)value));
                 }

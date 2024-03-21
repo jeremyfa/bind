@@ -1108,15 +1108,22 @@ class Bind {
                         if (haxeType.indexOf('->') != -1) {
                             haxeType = '(' + haxeType + ')';
                         }
-                        resArgs.push(haxeType);
+                        if (arg.name != null) {
+                            resArgs.push(arg.name + ':' + haxeType);
+                        }
+                        else {
+                            resArgs.push(haxeType);
+                        }
                     }
                 }
-                var haxeType = toHaxeType(ret, ctx);
-                if (haxeType.indexOf('->') != -1) {
-                    haxeType = '(' + haxeType + ')';
+                result = '(' + resArgs.join(',') + ')';
+
+                var haxeRetType = toHaxeType(ret, ctx);
+                if (haxeRetType.indexOf('->') != -1) {
+                    haxeRetType = '(' + haxeRetType + ')';
                 }
-                resArgs.push(haxeType);
-                result = resArgs.join('->');
+                result += '->' + haxeRetType;
+
             default:
         }
 

@@ -717,7 +717,7 @@ class Bind {
 
                         var i = 0;
                         for (funcArg in args) {
-                            writeHxcppArgAssign(funcArg, i++, ctx);
+                            writeHxcppArgAssign(funcArg, i++, ctx, false);
                         }
 
                         // Call
@@ -735,7 +735,7 @@ class Bind {
                         i = 0;
                         for (funcArg in args) {
                             if (i++ > 0) write(', ', ctx);
-                            write(funcArg.name + '_hxcpp_', ctx);
+                            write('arg' + i + '_hxcpp_', ctx);
                         }
                         write(');', ctx);
                         writeLineBreak(ctx);
@@ -1927,11 +1927,11 @@ class Bind {
 
     }
 
-    static function writeHxcppArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+    static function writeHxcppArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext, keepName:Bool = true):Void {
 
         var type = toHxcppType(arg.type, ctx);
-        var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_hxcpp_';
-        var value = (arg.name != null ? arg.name : 'arg' + (index + 1)) + (index == -1 ? '_jni_' : '');
+        var name = (keepName && arg.name != null ? arg.name : 'arg' + (index + 1)) + '_hxcpp_';
+        var value = (keepName && arg.name != null ? arg.name : 'arg' + (index + 1)) + (index == -1 ? '_jni_' : '');
 
         switch (arg.type) {
 

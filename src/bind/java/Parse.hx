@@ -423,9 +423,7 @@ class Parse {
                 if (typeParam == null) return null;
                 var name = null;
                 var typeParamWithComments = inputWithComments.substring(i, ctx.i);
-                trace('MATCH? |$typeParamWithComments|');
                 if (RE_TYPE_PARAM_COMMENT.match(typeParamWithComments)) {
-                    trace('YES MATCH!');
                     name = RE_TYPE_PARAM_COMMENT.matched(1);
                 }
                 i = ctx.i;
@@ -438,6 +436,11 @@ class Parse {
                 if (before.endsWith('>')) {
                     endI = i;
                     i++;
+                    if (inTypeParam) {
+                        while (input.charAt(i-1).trim() == '') {
+                            i++;
+                        }
+                    }
                     break;
                 } else {
                     expectNextTypeParam = true;
@@ -516,7 +519,6 @@ class Parse {
                             name: typeParameters[n].name != null ? typeParameters[n].name : 'arg' + (n + 1)
                         });
                     }
-                    trace('numArgs=$numArgs baseType=$baseType javaType=$javaType typeParams=${typeParameters} len=${typeParameters.length} ret=${typeParameters[numArgs]}');
                     var ret = typeParameters[numArgs].type;
                     type = Function(args, ret, {
                         type: javaType

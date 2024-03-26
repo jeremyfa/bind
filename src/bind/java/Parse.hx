@@ -245,7 +245,7 @@ class Parse {
 
                             var modifiers = extractModifiers(RE_PROPERTY.matched(1));
                             var name = RE_PROPERTY.matched(3);
-                            var javaTypeWithComments = code.substr(i + after.indexOf(RE_METHOD.matched(2)), RE_METHOD.matched(2).length);
+                            var javaTypeWithComments = code.substr(i + after.indexOf(RE_PROPERTY.matched(2)), RE_PROPERTY.matched(2).length);
                             var javaType = RE_PROPERTY.matched(2);
                             var end = RE_PROPERTY.matched(4);
 

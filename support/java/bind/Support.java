@@ -158,11 +158,11 @@ public class Support {
 
 /// Helpers for native
 
-    public static class HaxeObject {
+    public static class HObject {
 
         public String address;
 
-        public HaxeObject(String address) {
+        public HObject(String address) {
             this.address = address;
         }
 

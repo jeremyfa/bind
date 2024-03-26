@@ -1100,9 +1100,7 @@ class Bind {
         switch (type) {
             case Function(args, ret, orig):
                 var resArgs = [];
-                if (args.length == 0) {
-                    resArgs.push('Void');
-                } else {
+                if (args.length > 0) {
                     for (arg in args) {
                         var haxeType = toHaxeType(arg.type, ctx);
                         if (haxeType.indexOf('->') != -1) {
@@ -1372,7 +1370,7 @@ class Bind {
                 var retType = toJavaType(ret, ctx);
                 var hasReturn = retType != 'void' && retType != 'Void';
 
-                writeLine('final HaxeObject ' + name + 'hobj_ = $value == null ? null : new HaxeObject($value);', ctx);
+                writeLine('final HObject ' + name + 'hobj_ = $value == null ? null : new HObject($value);', ctx);
                 writeLine('final ' + type + ' ' + name + ' = $value == null ? null : new ' + type + '() {', ctx);
                 ctx.indent++;
                 writeIndent(ctx);

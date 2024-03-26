@@ -569,18 +569,18 @@ class Bind {
         switch (type) {
             case Function(args, ret, orig):
                 var resArgs = [];
-                if (args.length == 0) {
-                    resArgs.push('Void');
-                } else {
+                if (args.length > 0) {
                     for (arg in args) {
                         var haxeType = toHaxeType(arg.type, ctx);
                         if (haxeType.indexOf('->') != -1) {
                             haxeType = '(' + haxeType + ')';
                         }
                         if (arg.name != null) {
-                            resArgs.push(arg.name + ':');
+                            resArgs.push(arg.name + ':' + haxeType);
                         }
-                        resArgs.push(haxeType);
+                        else {
+                            resArgs.push(haxeType);
+                        }
                     }
                 }
                 result = '(' + resArgs.join(',') + ')';

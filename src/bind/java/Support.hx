@@ -8,7 +8,6 @@ import haxe.macro.Expr;
 #else
 
 import cpp.Pointer;
-import cpp.vm.Mutex;
 
 typedef JClass = Pointer<Void>;
 typedef JMethodID = Pointer<Void>;

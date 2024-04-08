@@ -63,6 +63,12 @@ class Cli {
                     i++;
                     bindClassOptions.namespace = args[i];
                 }
+                else if (arg == '--linc-file') {
+                    i++;
+                    if (bindClassOptions.lincFiles == null)
+                        bindClassOptions.lincFiles = [];
+                    bindClassOptions.lincFiles.push(args[i]);
+                }
                 else if (arg == '--package') {
                     i++;
                     bindClassOptions.pack = args[i];
@@ -82,6 +88,17 @@ class Cli {
             }
 
             i++;
+        }
+
+        if (bindClassOptions.lincFiles != null) {
+            var lincFiles:Array<String> = bindClassOptions.lincFiles;
+            for (n in 0...lincFiles.length) {
+                var path = lincFiles[n];
+                if (!Path.isAbsolute(path)) {
+                    path = Path.join([cwd, path]);
+                    lincFiles[n] = path;
+                }
+            }
         }
 
         var kind = args[0];

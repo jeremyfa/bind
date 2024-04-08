@@ -1,24 +1,83 @@
-#import <Foundation/Foundation.h>
 #import "linc_Objc.h"
+#import <dispatch/dispatch.h>
 
 // Substantial portions of this code taken from HaxeFoundation/HXCPP repository Objc helpers code.
 
 @implementation BindObjcHaxeWrapperClass
 
-- (id)init:( hx::Object * )inHaxe  {
-   self = [super init];
-   haxeObject = inHaxe;
-   hx::GCAddRoot(&haxeObject);
-   if (self!=nil) {
-   }
-   return self;
+- (id)init:( hx::Object * )inHaxe {
+    self = [super init];
+    haxeObject = inHaxe;
+    hx::GCAddRoot(&haxeObject);
+    if (self!=nil) {
+    }
+    return self;
 }
 
 - (void)dealloc {
-   GCRemoveRoot(&haxeObject);
-   #ifndef OBJC_ARC
-   [super dealloc];
-   #endif
+    GCRemoveRoot(&haxeObject);
+    #ifndef OBJC_ARC
+    [super dealloc];
+    #endif
+}
+
+@end
+
+@implementation BindObjcHaxeQueue
+
++ (instancetype)sharedQueue {
+    static BindObjcHaxeQueue *sharedInstance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sharedInstance = [[BindObjcHaxeQueue alloc] initPrivate];
+    });
+    return sharedInstance;
+}
+
+- (instancetype)initPrivate {
+    self = [super init];
+    if (self) {
+        blockQueue = [[NSMutableArray alloc] init];
+        hasBlocks = false;
+    }
+    return self;
+}
+
+- (void)enqueue:(void (^)(void))block {
+    @synchronized (self) {
+        @autoreleasepool {
+            [blockQueue addObject:[block copy]];
+            hasBlocks = true;
+        }
+    }
+}
+
+- (void)enqueueSync:(void (^)(void))block callerThread:(NSThread *)callerThread {
+    if ([[NSThread currentThread] isEqual:callerThread]) {
+        block();
+    }
+    else {
+        dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+        [self enqueue:block];
+        [self enqueue:^{
+            dispatch_semaphore_signal(semaphore);
+        }];
+        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+    }
+}
+
+- (void)flush {
+    if (hasBlocks.load()) {
+        @synchronized (self) {
+            @autoreleasepool {
+                for (void (^block)(void) in blockQueue) {
+                    block();
+                }
+                [blockQueue removeAllObjects];
+                hasBlocks = false;
+            }
+        }
+    }
 }
 
 @end
@@ -26,6 +85,10 @@
 namespace bind {
 
     namespace objc {
+
+        void flushHaxeQueue() {
+            [[BindObjcHaxeQueue sharedQueue] flush];
+        }
 
 #ifndef HXCPP_OBJC
 

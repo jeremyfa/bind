@@ -204,7 +204,11 @@ class Support {
 
     private static var _mid_runRunnables:JMethodID = null;
 
-    #if !debug inline #end public static function flushRunnables():Void {
+    @:deprecated('Use flushHaxeQueue() instead') inline public static function flushRunnables():Void {
+        flushHaxeQueue();
+    }
+
+    #if !debug inline #end public static function flushHaxeQueue():Void {
 
         if (!Support_Extern.hasNativeRunnables()) return;
 

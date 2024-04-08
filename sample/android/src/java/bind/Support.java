@@ -27,61 +27,103 @@ public class Support {
 
         T run();
 
-    } //Func0
+    }
 
     public interface Func1<A1,T> {
 
         T run(A1 arg1);
 
-    } //Func1
+    }
 
     public interface Func2<A1,A2,T> {
 
         T run(A1 arg1, A2 arg2);
 
-    } //Func2
+    }
 
-    public interface Func3<A1,A2,A3,A4,A5,A6,A7,A8,A9,T> {
+    public interface Func3<A1,A2,A3,T> {
 
-        T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9);
+        T run(A1 arg1, A2 arg2, A3 arg3);
 
-    } //Func3
+    }
 
     public interface Func4<A1,A2,A3,A4,T> {
 
         T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4);
 
-    } //Func4
+    }
 
     public interface Func5<A1,A2,A3,A4,A5,T> {
 
         T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5);
 
-    } //Func5
+    }
 
     public interface Func6<A1,A2,A3,A4,A5,A6,T> {
 
         T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6);
 
-    } //Func6
+    }
 
     public interface Func7<A1,A2,A3,A4,A5,A6,A7,T> {
 
         T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7);
 
-    } //Func7
+    }
 
     public interface Func8<A1,A2,A3,A4,A5,A6,A7,A8,T> {
 
         T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8);
 
-    } //Func8
+    }
 
     public interface Func9<A1,A2,A3,A4,A5,A6,A7,A8,A9,T> {
 
         T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9);
 
-    } //Func9
+    }
+
+    public interface Func10<A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,T> {
+
+        T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9, A10 arg10);
+
+    }
+
+    public interface Func11<A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,T> {
+
+        T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9, A10 arg10, A11 arg11);
+
+    }
+
+    public interface Func12<A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,T> {
+
+        T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9, A10 arg10, A11 arg11, A12 arg12);
+
+    }
+
+    public interface Func13<A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,T> {
+
+        T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9, A10 arg10, A11 arg11, A12 arg12, A13 arg13);
+
+    }
+
+    public interface Func14<A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,T> {
+
+        T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9, A10 arg10, A11 arg11, A12 arg12, A13 arg13, A14 arg14);
+
+    }
+
+    public interface Func15<A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,T> {
+
+        T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9, A10 arg10, A11 arg11, A12 arg12, A13 arg13, A14 arg14, A15 arg15);
+
+    }
+
+    public interface Func16<A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,T> {
+
+        T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9, A10 arg10, A11 arg11, A12 arg12, A13 arg13, A14 arg14, A15 arg15, A16 arg16);
+
+    }
 
 /// Android context
 
@@ -102,7 +144,7 @@ public class Support {
 
         nativeInit();
 
-    } //init
+    }
 
 /// Native calls
 
@@ -112,15 +154,15 @@ public class Support {
 
     static native void nativeInit();
 
-    static native void releaseHaxeObject(String address);
+    static native void releaseHObject(String address);
 
 /// Helpers for native
 
-    public static class HaxeObject {
+    public static class HObject {
 
         public String address;
 
-        public HaxeObject(String address) {
+        public HObject(String address) {
             this.address = address;
         }
 
@@ -138,17 +180,17 @@ public class Support {
 
         }
 
-    } //HaxeObject
+    }
 
     static void notifyFinalize(final String address) {
 
         runInNativeThread(new Runnable() {
             public void run() {
-                Support.releaseHaxeObject(address);
+                Support.releaseHObject(address);
             }
         });
 
-    } //notifyFinalize
+    }
 
 /// Converters
 
@@ -157,22 +199,22 @@ public class Support {
         if (value == null) return null;
         return toJSONValue(value).toString();
 
-    } //toJSONString
+    }
 
     public static Object toJSONValue(Object value) {
 
         if (value == null) return null;
         if (value instanceof List) {
-            return toJSONArray((List<Object>)value).toString();
+            return toJSONArray((List<Object>)value);
         }
         else if (value instanceof Map) {
-            return toJSONObject((Map<String,Object>)value).toString();
+            return toJSONObject((Map<String,Object>)value);
         }
         else {
             return value;
         }
 
-    } //toJSONValue
+    }
 
     public static JSONObject toJSONObject(Map<String,Object> map) {
 
@@ -191,7 +233,7 @@ public class Support {
             return null;
         }
 
-    } //toJSONObject
+    }
 
     public static JSONArray toJSONArray(List<Object> list) {
 
@@ -205,7 +247,7 @@ public class Support {
 
         return json;
 
-    } //toJSONArray
+    }
 
     public static Object fromJSONObject(JSONObject json) {
 
@@ -232,7 +274,7 @@ public class Support {
             return null;
         }
 
-    } //fromJSONObject
+    }
 
     public static List<Object> fromJSONArray(JSONArray json) {
 
@@ -258,7 +300,7 @@ public class Support {
             return null;
         }
 
-    } //fromJSONArray
+    }
 
     public static Object fromJSONString(String jsonString) {
 
@@ -275,7 +317,7 @@ public class Support {
             return null;
         }
 
-    } //fromJSONString
+    }
 
 /// Thread safety
 
@@ -285,7 +327,7 @@ public class Support {
 
         public boolean resolved = false;
 
-    } //BindResult
+    }
 
     public static void runInNativeThread(Runnable r) {
 
@@ -306,7 +348,7 @@ public class Support {
             runInUIThread(r);
         }
 
-    } //runInNativeThread
+    }
 
     public static void runInNativeThreadSync(final Runnable r) {
 
@@ -336,7 +378,7 @@ public class Support {
             r.run();
         }
 
-    } //runInNativeThreadSync
+    }
 
     public static void runInUIThread(Runnable r) {
 
@@ -347,7 +389,7 @@ public class Support {
             r.run();
         }
 
-    } //runInUIThread
+    }
 
     public static void runInUIThreadSync(final Runnable r) {
 
@@ -377,7 +419,7 @@ public class Support {
             r.run();
         }
 
-    } //runInUIThreadSync
+    }
 
     /**
      * If set to `true`, native side will take care of executing
@@ -403,7 +445,7 @@ public class Support {
             nativeSetHasRunnables(1);
         }
 
-    } //pushNativeRunnable
+    }
 
     /** Inform native/JNI that some Runnable instances are waiting to be run frpù native thread. */
     static native void nativeSetHasRunnables(int value);
@@ -411,17 +453,18 @@ public class Support {
     /** Called by native/JNI to run a Runnable from its thread */
     public static void runAwaitingNativeRunnables() {
 
+        ArrayList<Runnable> toRun = new ArrayList<>();
         synchronized (sNativeRunnables) {
             if (sNativeRunnableStackThread == null) sNativeRunnableStackThread = Thread.currentThread();
             nativeSetHasRunnables(0);
-            List<Runnable> toRun = sNativeRunnables;
-            sNativeRunnables = new ArrayList<>();
-            for (Runnable r : toRun) {
-                r.run();
-            }
+            toRun.addAll(sNativeRunnables);
+            sNativeRunnables.clear();
+        }
+        for (Runnable r : toRun) {
+            r.run();
         }
 
-    } //runRunnable
+    }
 
     /**
      * If provided, calls to JNI will be done on this GLSurfaceView's renderer thread.
@@ -489,4 +532,4 @@ public class Support {
         }
     }
 
-} //Support
+}

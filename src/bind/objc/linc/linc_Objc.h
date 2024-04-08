@@ -1,4 +1,6 @@
 #include <hxcpp.h>
+#import <Foundation/Foundation.h>
+#import <atomic>
 
 // Substantial portions of this code taken from HaxeFoundation/HXCPP repository Objc helpers code.
 
@@ -15,10 +17,32 @@
 
 @end
 
+// Objective-C class that enqueues callbacks
+// in order to run them at the right time,
+// from the right thread.
+@interface BindObjcHaxeQueue : NSObject {
+
+    NSMutableArray *blockQueue;
+
+    std::atomic<bool> hasBlocks;
+
+}
+
++ (instancetype)sharedQueue;
+
+- (void)enqueue:(void (^)(void))block;
+
+- (void)enqueueSync:(void (^)(void))block callerThread:(NSThread *)callerThread;
+
+- (void)flush;
+
+@end
 
 namespace bind {
 
     namespace objc {
+
+        void flushHaxeQueue();
 
         NSString* HxcppToNSString(::String str);
 

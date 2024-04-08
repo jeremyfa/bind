@@ -1,7 +1,7 @@
 package;
 
-import bind.java.Support;
 import android.AppAndroidInterface;
+import bind.java.Support;
 
 class Main {
 
@@ -12,7 +12,7 @@ class Main {
 
         testAndroid();
 
-    } //main
+    }
 
     static function testAndroid():Void {
 
@@ -57,6 +57,6 @@ class Main {
             trace('Activity.onResume');
         };
 
-    } //testAndroid
+    }
 
-} //Main
+}

@@ -13,6 +13,7 @@ typedef BindContext = {
     var currentFile:bind.File;
     var headerPath:String;
     var headerCode:String;
+    var lincFiles:Array<String>;
 }
 
 class Bind {
@@ -28,7 +29,8 @@ class Bind {
             pack: null,
             currentFile: null,
             headerPath: null,
-            headerCode: null
+            headerCode: null,
+            lincFiles: []
         };
 
     }
@@ -37,7 +39,7 @@ class Bind {
         To bind the related Objective-C class to Haxe.
         The files are returned as an array of bind.File objects.
         Nothing is written to disk at this stage. */
-    public static function bindClass(objcClass:bind.Class, ?options:{?namespace:String, ?pack:String, ?objcPrefix:String, ?headerPath:String, ?headerCode:String}):Array<bind.File> {
+    public static function bindClass(objcClass:bind.Class, ?options:{?namespace:String, ?pack:String, ?objcPrefix:String, ?headerPath:String, ?headerCode:String, ?lincFiles:Array<String>}):Array<bind.File> {
 
         var ctx = createContext();
         ctx.objcClass = objcClass;
@@ -48,6 +50,7 @@ class Bind {
             if (options.objcPrefix != null) ctx.objcPrefix = options.objcPrefix;
             if (options.headerPath != null) ctx.headerPath = options.headerPath;
             if (options.headerCode != null) ctx.headerCode = options.headerCode;
+            if (options.lincFiles != null) ctx.lincFiles = options.lincFiles;
         }
 
         // Copy Objective C header file
@@ -177,6 +180,18 @@ class Bind {
 
                 // Method body
                 //
+
+                // Autorelease pool
+                writeIndent(ctx);
+                write('@autoreleasepool {', ctx);
+                writeLineBreak(ctx);
+                ctx.indent++;
+
+                // Get current thread
+                writeIndent(ctx);
+                write('NSThread *objc_caller_thread_ = [NSThread currentThread];', ctx);
+                writeLineBreak(ctx);
+
                 // Convert args to Objc
                 var toObjc = [];
                 var i = 0;
@@ -184,8 +199,25 @@ class Bind {
                     writeObjcArgAssign(arg, i, ctx);
                     i++;
                 }
+
+                // Check if it is main thread
+                writeIndent(ctx);
+                write('if (![objc_caller_thread_ isMainThread]) {', ctx);
+                writeLineBreak(ctx);
+                ctx.indent++;
+                writeWrapToObjcThreadCall(method, ctx);
+                ctx.indent--;
+                writeIndent(ctx);
+                write('}', ctx);
+                writeLineBreak(ctx);
+
                 // Call Objc
                 writeObjcCall(method, ctx);
+
+                ctx.indent--;
+                writeIndent(ctx);
+                write('}', ctx);
+                writeLineBreak(ctx);
 
                 ctx.indent--;
                 writeIndent(ctx);
@@ -494,6 +526,24 @@ class Bind {
         ctx.indent++;
         writeLine('<compilerflag value="-I$'+'{LINC_' + ctx.objcClass.name.toUpperCase() + '_PATH}linc/" />', ctx);
         writeLine('<file name="$'+'{LINC_' + ctx.objcClass.name.toUpperCase() + '_PATH}linc/linc_' + ctx.objcClass.name + '.mm" />', ctx);
+
+        if (ctx.lincFiles != null) {
+            for (lincFilePath in ctx.lincFiles) {
+                if (lincFilePath.endsWith('.h')) {
+
+                }
+                else {
+                    writeLine('<file name="$'+'{LINC_' + ctx.objcClass.name.toUpperCase() + '_PATH}linc/${Path.withoutDirectory(lincFilePath)}" />', ctx);
+                }
+
+                var file:bind.File = {
+                    content: sys.io.File.getContent(lincFilePath),
+                    path: dir + 'linc/' + Path.withoutDirectory(lincFilePath)
+                };
+                ctx.files.push(file);
+            }
+        }
+
         ctx.indent--;
         writeLine('</files>', ctx);
         writeLine('<target id="haxe">', ctx);
@@ -871,6 +921,25 @@ class Bind {
                 ctx.indent++;
                 writeLineBreak(ctx);
 
+                if (blockReturnType != 'void') {
+                    writeLine('__block ' + toObjcType(ret, ctx) + ' return_fromthread_objc_;', ctx);
+                }
+
+                writeIndent(ctx);
+                if (blockReturnType == 'void') {
+                    write('[[BindObjcHaxeQueue sharedQueue] enqueue:^{', ctx);
+                }
+                else {
+                    write('[[BindObjcHaxeQueue sharedQueue] enqueueSync:^{', ctx);
+                }
+                writeLineBreak(ctx);
+                ctx.indent++;
+
+                writeIndent(ctx);
+                write('@autoreleasepool {', ctx);
+                writeLineBreak(ctx);
+                ctx.indent++;
+
                 // Push HXCPP stack lock
                 writeIndent(ctx);
                 write('int haxe_stack_ = 99;', ctx);
@@ -924,7 +993,26 @@ class Bind {
                         name: 'return',
                         type: ret
                     }, -1, ctx);
-                    writeLine('return return_objc_;', ctx);
+                    writeLine('return_fromthread_objc_ = return_objc_;', ctx);
+                }
+
+                ctx.indent--;
+                writeIndent(ctx);
+                write('}', ctx);
+                writeLineBreak(ctx);
+
+                ctx.indent--;
+                writeIndent(ctx);
+                if (blockReturnType == 'void') {
+                    write('}];', ctx);
+                }
+                else {
+                    write('} callerThread:objc_caller_thread_];', ctx);
+                }
+                writeLineBreak(ctx);
+
+                if (blockReturnType != 'void') {
+                    writeLine('return return_fromthread_objc_;', ctx);
                 }
 
                 ctx.indent--;
@@ -975,10 +1063,68 @@ class Bind {
 
     }
 
-    static function writeObjcCall(method:bind.Class.Method, ctx:BindContext):Void {
+    static function writeWrapToObjcThreadCall(method:bind.Class.Method, ctx:BindContext):Void {
 
         var hasReturn = false;
-        var hasParenClose = false;
+        var isObjcConstructor = isObjcConstructor(method, ctx);
+
+        writeIndent(ctx);
+        switch (method.type) {
+            case Void(orig):
+            default:
+                hasReturn = true;
+        }
+        if (hasReturn) {
+            switch (method.type) {
+                case Function(args, ret, orig):
+                    write('__block id return_fromthread_objc_;', ctx);
+                default:
+                    var objcType = toObjcType(method.type, ctx);
+                    if (objcType == 'instancetype') objcType = ctx.objcClass.name + '*';
+                    write('__block ' + objcType + ' return_fromthread_objc_;', ctx);
+            }
+            writeLineBreak(ctx);
+            writeIndent(ctx);
+            write('dispatch_sync(dispatch_get_main_queue(), ^{', ctx);
+        }
+        else {
+            write('dispatch_async(dispatch_get_main_queue(), ^{', ctx);
+        }
+        writeLineBreak(ctx);
+        ctx.indent++;
+
+        writeObjcCall(method, ctx, false);
+        if (hasReturn) {
+            writeIndent(ctx);
+            write('return_fromthread_objc_ = return_objc_;', ctx);
+            writeLineBreak(ctx);
+        }
+
+        ctx.indent--;
+        writeIndent(ctx);
+        write('});', ctx);
+        writeLineBreak(ctx);
+
+        if (hasReturn) {
+            writeHxcppArgAssign({
+                name: 'return_fromthread',
+                type: method.type
+            }, -1, ctx);
+            writeIndent(ctx);
+            write('return return_fromthread_hxcpp_;', ctx);
+            writeLineBreak(ctx);
+        }
+        else {
+            writeIndent(ctx);
+            write('return;', ctx);
+            writeLineBreak(ctx);
+        }
+
+    }
+
+    static function writeObjcCall(method:bind.Class.Method, ctx:BindContext, convertReturnToHaxe:Bool = true):Void {
+
+        var hasReturn = false;
         var isObjcConstructor = isObjcConstructor(method, ctx);
 
         writeIndent(ctx);
@@ -1016,11 +1162,13 @@ class Bind {
         write('];', ctx);
         writeLineBreak(ctx);
         if (hasReturn) {
-            writeHxcppArgAssign({
-                name: 'return',
-                type: method.type
-            }, -1, ctx);
-            writeLine('return return_hxcpp_;', ctx);
+            if (convertReturnToHaxe) {
+                writeHxcppArgAssign({
+                    name: 'return',
+                    type: method.type
+                }, -1, ctx);
+                writeLine('return return_hxcpp_;', ctx);
+            }
         }
 
     }

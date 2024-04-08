@@ -17,7 +17,7 @@ class Main {
             testSwift();
         });
 
-    } //main
+    }
 
     static function testObjc(done:Void->Void):Void {
 
@@ -57,7 +57,7 @@ class Main {
             });
         };
 
-    } //testObjc
+    }
 
     static function testSwift():Void {
 
@@ -94,6 +94,6 @@ class Main {
             trace('Swift done.');
         });
 
-    } //testSwift
+    }
 
-} //Main
+}

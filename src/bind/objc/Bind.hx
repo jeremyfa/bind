@@ -409,7 +409,7 @@ class Bind {
                         write('return ', ctx);
                 }
             }
-            write(ctx.objcClass.name + '_Extern.' + name + '(', ctx);
+            write(haxeName + '_Extern.' + name + '(', ctx);
             var i = 0;
             if (!isObjcConstructor && method.instance) {
                 write('_instance', ctx);

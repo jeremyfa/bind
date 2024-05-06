@@ -64,7 +64,8 @@ class Parse {
             description: null,
             orig: {
                 pack: null,
-                imports: []
+                imports: [],
+                staticImports: []
             }
         };
 
@@ -370,7 +371,14 @@ class Parse {
                     }
 
                     var pack = RE_IMPORT.matched(2);
-                    result.orig.imports.push(pack);
+                    var isStatic = RE_IMPORT.matched(1) != null && RE_IMPORT.matched(1).trim() == 'static';
+
+                    if (isStatic) {
+                        result.orig.staticImports.push(pack);
+                    }
+                    else {
+                        result.orig.imports.push(pack);
+                    }
 
                     i += RE_IMPORT.matched(0).length;
 

@@ -783,6 +783,7 @@ class Bind {
         dir = pack.replace('.', '/') + '/';
 
         var imports:Array<String> = ctx.javaClass.orig.imports;
+        var staticImports:Array<String> = ctx.javaClass.orig.staticImports;
         var bindingName = 'bind_' + ctx.javaClass.name;
 
         ctx.currentFile = { path: Path.join(['java', dir, bindingName + '.java']), content: '' };
@@ -803,6 +804,9 @@ class Bind {
             else {
                 writeLine('import $imp;', ctx);
             }
+        }
+        for (imp in staticImports) {
+            writeLine('import static $imp;', ctx);
         }
 
         writeLineBreak(ctx);

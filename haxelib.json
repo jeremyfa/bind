@@ -4,9 +4,9 @@
   "license": "MIT",
   "tags": ["cross", "bindings"],
   "description": "Bind Objective-C and Java (JNI) code to Haxe without writing glue code manually.",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "classPath": "src/",
-  "releasenote": "Several fixes and support of running haxe in a different thread than iOS UI thread",
+  "releasenote": "Fix static imports breaking java bindings",
   "contributors": ["jeremyfa"],
   "dependencies": {}
 }

@@ -1,4 +1,4 @@
-package gadsme.bind;
+package bind;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;

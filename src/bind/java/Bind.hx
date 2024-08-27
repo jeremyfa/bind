@@ -1,6 +1,7 @@
 package bind.java;
 
 import haxe.io.Path;
+
 using StringTools;
 
 typedef BindContext = {
@@ -624,8 +625,15 @@ class Bind {
                     writeJniArgAssign(arg, i, ctx);
                     i++;
                 }
+                writeLine('JNIEnv *env = ::bind::jni::GetJNIEnv();', ctx);
                 // Call jni
-                writeJniCall(method, ctx);
+                writeJniCall(method, ctx, 'env');
+                // Release reference to any jni argument like jstring
+                i = 0;
+                for (arg in method.args) {
+                    writeJniArgReleaseRef(arg, i, ctx, 'env');
+                    i++;
+                }
 
                 ctx.indent--;
                 writeIndent(ctx);
@@ -1617,7 +1625,48 @@ class Bind {
 
     }
 
-    static function writeJniCall(method:bind.Class.Method, ctx:BindContext):Void {
+    static function writeJniArgReleaseRef(arg:bind.Class.Arg, index:Int, ctx:BindContext, env:String = '::bind::jni::GetJNIEnv()'):Void {
+
+        var type = toJniType(arg.type, ctx);
+        var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_jni_';
+        var value = (arg.name != null ? arg.name : 'arg' + (index + 1)) + (index == -1 ? '_hxcpp_' : '');
+
+        switch (arg.type) {
+
+            case Function(args, ret, orig):
+                writeIndent(ctx);
+                write('if ($name) $env->DeleteLocalRef($name);', ctx);
+                writeLineBreak(ctx);
+
+            case String(orig):
+                writeIndent(ctx);
+                write('if ($name) $env->DeleteLocalRef($name);', ctx);
+                writeLineBreak(ctx);
+
+            case Bool(orig):
+
+            case Int(orig):
+
+            case Float(orig):
+
+            case Array(itemType, orig):
+                writeIndent(ctx);
+                write('if ($name) $env->DeleteLocalRef($name);', ctx);
+                writeLineBreak(ctx);
+
+            case Map(itemType, orig):
+                writeIndent(ctx);
+                write('if ($name) $env->DeleteLocalRef($name);', ctx);
+                writeLineBreak(ctx);
+
+            case Object(orig):
+
+            default:
+        }
+
+    }
+
+    static function writeJniCall(method:bind.Class.Method, ctx:BindContext, env:String = '::bind::jni::GetJNIEnv()'):Void {
 
         var hasReturn = false;
         var isJavaConstructor = isJavaConstructor(method, ctx);
@@ -1637,7 +1686,7 @@ class Bind {
             }
         }
 
-        write('::bind::jni::GetJNIEnv()->CallStatic', ctx);
+        write('$env->CallStatic', ctx);
 
         switch (method.type) {
 

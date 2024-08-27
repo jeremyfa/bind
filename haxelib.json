@@ -4,9 +4,9 @@
   "license": "MIT",
   "tags": ["cross", "bindings"],
   "description": "Bind Objective-C and Java (JNI) code to Haxe without writing glue code manually.",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "classPath": "src/",
-  "releasenote": "Fix static imports breaking java bindings",
+  "releasenote": "Add explicit calls to `DeleteLocalRef()` to prevent jni table overflow in some edgy situations",
   "contributors": ["jeremyfa"],
   "dependencies": {}
 }

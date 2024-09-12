@@ -1,6 +1,7 @@
 package bind.objc;
 
 import haxe.io.Path;
+
 using StringTools;
 
 typedef BindContext = {

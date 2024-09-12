@@ -106,7 +106,7 @@ class Bind {
         writeLine('// This file was generated with bind library', ctx);
         writeLineBreak(ctx);
 
-        // Support support
+        // Support
         writeLine('import bind.java.Support;', ctx);
         writeLine('import cpp.Pointer;', ctx);
 

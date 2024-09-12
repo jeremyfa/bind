@@ -4,6 +4,7 @@ import Sys.println;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
+
 using StringTools;
 
 class Cli {
@@ -204,6 +205,55 @@ class Cli {
 
         }
 
+        else if (kind == 'cs') {
+
+            for (i in 0...fileArgs.length) {
+                var file = fileArgs[i];
+
+                var path = Path.isAbsolute(file) ? file : Path.join([cwd, file]);
+                if (!FileSystem.exists(path)) {
+                    throw "C# file doesn't exist at path " + path;
+                }
+                if (FileSystem.isDirectory(path)) {
+                    throw "Expected a C# file but got a directory at path " + path;
+                }
+                var code = File.getContent(path);
+
+                bindClassOptions.csharpPath = path;
+                bindClassOptions.csharpCode = code;
+
+                var ctx = {i: 0, types: new Map()};
+                var result = null;
+                while ((result = bind.cs.Parse.parseClass(code, ctx)) != null) {
+                    result.path = path;
+
+                    if (options.json) {
+                        if (options.parseOnly) {
+                            json.push(bind.Json.stringify(result, options.pretty));
+                        }
+                        else {
+                            for (entry in bind.cs.Bind.bindClass(result, bindClassOptions)) {
+                                json.push(bind.Json.stringify(entry, options.pretty));
+                            }
+                        }
+                    }
+                    else {
+                        if (options.parseOnly) {
+                            output += '' + result;
+                        }
+                        else {
+                            for (entry in bind.cs.Bind.bindClass(result, bindClassOptions)) {
+                                output += '-- BEGIN ' + entry.path + " --\n";
+                                output += entry.content.rtrim() + "\n\n";
+                                output += '-- END ' + entry.path + " --\n";
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+
         if (options.json) {
             if (options.export != null) {
 
@@ -244,6 +294,7 @@ class Cli {
         else {
             if (output.trim() != '') {
                 if (!options.mute) println(output.rtrim());
+
             }
         }
 

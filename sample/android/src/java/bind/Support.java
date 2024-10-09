@@ -517,11 +517,11 @@ public class Support {
 
     public static boolean isNativeThread() {
         if (sUseNativeRunnableStack) {
-            if (sNativeRunnableStackThread != null) return !isUIThread();
+            if (sNativeRunnableStackThread == null) return !isUIThread();
             return sNativeRunnableStackThread == Thread.currentThread();
         }
         else if (sGLSurfaceView != null) {
-            if (sGLSurfaceViewThread != null) return !isUIThread();
+            if (sGLSurfaceViewThread == null) return !isUIThread();
             return sGLSurfaceViewThread == Thread.currentThread();
         }
         else if (sNativeThreadHandler != null) {

@@ -1,0 +1,8 @@
+<xml>
+    <files id="haxe">
+        <compilerflag value="-I${LINC_APPCSINTERFACE_PATH}linc/" />
+        <file name="${LINC_APPCSINTERFACE_PATH}linc/linc_AppCsInterface.cpp" />
+    </files>
+    <target id="haxe">
+    </target>
+</xml>

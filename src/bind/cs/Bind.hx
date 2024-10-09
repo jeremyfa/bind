@@ -486,10 +486,6 @@ class Bind {
                 writeIndent(ctx);
                 write('}', ctx);
                 writeLineBreak(ctx);
-
-                ctx.indent--;
-                writeIndent(ctx);
-                write('}', ctx);
             }
             writeLineBreak(ctx);
             writeLineBreak(ctx);
@@ -527,12 +523,12 @@ class Bind {
                 case Function(args, ret, orig):
                     writeIndent(ctx);
                     var retType = toCSharpCType(ret, ctx);
-                    write(retType + ' ', ctx);
+                    write(retType + ' CS_', ctx);
                     var csharpNamespace = (''+ctx.csharpClass.orig.namespace);
                     if (csharpNamespace != '') {
                         write(csharpNamespace.replace('.', '_') + '_', ctx);
                     }
-                    write(ctx.csharpClass.name + '_callN_' + key + '(JNIEnv *env, jclass clazz, jstring address', ctx);
+                    write(ctx.csharpClass.name + '_CallN_' + key + '(const char* address', ctx);
 
                     var n = 1;
                     for (funcArg in args) {
@@ -793,7 +789,20 @@ class Bind {
 
         }
 
-        // Expose C# callbacks to native
+        // Register C# methods to native
+        writeLine('public static void Bind_RegisterMethods() {', ctx);
+        ctx.indent++;
+        for (method in ctx.csharpClass.methods) {
+
+            // Constructor?
+            var isCSharpConstructor = isCSharpConstructor(method, ctx);
+
+
+        }
+        ctx.indent--;
+        writeLine('}', ctx);
+
+        // Expose methods that allow to call native callbacks from C# callbacks
         for (key in ctx.csharpCallbacks.keys()) {
 
             var func = ctx.csharpCallbacks.get(key);
@@ -828,7 +837,13 @@ class Bind {
 
                     writeIndent(ctx);
                     var retType = toCSharpBindType(ret, ctx);
-                    write('private static extern ' + retType + ' CallN_' + key + '(IntPtr address', ctx);
+                    write('private static extern ' + retType + ' CS_', ctx);
+                    var csharpNamespace = (''+ctx.csharpClass.orig.namespace);
+                    if (csharpNamespace != '') {
+                        write(csharpNamespace.replace('.', '_') + '_', ctx);
+                    }
+                    write(ctx.csharpClass.name + '_', ctx);
+                    write('CallN_' + key + '(IntPtr address', ctx);
 
                     var n = 1;
                     for (funcArg in args) {
@@ -1188,7 +1203,13 @@ class Bind {
                 if (hasReturn) {
                     write('return_csc_result_ = ', ctx);
                 }
-                write('Bind_' + ctx.csharpClass.name + '.CallN_', ctx);
+                write('Bind_' + ctx.csharpClass.name + '.CS_', ctx);
+                var csharpNamespace = (''+ctx.csharpClass.orig.namespace);
+                if (csharpNamespace != '') {
+                    write(csharpNamespace.replace('.', '_') + '_', ctx);
+                }
+                write(ctx.csharpClass.name + '_', ctx);
+                write('CallN_', ctx);
 
                 i = 0;
                 var allParts = '';

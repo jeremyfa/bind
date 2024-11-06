@@ -447,7 +447,7 @@ public class Support {
 
     }
 
-    /** Inform native/JNI that some Runnable instances are waiting to be run frpù native thread. */
+    /** Inform native/JNI that some Runnable instances are waiting to be run from native thread. */
     static native void nativeSetHasRunnables(int value);
 
     /** Called by native/JNI to run a Runnable from its thread */

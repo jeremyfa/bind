@@ -486,6 +486,17 @@ class Parse {
             var type:bind.Class.Type;
             var csharpType = removeSpacesForType(input.substring(startI, endI));
 
+            var arrayLevels:Int = 0;
+            var csharpTypeArrayLevels:Int = 0;
+            while (baseType.endsWith('[]')) {
+                baseType = baseType.substring(0, baseType.length - 2);
+                arrayLevels++;
+                if (csharpType.endsWith('[]')) {
+                    csharpType = csharpType.substring(0, csharpType.length - 2);
+                    csharpTypeArrayLevels++;
+                }
+            }
+
             switch (baseType) {
                 case 'string':
                     type = String({
@@ -504,7 +515,7 @@ class Parse {
                     type = Function(args, ret, {
                         type: csharpType
                     });
-                case 'List', 'IList', 'ICollection', 'IEnumerable':
+                case 'ArrayList', 'List', 'IList', 'ICollection', 'IEnumerable':
                     type = Array(typeParameters.length > 0 ? typeParameters[0].type : null, {
                         type: csharpType
                     });
@@ -533,6 +544,15 @@ class Parse {
                     type = Object({
                         type: csharpType
                     });
+            }
+
+            while (arrayLevels-- > 0) {
+                if (csharpTypeArrayLevels-- > 0) {
+                    csharpType += '[]';
+                }
+                type = Array(type, {
+                    type: csharpType
+                });
             }
 
             return type;

@@ -700,6 +700,7 @@ class Bind {
                 args.push(ctx.csharpClass.name + ' _instance');
             }
             for (arg in method.args) {
+                //trace('TO C# BIND TYPE ${arg.name} FROM ${arg.type} to ${toCSharpBindType(arg.type, ctx)}');
                 args.push(toCSharpBindType(arg.type, ctx) + ' ' + arg.name);
             }
 
@@ -719,16 +720,16 @@ class Bind {
             writeLineBreak(ctx);
             ctx.indent++;
 
-            writeLine('if (!${ctx.bindSupport}.isCSMainThread()) {', ctx);
+            writeLine('if (!${ctx.bindSupport}.IsMainThread()) {', ctx);
             ctx.indent++;
             if (hasReturn) {
                 writeLine(ret + ' _bind_result;', ctx);
             }
             if (hasReturn) {
-                writeLine('${ctx.bindSupport}.RunInCSMainThreadSync(() => {', ctx);
+                writeLine('${ctx.bindSupport}.RunInMainThreadSync(() => {', ctx);
             }
             else {
-                writeLine('${ctx.bindSupport}.RunInCSMainThreadAsync(() => {', ctx);
+                writeLine('${ctx.bindSupport}.RunInMainThread(() => {', ctx);
             }
             ctx.indent++;
 
@@ -1080,9 +1081,9 @@ class Bind {
             case Array(Int(_), orig): 'int[]';
             case Array(Float(floatOrig), orig): toCSharpBindType(Float(floatOrig), ctx) + '[]';
             case Array(Bool(_), orig): 'int[]';
-            case Array(String(_), orig): 'IntPtr';//'string[]';
+            case Array(String(_), orig): 'IntPtr';//'string[]'; // Serialized as JSON
             case Array(itemType, orig): 'IntPtr';//'string'; // Serialized as JSON
-            case Map(String(_), orig): 'IntPtr';//'string[]';
+            case Map(String(_), orig): 'IntPtr';//'string[]'; // Serialized as JSON
             case Map(itemType, orig): 'IntPtr';//'string'; // Serialized as JSON
 
             case Object(orig): orig;
@@ -1194,7 +1195,7 @@ class Bind {
                     writeLine(csharpBindRetType + ' return_csc_result_;', ctx);
                     writeLine('${ctx.bindSupport}.RunInNativeThreadSync(() => {', ctx);
                 } else {
-                    writeLine('${ctx.bindSupport}.RunInNativeThreadAsync(() => {', ctx);
+                    writeLine('${ctx.bindSupport}.RunInNativeThread(() => {', ctx);
                 }
                 ctx.indent++;
 
@@ -1247,7 +1248,7 @@ class Bind {
                 }
                 if (shouldRelease) {
                     // TODO: wrap in a main thread call? (so far not needed so not implemented)
-                    // writeLine('${ctx.bindSupport}.RunInCSMainThreadAsync(() => {', ctx);
+                    // writeLine('${ctx.bindSupport}.RunInCSMainThread(() => {', ctx);
                     // ctx.indent++;
 
                     i = 0;
@@ -1283,7 +1284,7 @@ class Bind {
 
             case String(orig):
                 writeIndent(ctx);
-                write('$type $name = Bind.Support.UTF8CStringToString($value);', ctx);
+                write('$type $name = ${ctx.bindSupport}.UTF8CStringToString($value);', ctx);
                 writeLineBreak(ctx);
 
             case Int(orig):
@@ -1303,12 +1304,17 @@ class Bind {
 
             case Array(itemType, orig):
                 writeIndent(ctx);
-                write('$type $name = ${ctx.bindSupport}.JSONStringTo${type.charAt(0).toUpperCase() + type.substr(1)}($value);', ctx);
+                if (type.endsWith('[]')) {
+                    write('$type $name = (${type}) ${ctx.bindSupport}.JSONStringToObject(${ctx.bindSupport}.UTF8CStringToString($value));', ctx);
+                }
+                else {
+                    write('$type $name = (${type}) ${ctx.bindSupport}.JSONStringToArrayList(${ctx.bindSupport}.UTF8CStringToString($value));', ctx);
+                }
                 writeLineBreak(ctx);
 
             case Map(itemType, orig):
                 writeIndent(ctx);
-                write('$type $name = ${ctx.bindSupport}.JSONStringTo${type.charAt(0).toUpperCase() + type.substr(1)}($value);', ctx);
+                write('$type $name = (${type}) ${ctx.bindSupport}.JSONStringToObject(${ctx.bindSupport}.UTF8CStringToString($value));', ctx);
                 writeLineBreak(ctx);
 
             default:
@@ -1347,7 +1353,7 @@ class Bind {
 
             case String(orig):
                 writeIndent(ctx);
-                write('$type $name = Bind.Support.StringToCSCString($value);', ctx);
+                write('$type $name = ${ctx.bindSupport}.StringToUTF8CString($value);', ctx);
                 writeLineBreak(ctx);
 
             case Int(orig):
@@ -1395,7 +1401,7 @@ class Bind {
                 // TODO?
 
             case String(orig):
-                writeLine('Bind.Support.ReleaseCSCString($name);', ctx);
+                writeLine('${ctx.bindSupport}.ReleaseUTF8CString($name);', ctx);
 
             case Int(orig):
 
@@ -1406,25 +1412,25 @@ class Bind {
             case Array(itemType, orig):
                 switch itemType {
                     case Int(orig) | Bool(orig):
-                        writeLine('Bind.Support.ReleaseCSCIntArray($name);', ctx);
+                        writeLine('${ctx.bindSupport}.ReleaseCSCIntArray($name);', ctx);
                     case Float(orig):
                         if (orig.type == 'Double' || orig.type == 'double') {
-                            writeLine('Bind.Support.ReleaseCSCDoubleArray($name);', ctx);
+                            writeLine('${ctx.bindSupport}.ReleaseCSCDoubleArray($name);', ctx);
                         } else {
-                            writeLine('Bind.Support.ReleaseCSCFloatArray($name);', ctx);
+                            writeLine('${ctx.bindSupport}.ReleaseCSCFloatArray($name);', ctx);
                         }
                     case String(orig):
-                        writeLine('Bind.Support.ReleaseCSCStringArray($name);', ctx);
+                        writeLine('${ctx.bindSupport}.ReleaseUTF8CStringArray($name);', ctx);
                     case _:
-                        writeLine('Bind.Support.ReleaseCSCString($name);', ctx);
+                        writeLine('${ctx.bindSupport}.ReleaseUTF8CString($name);', ctx);
                 }
 
             case Map(itemType, orig):
                 switch itemType {
                     case String(orig):
-                        writeLine('Bind.Support.ReleaseCSCStringArray($name);', ctx);
+                        writeLine('${ctx.bindSupport}.ReleaseUTF8CStringArray($name);', ctx);
                     case _:
-                        writeLine('Bind.Support.ReleaseCSCString($name);', ctx);
+                        writeLine('${ctx.bindSupport}.ReleaseUTF8CString($name);', ctx);
                 }
 
             default:
@@ -1694,6 +1700,31 @@ class Bind {
     static function write(input:String, ctx:BindContext):Void {
 
         ctx.currentFile.content += input;
+
+    }
+
+    static function camelFlatType(type:String):String {
+
+        type = type.charAt(0).toUpperCase() + type.substr(1).replace('<', '_').replace(',', '_').replace('>', '_').replace('[]', 'Array');
+
+        var result = new StringBuf();
+        var i = 0;
+        while (i < type.length) {
+
+            var c = type.charCodeAt(i);
+
+            if (c == '_'.code) {
+                i++;
+                result.add(type.charAt(i).toUpperCase());
+            }
+            else {
+                result.addChar(c);
+            }
+
+            i++;
+        }
+
+        return result.toString();
 
     }
 

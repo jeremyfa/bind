@@ -441,15 +441,34 @@ class Bind {
             var name = method.name;
 
             var args = [];
+            var cscArgs = [];
 
             // Instance handle as first argument
             if (method.instance && !isCSharpConstructor) {
                 args.push('::Dynamic instance_');
+                cscArgs.push('IntPtr instance_');
             }
 
             // Method args
             for (arg in method.args) {
                 args.push(toHxcppType(arg.type, ctx) + ' ' + arg.name);
+                cscArgs.push(toCSharpCType(arg.type, ctx) + ' ' + arg.name);
+            }
+
+            // Function pointer
+            if (!header) {
+                writeIndent(ctx);
+                write('static ${ctx.csharpClass.name}_${name}_CSFunc_ ${ctx.csharpClass.name}_${name}_csfunc_ = nullptr;', ctx);
+                writeLineBreak(ctx);
+                writeLineBreak(ctx);
+            }
+            else {
+                writeIndent(ctx);
+                write('typedef void (${ctx.csharpClass.name}_${name}_CSFunc_*)(', ctx);
+                write(cscArgs.join(', '), ctx);
+                write(')', ctx);
+                writeLineBreak(ctx);
+                writeLineBreak(ctx);
             }
 
             // Method comment
@@ -462,6 +481,7 @@ class Bind {
             write(ret + ' ' + ctx.csharpClass.name + '_' + name + '(' + args.join(', ') + ')', ctx);
             if (header) {
                 write(';', ctx);
+                writeLineBreak(ctx);
             }
             else {
                 write(' {', ctx);
@@ -488,7 +508,6 @@ class Bind {
                 writeLineBreak(ctx);
             }
             writeLineBreak(ctx);
-            writeLineBreak(ctx);
 
         }
 
@@ -507,15 +526,56 @@ class Bind {
         }
 
         // Native callbacks exposed to JNI
-        var hasNativeCallbacks = false;
-        for (key in ctx.nativeCallbacks.keys()) {
+        writeLine('extern "C" {', ctx);
+        writeLineBreak(ctx);
+        ctx.indent++;
 
-            if (!hasNativeCallbacks) {
-                hasNativeCallbacks = true;
-                writeLine('extern "C" {', ctx);
-                writeLineBreak(ctx);
+        writeIndent(ctx);
+        write('BIND_CS_EXPORT void CS_', ctx);
+        var csharpNamespace = (''+ctx.csharpClass.orig.namespace);
+        if (csharpNamespace != '') {
+            write(csharpNamespace.replace('.', '_') + '_', ctx);
+        }
+        write(ctx.csharpClass.name + '_RegisterMethod(int index, void *ptr)', ctx);
+        if (header) {
+            write(';', ctx);
+            writeLineBreak(ctx);
+            writeLineBreak(ctx);
+        }
+        else {
+            write(' {', ctx);
+            writeLineBreak(ctx);
+            ctx.indent++;
+
+            writeLine('switch (index) {', ctx);
+            ctx.indent++;
+
+            for (index in 0...ctx.csharpClass.methods.length) {
+                var method = ctx.csharpClass.methods[index];
+
+                // Method name
+                var name = method.name;
+
+                writeLine('case $index:', ctx);
                 ctx.indent++;
+                writeIndent(ctx);
+                write('::' + namespaceEntries.join('::') + '::', ctx);
+                write('${ctx.csharpClass.name}_${name}_csfunc_ = (${ctx.csharpClass.name}_${name}_CSFunc_)ptr;', ctx);
+                writeLineBreak(ctx);
+                writeLine('break;', ctx);
+                ctx.indent--;
             }
+
+            writeLine('default:', ctx);
+            ctx.indent--;
+            writeLine('}', ctx);
+
+            ctx.indent--;
+            writeLine('}', ctx);
+            writeLineBreak(ctx);
+        }
+
+        for (key in ctx.nativeCallbacks.keys()) {
 
             var func = ctx.nativeCallbacks.get(key);
 
@@ -523,11 +583,7 @@ class Bind {
                 case Function(args, ret, orig):
                     writeIndent(ctx);
                     var retType = toCSharpCType(ret, ctx);
-                    write(retType + ' CS_', ctx);
-                    var csharpNamespace = (''+ctx.csharpClass.orig.namespace);
-                    if (csharpNamespace != '') {
-                        write(csharpNamespace.replace('.', '_') + '_', ctx);
-                    }
+                    write('BIND_CS_EXPORT ' + retType + ' CS_', ctx);
                     write(ctx.csharpClass.name + '_CallN_' + key + '(const char* address', ctx);
 
                     var n = 1;
@@ -596,11 +652,9 @@ class Bind {
 
         }
 
-        if (hasNativeCallbacks) {
-            ctx.indent--;
-            writeLine('}', ctx);
-            writeLineBreak(ctx);
-        }
+        ctx.indent--;
+        writeLine('}', ctx);
+        writeLineBreak(ctx);
 
         ctx.files.push(ctx.currentFile);
         ctx.currentFile = null;
@@ -661,7 +715,7 @@ class Bind {
             // Constructor?
             var isCSharpConstructor = isCSharpConstructor(method, ctx);
 
-            // Factori?
+            // Factory?
             var isCSharpFactory = isCSharpFactory(method, ctx);
 
             // Is it a getter or setter?
@@ -700,7 +754,6 @@ class Bind {
                 args.push(ctx.csharpClass.name + ' _instance');
             }
             for (arg in method.args) {
-                //trace('TO C# BIND TYPE ${arg.name} FROM ${arg.type} to ${toCSharpBindType(arg.type, ctx)}');
                 args.push(toCSharpBindType(arg.type, ctx) + ' ' + arg.name);
             }
 
@@ -720,6 +773,11 @@ class Bind {
             writeLineBreak(ctx);
             ctx.indent++;
 
+            var index = 0;
+            for (arg in method.args) {
+                writeCSharpArgAssignFirstPass(arg, index++, ctx);
+            }
+
             writeLine('if (!${ctx.bindSupport}.IsMainThread()) {', ctx);
             ctx.indent++;
             if (hasReturn) {
@@ -735,10 +793,10 @@ class Bind {
 
             if (hasReturn) {
                 writeIndent(ctx);
-                write('_bind_result = Bind_' + ctx.csharpClass.name + '.' + method.name + '(', ctx);
+                write('_bind_result = Bind_' + ctx.csharpClass.name + '.' + name + '_Internal_(', ctx);
             } else {
                 writeIndent(ctx);
-                write('Bind_' + ctx.csharpClass.name + '.' + method.name + '(', ctx);
+                write('Bind_' + ctx.csharpClass.name + '.' + name + '_Internal_(', ctx);
             }
 
             var callArgs = [];
@@ -749,7 +807,7 @@ class Bind {
                 callArgs.push('_instance');
             }
             for (arg in method.args) {
-                callArgs.push(arg.name);
+                callArgs.push(arg.name + '_csi_');
             }
             write(callArgs.join(', '), ctx);
             write(');', ctx);
@@ -766,16 +824,103 @@ class Bind {
             writeLine('} else {', ctx);
             ctx.indent++;
 
+            if (hasReturn) {
+                writeIndent(ctx);
+                write('return Bind_' + ctx.csharpClass.name + '.' + name + '_Internal_(', ctx);
+            } else {
+                writeIndent(ctx);
+                write('Bind_' + ctx.csharpClass.name + '.' + name + '_Internal_(', ctx);
+            }
+
+            var callArgs = [];
+            if (isCSharpCallback) {
+                callArgs.push('_callback');
+            }
+            else if (method.instance && !isCSharpConstructor) {
+                callArgs.push('_instance');
+            }
+            for (arg in method.args) {
+                callArgs.push(arg.name + '_csi_');
+            }
+            write(callArgs.join(', '), ctx);
+            write(');', ctx);
+            writeLineBreak(ctx);
+
+            ctx.indent--;
+            writeLine('}', ctx);
+
+            ctx.indent--;
+            writeLine('}', ctx);
+            writeLineBreak(ctx);
+
+        }
+
+        function writeInternalMethod(method:bind.Class.Method) {
+
+            // Constructor?
+            var isCSharpConstructor = isCSharpConstructor(method, ctx);
+
+            // Factory?
+            var isCSharpFactory = isCSharpFactory(method, ctx);
+
+            // Is it a getter or setter?
+            var isGetter = method.orig != null && method.orig.getter == true;
+            var isSetter = method.orig != null && method.orig.setter == true;
+
+            // Java callback called from native?
+            var isCSharpCallback = method.orig != null && method.orig.csharpCallback == true;
+            var csharpCallbackType:String = null;
+            if (isCSharpCallback) {
+                csharpCallbackType = '' + method.orig.csharpCallbackType;
+            }
+
+            // Method return type
+            var ret = toCSharpBindFromCSharpType(method.type, ctx);
+            if (isCSharpConstructor) {
+                ret = ctx.csharpClass.name;
+            }
+
+            // Has return
+            var hasReturn = ret != 'void';
+
+            // Method name
+            var name = method.name;
+            if (reserved.indexOf(name) != -1) {
+                name = '_' + name;
+            }
+            name += '_Internal_';
+
+            var args = [];
+
+            // Method args
+            if (isCSharpCallback) {
+                args.push('object _callback');
+            }
+            else if (method.instance && !isCSharpConstructor) {
+                args.push(ctx.csharpClass.name + ' _instance');
+            }
+            for (arg in method.args) {
+                args.push(toCSharpBindInternalType(arg.type, ctx) + ' ' + arg.name);
+            }
+
+            writeIndent(ctx);
+            write('private ', ctx);
+            write('static ', ctx);
+
+            write(ret + ' ', ctx);
+            write(name + '(', ctx);
+            write(args.join(', '), ctx);
+            write(') {', ctx);
+            writeLineBreak(ctx);
+            ctx.indent++;
+
             var index = 0;
             for (arg in method.args) {
-                writeCSharpArgAssign(arg, index++, ctx);
+                writeCSharpArgAssignSecondPass(arg, index++, ctx);
             }
 
             // Call C#
             writeCSharpCall(method, ctx);
-
-            ctx.indent--;
-            writeLine('}', ctx);
 
             ctx.indent--;
             writeLine('}', ctx);
@@ -788,20 +933,145 @@ class Bind {
 
             writeMethod(method);
 
+            writeInternalMethod(method);
+
         }
 
-        // Register C# methods to native
-        writeLine('public static void Bind_RegisterMethods() {', ctx);
-        ctx.indent++;
+        // Declare delegates for allowing to call C# from native
+        writeLine('private static readonly List<Delegate> bind_delegates_ = new List<Delegate>();', ctx);
+        writeLineBreak(ctx);
+
         for (method in ctx.csharpClass.methods) {
 
             // Constructor?
             var isCSharpConstructor = isCSharpConstructor(method, ctx);
 
+            // Factory?
+            var isCSharpFactory = isCSharpFactory(method, ctx);
+
+            // Is it a getter or setter?
+            var isGetter = method.orig != null && method.orig.getter == true;
+            var isSetter = method.orig != null && method.orig.setter == true;
+
+            // Java callback called from native?
+            var isCSharpCallback = method.orig != null && method.orig.csharpCallback == true;
+            var csharpCallbackType:String = null;
+            if (isCSharpCallback) {
+                csharpCallbackType = '' + method.orig.csharpCallbackType;
+            }
+
+            // Method return type
+            var ret = toCSharpBindFromCSharpType(method.type, ctx);
+            if (isCSharpConstructor) {
+                ret = ctx.csharpClass.name;
+            }
+
+            // Has return
+            var hasReturn = ret != 'void';
+
+            // Method name
+            var name = method.name;
+            if (reserved.indexOf(name) != -1) {
+                name = '_' + name;
+            }
+
+            writeLine('[UnmanagedFunctionPointer(CallingConvention.Cdecl)]', ctx);
+
+            writeIndent(ctx);
+            write('private delegate $ret ${name}_Delegate_(', ctx);
+
+            var args = [];
+
+            // Method args
+            if (isCSharpCallback) {
+                args.push('object _callback');
+            }
+            else if (method.instance && !isCSharpConstructor) {
+                args.push(ctx.csharpClass.name + ' _instance');
+            }
+            for (arg in method.args) {
+                args.push(toCSharpBindType(arg.type, ctx) + ' ' + arg.name);
+            }
+
+            write(args.join(', '), ctx);
+
+            write(');', ctx);
+            writeLineBreak(ctx);
+
+            writeLineBreak(ctx);
 
         }
+
+        // Register C# methods to native
+        writeLine('public static void Bind_RegisterMethods() {', ctx);
+        ctx.indent++;
+
+        for (index in 0...ctx.csharpClass.methods.length) {
+
+            var method = ctx.csharpClass.methods[index];
+            writeLineBreak(ctx);
+
+            // Constructor?
+            var isCSharpConstructor = isCSharpConstructor(method, ctx);
+
+            // Factory?
+            var isCSharpFactory = isCSharpFactory(method, ctx);
+
+            // Is it a getter or setter?
+            var isGetter = method.orig != null && method.orig.getter == true;
+            var isSetter = method.orig != null && method.orig.setter == true;
+
+            // Java callback called from native?
+            var isCSharpCallback = method.orig != null && method.orig.csharpCallback == true;
+            var csharpCallbackType:String = null;
+            if (isCSharpCallback) {
+                csharpCallbackType = '' + method.orig.csharpCallbackType;
+            }
+
+            // Method return type
+            var ret = toCSharpBindFromCSharpType(method.type, ctx);
+            if (isCSharpConstructor) {
+                ret = ctx.csharpClass.name;
+            }
+
+            // Has return
+            var hasReturn = ret != 'void';
+
+            // Method name
+            var name = method.name;
+            if (reserved.indexOf(name) != -1) {
+                name = '_' + name;
+            }
+
+            writeLine('var ${name}_delegate_ = new ${name}_Delegate_(${name});', ctx);
+            writeLine('bind_delegates_.Add(${name}_delegate_);', ctx);
+            writeLine('IntPtr ${name}_ptr_ = Marshal.GetFunctionPointerForDelegate(${name}_delegate_);', ctx);
+
+            writeIndent(ctx);
+            write('CS_', ctx);
+            var csharpNamespace = (''+ctx.csharpClass.orig.namespace);
+            if (csharpNamespace != '') {
+                write(csharpNamespace.replace('.', '_') + '_', ctx);
+            }
+            write(ctx.csharpClass.name + '_', ctx);
+            write('RegisterMethod($index, ${name}_ptr_);', ctx);
+            writeLineBreak(ctx);
+        }
+
         ctx.indent--;
         writeLine('}', ctx);
+        writeLineBreak(ctx);
+
+        writeLine('[DllImport(Bind_DllName, CallingConvention = CallingConvention.Cdecl)]', ctx);
+        writeIndent(ctx);
+        write('private static extern void CS_', ctx);
+        var csharpNamespace = (''+ctx.csharpClass.orig.namespace);
+        if (csharpNamespace != '') {
+            write(csharpNamespace.replace('.', '_') + '_', ctx);
+        }
+        write(ctx.csharpClass.name + '_RegisterMethod(int method, IntPtr ptr);', ctx);
+        writeLineBreak(ctx);
+        writeLineBreak(ctx);
 
         // Expose methods that allow to call native callbacks from C# callbacks
         for (key in ctx.csharpCallbacks.keys()) {
@@ -1023,9 +1293,9 @@ class Bind {
             case Array(Int(_), orig): 'int*';
             case Array(Float(floatOrig), orig): toCSharpCType(Float(floatOrig), ctx) + '*';
             case Array(Bool(_), orig): 'int*';
-            case Array(String(_), orig): 'const char**';
+            case Array(String(_), orig): 'const char*';
             case Array(itemType, orig): 'const char*'; // Serialized as JSON
-            case Map(String(_), orig): 'const char**';
+            case Map(String(_), orig): 'const char*';
             case Map(itemType, orig): 'const char*'; // Serialized as JSON
             case Object(orig): 'void*';
             case Function(args, ret, orig): 'const char*';
@@ -1094,6 +1364,39 @@ class Bind {
 
     }
 
+    static function toCSharpBindInternalType(type:bind.Class.Type, ctx:BindContext):String {
+
+        var csharpType = toCSharpType(type, ctx);
+        if (csharpType == ctx.csharpClass.name || csharpType == ctx.csharpClass.orig.namespace + '.' + ctx.csharpClass.name) {
+            return csharpType;
+        }
+
+        var result = switch (type) {
+            case Void(orig): 'void';
+            case Int(orig): 'int';
+            case Float(orig):
+                orig != null && (orig.type == 'Double' || orig.type == 'double')
+                ? 'double'
+                : 'float';
+            case Bool(orig): 'int';
+            case String(orig): 'string';
+
+            case Array(Int(_), orig): 'string';
+            case Array(Float(floatOrig), orig): 'string';
+            case Array(Bool(_), orig): 'string';
+            case Array(String(_), orig): 'string';//'string[]'; // Serialized as JSON
+            case Array(itemType, orig): 'string';//'string'; // Serialized as JSON
+            case Map(String(_), orig): 'string';//'string[]'; // Serialized as JSON
+            case Map(itemType, orig): 'string';//'string'; // Serialized as JSON
+
+            case Object(orig): orig;
+            case Function(args, ret, orig): 'IntPtr';//'string';
+        }
+
+        return result;
+
+    }
+
     static function toCSharpBindFromCSharpType(type:bind.Class.Type, ctx:BindContext):String {
 
         var result = switch (type) {
@@ -1153,7 +1456,28 @@ class Bind {
 
 /// Write utils (specific)
 
-    static function writeCSharpArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+    static function writeCSharpArgAssignFirstPass(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+
+        var type = toCSharpBindInternalType(arg.type, ctx);
+        var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_csi_';
+        var value = (arg.name != null ? arg.name : 'arg' + (index + 1)) + (index == -1 ? '_csc_' : '');
+
+        switch (arg.type) {
+
+            case String(orig) | Array(_, orig) | Map(_, orig):
+                writeIndent(ctx);
+                write('$type $name = ${ctx.bindSupport}.UTF8CStringToString($value);', ctx);
+                writeLineBreak(ctx);
+
+            default:
+                writeIndent(ctx);
+                write('$type $name = $value;', ctx);
+                writeLineBreak(ctx);
+        }
+
+    }
+
+    static function writeCSharpArgAssignSecondPass(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
 
         var type = toCSharpType(arg.type, ctx);
         var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_cs_';
@@ -1238,30 +1562,30 @@ class Bind {
                 write(');', ctx);
                 writeLineBreak(ctx);
 
-                // Release data allocated by C# for this call
-                var shouldRelease = false;
-                for (funcArg in args) {
-                    if (shouldReleaseCSharpBindArg(funcArg)) {
-                        shouldRelease = true;
-                        break;
-                    }
-                }
-                if (shouldRelease) {
-                    // TODO: wrap in a main thread call? (so far not needed so not implemented)
-                    // writeLine('${ctx.bindSupport}.RunInCSMainThread(() => {', ctx);
-                    // ctx.indent++;
+                // // Release data allocated by C# for this call
+                // var shouldRelease = false;
+                // for (funcArg in args) {
+                //     if (shouldReleaseCSharpBindArg(funcArg)) {
+                //         shouldRelease = true;
+                //         break;
+                //     }
+                // }
+                // if (shouldRelease) {
+                //     // TODO: wrap in a main thread call? (so far not needed so not implemented)
+                //     // writeLine('${ctx.bindSupport}.RunInMainThread(() => {', ctx);
+                //     // ctx.indent++;
 
-                    i = 0;
-                    for (funcArg in args) {
-                        var argName = funcArg.name;
-                        if (argName == null) argName = 'arg' + (i + 1);
-                        writeCSharpBindArgRelease(funcArg, i, ctx);
-                        i++;
-                    }
+                //     i = 0;
+                //     for (funcArg in args) {
+                //         var argName = funcArg.name;
+                //         if (argName == null) argName = 'arg' + (i + 1);
+                //         writeCSharpBindArgRelease(funcArg, i, ctx);
+                //         i++;
+                //     }
 
-                    // ctx.indent--;
-                    // writeLine('});', ctx);
-                }
+                //     // ctx.indent--;
+                //     // writeLine('});', ctx);
+                // }
 
                 ctx.indent--;
                 writeLine('});', ctx);
@@ -1272,7 +1596,7 @@ class Bind {
                 else if (retType != 'void') {
                     var csharpBindRetType = toCSharpBindType(ret, ctx);
                     writeLine(csharpBindRetType + ' return_csc_ = return_csc_result_;', ctx);
-                    writeCSharpArgAssign({
+                    writeCSharpArgAssignSecondPass({
                         name: 'return',
                         type: ret
                     }, -1, ctx);
@@ -1284,7 +1608,7 @@ class Bind {
 
             case String(orig):
                 writeIndent(ctx);
-                write('$type $name = ${ctx.bindSupport}.UTF8CStringToString($value);', ctx);
+                write('$type $name = $value;', ctx);
                 writeLineBreak(ctx);
 
             case Int(orig):
@@ -1305,16 +1629,16 @@ class Bind {
             case Array(itemType, orig):
                 writeIndent(ctx);
                 if (type.endsWith('[]')) {
-                    write('$type $name = (${type}) ${ctx.bindSupport}.JSONStringToObject(${ctx.bindSupport}.UTF8CStringToString($value));', ctx);
+                    write('$type $name = (${type}) ${ctx.bindSupport}.JSONStringToObject($value);', ctx);
                 }
                 else {
-                    write('$type $name = (${type}) ${ctx.bindSupport}.JSONStringToArrayList(${ctx.bindSupport}.UTF8CStringToString($value));', ctx);
+                    write('$type $name = (${type}) ${ctx.bindSupport}.JSONStringToArrayList($value);', ctx);
                 }
                 writeLineBreak(ctx);
 
             case Map(itemType, orig):
                 writeIndent(ctx);
-                write('$type $name = (${type}) ${ctx.bindSupport}.JSONStringToObject(${ctx.bindSupport}.UTF8CStringToString($value));', ctx);
+                write('$type $name = (${type}) ${ctx.bindSupport}.JSONStringToObject($value);', ctx);
                 writeLineBreak(ctx);
 
             default:
@@ -1510,8 +1834,70 @@ class Bind {
 
     static function writeCSharpCCall(method:bind.Class.Method, ctx:BindContext):Void {
 
-        // TODO
-        writeLine('// TODO C# C call', ctx);
+        var reserved = [];
+
+        // Constructor?
+        var isCSharpConstructor = isCSharpConstructor(method, ctx);
+
+        // Factory?
+        var isCSharpFactory = isCSharpFactory(method, ctx);
+
+        // Is it a getter or setter?
+        var isGetter = method.orig != null && method.orig.getter == true;
+        var isSetter = method.orig != null && method.orig.setter == true;
+
+        // Java callback called from native?
+        var isCSharpCallback = method.orig != null && method.orig.csharpCallback == true;
+        var csharpCallbackType:String = null;
+        if (isCSharpCallback) {
+            csharpCallbackType = '' + method.orig.csharpCallbackType;
+        }
+
+        // Method return type
+        var ret = toCSharpBindFromCSharpType(method.type, ctx);
+        if (isCSharpConstructor) {
+            ret = ctx.csharpClass.name;
+        }
+
+        // Has return
+        var hasReturn = ret != 'void';
+
+        // Method name
+        var name = method.name;
+        if (reserved.indexOf(name) != -1) {
+            name = '_' + name;
+        }
+
+        var args = [];
+
+        // Method args
+        if (isCSharpCallback) {
+            args.push('_callback_csc_');
+        }
+        else if (method.instance && !isCSharpConstructor) {
+            args.push(ctx.csharpClass.name + ' _instance_csc_');
+        }
+        for (arg in method.args) {
+            args.push(arg.name + '_csc_');
+        }
+
+        writeIndent(ctx);
+        if (hasReturn) {
+            var csharpcType = toCSharpCType(method.type, ctx);
+            write(csharpcType + ' return_csc_ = ', ctx);
+        }
+        write('${ctx.csharpClass.name}_${name}_csfunc_(', ctx);
+        write(args.join(', '), ctx);
+        write(');', ctx);
+        writeLineBreak(ctx);
+
+        if (hasReturn) {
+            writeHxcppArgAssign({
+                name: 'return',
+                type: method.type
+            }, -1, ctx);
+            writeLine('return return_hxcpp_;', ctx);
+        }
 
     }
 

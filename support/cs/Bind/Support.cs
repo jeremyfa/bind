@@ -17,10 +17,36 @@ namespace Bind {
 
         }
 
-        public static void FlushMainThreadActions() {
-
+        public static void Update() {
             // Should be called from C# main thread
-            // TODO
+
+            FlushMainThreadActions();
+            ScheduleAutoReleaseUTF8CStrings();
+        }
+
+        private static void ScheduleAutoReleaseUTF8CStrings() {
+            // Moving from main to native then from native to main thread
+            // will ensure the allocated strings that need to be released
+            // will have been copied as needed.
+            if (_autoReleaseUTF8CStringPool.Count > 0) {
+                List<IntPtr> toRelease = new List<IntPtr>();
+                while (_autoReleaseUTF8CStringPool.TryDequeue(out IntPtr ptr))
+                {
+                    toRelease.Add(ptr);
+                }
+                RunInNativeThread(() => {
+                    RunInMainThread(() => {
+                        for (IntPtr ptr in toRelease) {
+                            ReleaseUTF8CString(ptr);
+                        }
+                    });
+                });
+            }
+        }
+
+        private static void FlushMainThreadActions() {
+
+            FlushMainThreadActions();
 
         }
 
@@ -73,7 +99,9 @@ namespace Bind {
 
         }
 
-        public static IntPtr StringToUTF8CString(string str)
+        private static readonly ConcurrentQueue<IntPtr> _autoReleaseUTF8CStringPool = new ConcurrentQueue<IntPtr>();
+
+        public static IntPtr StringToUTF8CString(string str, bool autoRelease = true)
         {
             if (str == null)
                 return IntPtr.Zero;
@@ -89,6 +117,12 @@ namespace Bind {
 
             // Add the null terminator
             Marshal.WriteByte(ptr, utf8Bytes.Length, 0);
+
+            // Add to auto-release pool if enabled and requested
+            if (autoRelease && Interlocked.CompareExchange(ref _isEnabled, 1, 1) == 1)
+            {
+                _autoReleaseUTF8CStringPool.Enqueue(ptr);
+            }
 
             return ptr;
         }
@@ -178,7 +212,7 @@ namespace Bind {
             }
             else
             {
-                RunInCSMainThread(a);
+                RunInMainThread(a);
             }
         }
 

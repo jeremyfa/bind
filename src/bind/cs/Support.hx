@@ -39,7 +39,7 @@ class Support {
 
         return switch (Type.typeof(value)) {
             case TNull: NULL_VALUE;
-            case TBool: [Std.string(value), 'b'];
+            case TBool: [value ? '1' : '0', 'b'];
             case TInt | TFloat: [Std.string(value), 'd'];
             case TClass(String): [value, 's'];
             case TClass(Array):

@@ -10,10 +10,20 @@ namespace Bind {
 
 /// Initialize
 
-        public static void Init() {
+        private static readonly List<Delegate> bind_delegates_ = new List<Delegate>();
 
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void RunAwaitingNativeActions_Delegate_();
+
+        public static void Init() {
             // Should be called from C# main thread
-            CS_Bind_Support_nativeInit();
+
+            // Register methods
+            var RunAwaitingNativeActions_delegate_ = new RunAwaitingNativeActions_Delegate_(RunAwaitingNativeActions);
+            bind_delegates_.Add(RunAwaitingNativeActions_delegate_);
+            IntPtr RunAwaitingNativeActions_ptr_ = Marshal.GetFunctionPointerForDelegate(RunAwaitingNativeActions_delegate_);
+
+            CS_Bind_Support_nativeInit(RunAwaitingNativeActions_ptr_);
 
         }
 

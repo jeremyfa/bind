@@ -336,6 +336,10 @@ class Bind {
             if (ctx.namespace != null && ctx.namespace.trim() != '') {
                 write(ctx.namespace.trim() + '::', ctx);
             }
+            var csharpNamespace = (''+ctx.csharpClass.orig.namespace);
+            if (csharpNamespace != '') {
+                write(csharpNamespace.replace('.', '_') + '_', ctx);
+            }
             write(ctx.csharpClass.name + '_' + method.name, ctx);
             write('\')', ctx);
             writeLineBreak(ctx);
@@ -400,10 +404,10 @@ class Bind {
         if (header) {
             writeLine('#include <hxcpp.h>', ctx);
         } else {
-            writeLine('#include "linc_CSharp.h"', ctx);
+            writeLine('#include "linc_CS.h"', ctx);
             writeLine('#include "linc_' + ctx.csharpClass.name + '.h"', ctx);
-            writeLine('#ifndef INCLUDED_bind_csharp_HObject', ctx);
-            writeLine('#include <bind/csharp/HObject.h>', ctx);
+            writeLine('#ifndef INCLUDED_bind_cs_HObject', ctx);
+            writeLine('#include <bind/cs/HObject.h>', ctx);
             writeLine('#endif', ctx);
         }
 
@@ -455,16 +459,26 @@ class Bind {
                 cscArgs.push(toCSharpCType(arg.type, ctx) + ' ' + arg.name);
             }
 
+            var csharpNamespace = (''+ctx.csharpClass.orig.namespace);
+
             // Function pointer
             if (!header) {
                 writeIndent(ctx);
-                write('static ${ctx.csharpClass.name}_${name}_CSFunc_ ${ctx.csharpClass.name}_${name}_csfunc_ = nullptr;', ctx);
+                write('static ', ctx);
+                if (csharpNamespace != '') {
+                    write(csharpNamespace.replace('.', '_') + '_', ctx);
+                }
+                write('${ctx.csharpClass.name}_${name}_CSFunc_ ${ctx.csharpClass.name}_${name}_csfunc_ = nullptr;', ctx);
                 writeLineBreak(ctx);
                 writeLineBreak(ctx);
             }
             else {
                 writeIndent(ctx);
-                write('typedef void (${ctx.csharpClass.name}_${name}_CSFunc_*)(', ctx);
+                write('typedef void (', ctx);
+                if (csharpNamespace != '') {
+                    write(csharpNamespace.replace('.', '_') + '_', ctx);
+                }
+                write('${ctx.csharpClass.name}_${name}_CSFunc_*)(', ctx);
                 write(cscArgs.join(', '), ctx);
                 write(')', ctx);
                 writeLineBreak(ctx);
@@ -478,7 +492,11 @@ class Bind {
 
             // Whole method
             writeIndent(ctx);
-            write(ret + ' ' + ctx.csharpClass.name + '_' + name + '(' + args.join(', ') + ')', ctx);
+            write(ret + ' ', ctx);
+            if (csharpNamespace != '') {
+                write(csharpNamespace.replace('.', '_') + '_', ctx);
+            }
+            write(ctx.csharpClass.name + '_' + name + '(' + args.join(', ') + ')', ctx);
             if (header) {
                 write(';', ctx);
                 writeLineBreak(ctx);
@@ -560,7 +578,15 @@ class Bind {
                 ctx.indent++;
                 writeIndent(ctx);
                 write('::' + namespaceEntries.join('::') + '::', ctx);
-                write('${ctx.csharpClass.name}_${name}_csfunc_ = (${ctx.csharpClass.name}_${name}_CSFunc_)ptr;', ctx);
+                var csharpNamespace = (''+ctx.csharpClass.orig.namespace);
+                if (csharpNamespace != '') {
+                    write(csharpNamespace.replace('.', '_') + '_', ctx);
+                }
+                write('${ctx.csharpClass.name}_${name}_csfunc_ = (', ctx);
+                if (csharpNamespace != '') {
+                    write(csharpNamespace.replace('.', '_') + '_', ctx);
+                }
+                write('${ctx.csharpClass.name}_${name}_CSFunc_)ptr;', ctx);
                 writeLineBreak(ctx);
                 writeLine('break;', ctx);
                 ctx.indent--;
@@ -584,6 +610,10 @@ class Bind {
                     writeIndent(ctx);
                     var retType = toCSharpCType(ret, ctx);
                     write('BIND_CS_EXPORT ' + retType + ' CS_', ctx);
+                    var csharpNamespace = (''+ctx.csharpClass.orig.namespace);
+                    if (csharpNamespace != '') {
+                        write(csharpNamespace.replace('.', '_') + '_', ctx);
+                    }
                     write(ctx.csharpClass.name + '_CallN_' + key + '(const char* address', ctx);
 
                     var n = 1;
@@ -1885,6 +1915,10 @@ class Bind {
         if (hasReturn) {
             var csharpcType = toCSharpCType(method.type, ctx);
             write(csharpcType + ' return_csc_ = ', ctx);
+        }
+        var csharpNamespace = (''+ctx.csharpClass.orig.namespace);
+        if (csharpNamespace != '') {
+            write(csharpNamespace.replace('.', '_') + '_', ctx);
         }
         write('${ctx.csharpClass.name}_${name}_csfunc_(', ctx);
         write(args.join(', '), ctx);

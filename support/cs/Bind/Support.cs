@@ -318,6 +318,12 @@ namespace Bind {
             public string t;
         }
 
+        [Serializable]
+        private class Bind_Json_String
+        {
+            public string value;
+        }
+
         private static object ParseWrappedJsonValue(string value, char type)
         {
             switch (type)
@@ -380,6 +386,43 @@ namespace Bind {
             else {
                 return null;
             }
+        }
+
+        public static string ObjectToJSONString(object value) {
+        {
+            if (value == null)
+                return "null";
+
+            // Handle primitive types
+            if (value is string)
+                return JsonUtility.ToJson(new Bind_Json_String { value = (string)value }).Substring(9).TrimEnd('}');
+            if (value is bool)
+                return ((bool)value).ToString().ToLower();
+            if (value is int || value is float || value is double)
+                return value.ToString();
+
+            // Handle arrays and lists
+            if (value is IList list)
+            {
+                List<string> items = new List<string>();
+                foreach (object item in list)
+                    items.Add(WriteJson(item));
+                return "[" + string.Join(",", items) + "]";
+            }
+
+            // Handle dictionaries
+            if (value is IDictionary dict)
+            {
+                List<string> items = new List<string>();
+                foreach (DictionaryEntry entry in dict)
+                {
+                    if (entry.Key is string)
+                        items.Add("\"" + (string)entry.Key + "\":" + WriteJson(entry.Value));
+                }
+                return "{" + string.Join(",", items) + "}";
+            }
+
+            throw new ArgumentException($"Unsupported type: {value.GetType()}");
         }
 
     }

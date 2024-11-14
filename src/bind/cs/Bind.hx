@@ -107,7 +107,7 @@ class Bind {
         writeLineBreak(ctx);
 
         // Support
-        writeLine('import bind.csharp.Support;', ctx);
+        writeLine('import bind.cs.Support;', ctx);
         writeLine('import cpp.Pointer;', ctx);
 
         writeLineBreak(ctx);
@@ -238,6 +238,11 @@ class Bind {
             writeLineBreak(ctx);
             ctx.indent++;
 
+            var index = 0;
+            for (arg in method.args) {
+                writeHaxeBindArgAssign(arg, index++, ctx);
+            }
+
             writeIndent(ctx);
             if (isCSharpConstructor) {
                 write('_instance = ', ctx);
@@ -261,7 +266,7 @@ class Bind {
             }
             for (arg in method.args) {
                 if (i > 0) write(', ', ctx);
-                write(arg.name, ctx);
+                write(arg.name + '_cs_', ctx);
                 i++;
             }
             write(');', ctx);
@@ -314,12 +319,6 @@ class Bind {
 
             var args = [];
 
-            // Class argument
-            args.push('class_:CSClass');
-
-            // Method argument
-            args.push('method_:CSMethodID');
-
             // Instance argument
             if (method.instance && !isCSharpConstructor) {
                 args.push('instance_:Dynamic');
@@ -327,7 +326,7 @@ class Bind {
 
             // Method args
             for (arg in method.args) {
-                args.push(arg.name + ':' + toHaxeType(arg.type, ctx));
+                args.push(arg.name + ':' + toHaxeBindType(arg.type, ctx));
             }
 
             // C++ method
@@ -1485,6 +1484,267 @@ class Bind {
     }
 
 /// Write utils (specific)
+
+    static function writeHaxeBindArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+
+        var haxeType = toHaxeType(arg.type, ctx);
+        var type = toHaxeBindType(arg.type, ctx);
+        var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_cs_';
+        var value = (arg.name != null ? arg.name : 'arg' + (index + 1)) + (index == -1 ? '_haxe_' : '');
+
+        switch (arg.type) {
+
+            case Function(args, ret, orig):
+                writeLine('var $name:HObject = null;', ctx);
+                writeLine('if ($value != null) {', ctx);
+                ctx.indent++;
+                writeIndent(ctx);
+                write('$name = new HObject(function(', ctx);
+                var i = 0;
+                for (funcArg in args) {
+                    if (i++ > 0) write(', ', ctx);
+                    write(funcArg.name + '_cl:' + toHaxeBindType(funcArg.type, ctx), ctx);
+                }
+                write(') {', ctx);
+                writeLineBreak(ctx);
+                ctx.indent++;
+
+                i = 0;
+                for (funcArg in args) {
+                    writeHaxeArgAssign({
+                        name: funcArg.name + '_cl',
+                        type: funcArg.type,
+                        orig: funcArg.orig
+                    }, i++, ctx);
+                }
+
+                // Call
+                writeIndent(ctx);
+                var hasReturn = false;
+                switch (ret) {
+                    case Void(orig):
+                    default:
+                        hasReturn = true;
+                        write('var return_haxe_ = ', ctx);
+                }
+                write(arg.name + '(', ctx);
+                i = 0;
+                for (funcArg in args) {
+                    if (i++ > 0) write(', ', ctx);
+                    write(funcArg.name + '_cl_haxe_', ctx);
+                }
+                write(');', ctx);
+                writeLineBreak(ctx);
+                if (hasReturn) {
+                    writeHaxeBindArgAssign({
+                        name: 'return',
+                        type: ret
+                    }, -1, ctx);
+                    writeLine('return return_cs_;', ctx);
+                }
+
+                ctx.indent--;
+                writeLine('});', ctx);
+                ctx.indent--;
+                writeLine('}', ctx);
+
+            case String(orig):
+                writeIndent(ctx);
+                write('var $name = $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Int(orig):
+                writeIndent(ctx);
+                write('var $name = $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Float(orig):
+                writeIndent(ctx);
+                write('var $name = $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Bool(orig):
+                writeIndent(ctx);
+                write('var $name = $value ? 1 : 0;', ctx);
+                writeLineBreak(ctx);
+
+            case Array(itemType, orig):
+                writeIndent(ctx);
+                write('var $name = ${ctx.bindSupport}.toUnityJson($value);', ctx);
+                writeLineBreak(ctx);
+
+            case Map(itemType, orig):
+                writeIndent(ctx);
+                write('var $name = ${ctx.bindSupport}.toUnityJson($value);', ctx);
+                writeLineBreak(ctx);
+
+            case Object(orig):
+                if (haxeType == ctx.csharpClass.name) {
+                    writeIndent(ctx);
+                    write('var $name = $value._instance.pointer;', ctx);
+                    writeLineBreak(ctx);
+                } else {
+                    writeIndent(ctx);
+                    write('var $name = $value.pointer;', ctx);
+                    writeLineBreak(ctx);
+                }
+
+            default:
+                writeIndent(ctx);
+                write('var $name:$type = $value;', ctx);
+                writeLineBreak(ctx);
+        }
+
+    }
+
+    static function writeHaxeArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+
+        var type = toHaxeType(arg.type, ctx);
+        var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_haxe_';
+        var value = (arg.name != null ? arg.name : 'arg' + (index + 1)) + (index == -1 ? '_cs_' : '');
+
+        switch (arg.type) {
+
+            case Function(args, ret, orig):
+                writeLine('var $name:$type = null;', ctx);
+                writeLine('if ($value != null) {', ctx);
+                ctx.indent++;
+                writeLine('var ' + name + 'csobj_ = new CSObject($value);', ctx);
+                writeIndent(ctx);
+                write('$name = function(', ctx);
+                var i = 0;
+                for (funcArg in args) {
+                    if (i++ > 0) write(', ', ctx);
+                    write(funcArg.name + '_cl:' + toHaxeType(funcArg.type, ctx), ctx);
+                }
+                write(') {', ctx);
+                writeLineBreak(ctx);
+                ctx.indent++;
+
+                i = 0;
+                for (funcArg in args) {
+                    writeHaxeBindArgAssign({
+                        name: funcArg.name + '_cl',
+                        type: funcArg.type,
+                        orig: funcArg.orig
+                    }, i++, ctx);
+                }
+
+                // Call
+                writeIndent(ctx);
+                var hasReturn = false;
+                switch (ret) {
+                    case Void(orig):
+                    default:
+                        hasReturn = true;
+                        write('var return_cs_ = ', ctx);
+                }
+                write(ctx.csharpClass.name + '_Extern.callCS_', ctx);
+
+                var retType = toCSharpType(ret, ctx);
+
+                var allParts = '';
+                for (funcArg in args) {
+                    var part = toCSharpType(funcArg.type, ctx);
+                    part = toNativeCallPart(part);
+                    allParts += part;
+                }
+                var part = toNativeCallPart(retType);
+                allParts += part;
+
+                if (!ctx.csharpCallbacks.exists(allParts)) {
+                    ctx.csharpCallbacks.set(allParts, arg.type);
+                }
+
+                write(allParts + '(_csclass, _mid_callCS_' + allParts + ', ' + arg.name + '_haxe_csobj_.pointer', ctx);
+                for (funcArg in args) {
+                    write(', ', ctx);
+                    write(funcArg.name + '_cl_cs_', ctx);
+                }
+                write(');', ctx);
+                writeLineBreak(ctx);
+                if (hasReturn) {
+                    writeHaxeArgAssign({
+                        name: 'return',
+                        type: ret
+                    }, -1, ctx);
+                    writeLine('return return_haxe_;', ctx);
+                }
+
+                ctx.indent--;
+                writeLine('};', ctx);
+                ctx.indent--;
+                writeLine('}', ctx);
+
+            case String(orig):
+                writeIndent(ctx);
+                write('var $name = $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Int(orig):
+                writeIndent(ctx);
+                write('var $name = $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Float(orig):
+                writeIndent(ctx);
+                write('var $name = $value;', ctx);
+                writeLineBreak(ctx);
+
+            case Bool(orig):
+                writeIndent(ctx);
+                write('var $name = $value != 0;', ctx);
+                writeLineBreak(ctx);
+
+            case Array(itemType, orig):
+                writeIndent(ctx);
+                write('var $name:$type = haxe.Json.parse($value);', ctx);
+                writeLineBreak(ctx);
+
+            case Map(itemType, orig):
+                writeIndent(ctx);
+                write('var $name:$type = haxe.Json.parse($value);', ctx);
+                writeLineBreak(ctx);
+
+            case Object(orig):
+                if (type == ctx.csharpClass.name) {
+                    writeIndent(ctx);
+                    write('var $name = new $type();', ctx);
+                    writeLineBreak(ctx);
+                    writeIndent(ctx);
+                    write('$name._instance = $value;', ctx);
+                    writeLineBreak(ctx);
+                } else {
+                    writeIndent(ctx);
+                    write('var $name = new CSObject($value);', ctx);
+                    writeLineBreak(ctx);
+                }
+
+            default:
+                writeIndent(ctx);
+                write('var $name:$type = $value;', ctx);
+                writeLineBreak(ctx);
+        }
+
+    }
+
+    static function toHaxeBindType(type:bind.Class.Type, ctx:BindContext):String {
+
+        var result = switch (type) {
+            case Void(orig): 'Void';
+            case Int(orig): 'Int';
+            case Float(orig): 'Float';
+            case Bool(orig): 'Int';
+            case String(orig): 'String';
+            case Array(itemType, orig): 'String';
+            case Map(itemType, orig): 'String';
+            case Object(orig): 'Pointer<Void>';
+            case Function(args, ret, orig): 'HObject';
+        }
+
+        return result;
+
+    }
 
     static function writeCSharpArgAssignFirstPass(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
 

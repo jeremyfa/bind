@@ -9,6 +9,8 @@ import haxe.macro.Expr;
 
 import cpp.Pointer;
 
+typedef CSClass = Any; // TODO?
+
 @:keep
 class CSObject {
 

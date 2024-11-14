@@ -503,7 +503,7 @@ class Parse {
                         type: csharpType
                     });
                 case 'Action' | 'Func':
-                    var numArgs = typeParameters.length - 1;
+                    var numArgs = baseType == 'Action' ? typeParameters.length : typeParameters.length - 1;
                     var args = [];
                     for (n in 0...numArgs) {
                         args.push({

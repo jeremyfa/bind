@@ -1,12 +1,15 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using UnityEngine;
 
 namespace Bind {
 
-    public class Support {
+    public static class Support {
 
 /// Initialize
 
@@ -17,6 +20,8 @@ namespace Bind {
 
         public static void Init() {
             // Should be called from C# main thread
+
+            mainThreadId = Thread.CurrentThread.ManagedThreadId;
 
             // Register methods
             var RunAwaitingNativeActions_delegate_ = new RunAwaitingNativeActions_Delegate_(RunAwaitingNativeActions);
@@ -46,7 +51,7 @@ namespace Bind {
                 }
                 RunInNativeThread(() => {
                     RunInMainThread(() => {
-                        for (IntPtr ptr in toRelease) {
+                        foreach (IntPtr ptr in toRelease) {
                             ReleaseUTF8CString(ptr);
                         }
                     });
@@ -79,13 +84,13 @@ namespace Bind {
 /// Native calls
 
         /** Utility to let C# side notify native (haxe) side that it is ready and can call C# stuff. This is not always necessary and is just a convenience when the setup requires it. */
-        [DllImport(Bind_DllName, CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(Bind.Config.DllName, CallingConvention = CallingConvention.Cdecl)]
         private static extern void CS_Bind_Support_notifyReady();
 
-        [DllImport(Bind_DllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern void CS_Bind_Support_nativeInit();
+        [DllImport(Bind.Config.DllName, CallingConvention = CallingConvention.Cdecl)]
+        private static extern void CS_Bind_Support_nativeInit(IntPtr runAwaitingNativeActions);
 
-        [DllImport(Bind_DllName, CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(Bind.Config.DllName, CallingConvention = CallingConvention.Cdecl)]
         private static extern void CS_Bind_Support_releaseHObject(IntPtr address);
 
 /// Converters
@@ -128,8 +133,8 @@ namespace Bind {
             // Add the null terminator
             Marshal.WriteByte(ptr, utf8Bytes.Length, 0);
 
-            // Add to auto-release pool if enabled and requested
-            if (autoRelease && Interlocked.CompareExchange(ref _isEnabled, 1, 1) == 1)
+            // Add to auto-release pool if requested
+            if (autoRelease)
             {
                 _autoReleaseUTF8CStringPool.Enqueue(ptr);
             }
@@ -151,6 +156,8 @@ namespace Bind {
         private static readonly Queue<Action> mainThreadQueue = new Queue<Action>();
 
         private static bool useNativeThreadQueue = false;
+
+        private static int mainThreadId = 0;
 
         private static int nativeThreadId = 0;
 
@@ -185,7 +192,9 @@ namespace Bind {
 
             List<Action> toRun = new List<Action>();
             lock (nativeThreadQueue) {
-                if (nativeThreadId == 0) Thread.CurrentThread.ManagedThreadId;
+                if (nativeThreadId == 0) {
+                    nativeThreadId = Thread.CurrentThread.ManagedThreadId;
+                }
                 CS_Bind_Support_nativeSetHasActions(0);
                 while (nativeThreadQueue.Count > 0)
                 {
@@ -204,19 +213,30 @@ namespace Bind {
             public readonly ManualResetEvent WaitHandle = new ManualResetEvent(false);
         }
 
+        public static bool IsMainThread() {
+
+            if (useNativeThreadQueue) {
+                if (mainThreadId == 0) return !IsNativeThread();
+                return mainThreadId == Thread.CurrentThread.ManagedThreadId;
+            }
+            return true;
+
+        }
+
         public static bool IsNativeThread() {
 
             if (useNativeThreadQueue) {
                 if (nativeThreadId == 0) return !IsMainThread();
-                return nativeThreadId ==
+                return nativeThreadId == Thread.CurrentThread.ManagedThreadId;
             }
+            return true;
 
         }
 
         // Your existing async method
         public static void RunInNativeThread(Action a)
         {
-            if (UseNativeThreadActionStack)
+            if (useNativeThreadQueue)
             {
                 PushNativeThreadAction(a);
             }
@@ -294,7 +314,7 @@ namespace Bind {
         }
 
         /** Inform native/C that some Action instances are waiting to be run from native thread. */
-        [DllImport(Bind_DllName, CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(Bind.Config.DllName, CallingConvention = CallingConvention.Cdecl)]
         private static extern void CS_Bind_Support_nativeSetHasActions(int value);
 
 /// JSON
@@ -377,11 +397,11 @@ namespace Bind {
 
         }
 
-        public static ArrayList<object> JSONStringToArrayList(string json) {
+        public static List<object> JSONStringToArrayList(string json) {
 
             object[] array = (object[]) JSONStringToObject(json);
             if (array != null) {
-                return new ArrayList<object>(array);
+                return new List<object>(array);
             }
             else {
                 return null;
@@ -389,7 +409,7 @@ namespace Bind {
         }
 
         public static string ObjectToJSONString(object value) {
-        {
+
             if (value == null)
                 return "null";
 
@@ -406,7 +426,7 @@ namespace Bind {
             {
                 List<string> items = new List<string>();
                 foreach (object item in list)
-                    items.Add(WriteJson(item));
+                    items.Add(ObjectToJSONString(item));
                 return "[" + string.Join(",", items) + "]";
             }
 
@@ -417,7 +437,7 @@ namespace Bind {
                 foreach (DictionaryEntry entry in dict)
                 {
                     if (entry.Key is string)
-                        items.Add("\"" + (string)entry.Key + "\":" + WriteJson(entry.Value));
+                        items.Add("\"" + (string)entry.Key + "\":" + ObjectToJSONString(entry.Value));
                 }
                 return "{" + string.Join(",", items) + "}";
             }

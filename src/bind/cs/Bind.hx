@@ -1091,7 +1091,7 @@ class Bind {
         writeLine('}', ctx);
         writeLineBreak(ctx);
 
-        writeLine('[DllImport(Bind_DllName, CallingConvention = CallingConvention.Cdecl)]', ctx);
+        writeLine('[DllImport(Bind.Config.DllName, CallingConvention = CallingConvention.Cdecl)]', ctx);
         writeIndent(ctx);
         write('private static extern void CS_', ctx);
         var csharpNamespace = (''+ctx.csharpClass.orig.namespace);
@@ -1133,7 +1133,7 @@ class Bind {
             switch (func) {
                 case Function(args, ret, orig):
 
-                    writeLine('[DllImport(Bind_DllName, CallingConvention = CallingConvention.Cdecl)]', ctx);
+                    writeLine('[DllImport(Bind.Config.DllName, CallingConvention = CallingConvention.Cdecl)]', ctx);
 
                     writeIndent(ctx);
                     var retType = toCSharpBindType(ret, ctx);

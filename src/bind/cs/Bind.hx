@@ -402,6 +402,7 @@ class Bind {
 
         if (header) {
             writeLine('#include <hxcpp.h>', ctx);
+            writeLine('#include "linc_CS.h"', ctx);
         } else {
             writeLine('#include "linc_CS.h"', ctx);
             writeLine('#include "linc_' + ctx.csharpClass.name + '.h"', ctx);
@@ -467,19 +468,23 @@ class Bind {
                 if (csharpNamespace != '') {
                     write(csharpNamespace.replace('.', '_') + '_', ctx);
                 }
-                write('${ctx.csharpClass.name}_${name}_CSFunc_ ${ctx.csharpClass.name}_${name}_csfunc_ = nullptr;', ctx);
+                write('${ctx.csharpClass.name}_${name}_CSFunc_ ', ctx);
+                if (csharpNamespace != '') {
+                    write(csharpNamespace.replace('.', '_') + '_', ctx);
+                }
+                write('${ctx.csharpClass.name}_${name}_csfunc_ = nullptr;', ctx);
                 writeLineBreak(ctx);
                 writeLineBreak(ctx);
             }
             else {
                 writeIndent(ctx);
-                write('typedef void (', ctx);
+                write('typedef void (*', ctx);
                 if (csharpNamespace != '') {
                     write(csharpNamespace.replace('.', '_') + '_', ctx);
                 }
-                write('${ctx.csharpClass.name}_${name}_CSFunc_*)(', ctx);
+                write('${ctx.csharpClass.name}_${name}_CSFunc_)(', ctx);
                 write(cscArgs.join(', '), ctx);
-                write(')', ctx);
+                write(');', ctx);
                 writeLineBreak(ctx);
                 writeLineBreak(ctx);
             }
@@ -576,16 +581,21 @@ class Bind {
                 writeLine('case $index:', ctx);
                 ctx.indent++;
                 writeIndent(ctx);
-                write('::' + namespaceEntries.join('::') + '::', ctx);
+                if (namespaceEntries.length > 0) {
+                    write('::' + namespaceEntries.join('::') + '::', ctx);
+                }
                 var csharpNamespace = (''+ctx.csharpClass.orig.namespace);
                 if (csharpNamespace != '') {
                     write(csharpNamespace.replace('.', '_') + '_', ctx);
                 }
-                write('${ctx.csharpClass.name}_${name}_csfunc_ = (', ctx);
+                write('${ctx.csharpClass.name}_${name}_csfunc_ = reinterpret_cast<', ctx);
+                if (namespaceEntries.length > 0) {
+                    write('::' + namespaceEntries.join('::') + '::', ctx);
+                }
                 if (csharpNamespace != '') {
                     write(csharpNamespace.replace('.', '_') + '_', ctx);
                 }
-                write('${ctx.csharpClass.name}_${name}_CSFunc_)ptr;', ctx);
+                write('${ctx.csharpClass.name}_${name}_CSFunc_>(ptr);', ctx);
                 writeLineBreak(ctx);
                 writeLine('break;', ctx);
                 ctx.indent--;
@@ -707,12 +717,17 @@ class Bind {
         writeLineBreak(ctx);
 
         // Imports
-        if (imports.indexOf('Bind.Support') == -1 && imports.indexOf('${ctx.bindSupport}') == -1) {
-            writeLine('using ${ctx.bindSupport};', ctx);
+        var bindSupportBase = ctx.bindSupport.split('.');
+        bindSupportBase.pop();
+        if (imports.indexOf('Bind') == -1 && imports.indexOf('${bindSupportBase.join('.')}') == -1) {
+            writeLine('using ${bindSupportBase.join('.')};', ctx);
+        }
+        if (imports.indexOf('System.Runtime.InteropServices') == -1) {
+            writeLine('using System.Runtime.InteropServices;', ctx);
         }
         for (imp in imports) {
-            if (imp == 'Bind.Support' || imp.startsWith('Bind.Support.')) {
-                writeLine('using ${ctx.bindSupport}${imp.substr('Bind.Support'.length)};', ctx);
+            if (imp == 'Bind' || imp.startsWith('Bind.')) {
+                writeLine('using ${bindSupportBase.join('.')}${imp.substr('Bind'.length)};', ctx);
             }
             else {
                 writeLine('using $imp;', ctx);
@@ -1189,7 +1204,7 @@ class Bind {
         var csContent = sys.io.File.getContent(Path.join([Path.directory(Sys.programPath()), 'support/cs/Bind/Support.cs']));
 
         // TODO: fix this to handle composed namespaces
-        csContent = csContent.replace('namespace Bind;', 'namespace ${pack.join('.')};');
+        csContent = csContent.replace('namespace Bind ', 'namespace ${pack.join('.')} ');
 
         ctx.currentFile = {
             path: Path.join(['cs', '${ctx.bindSupport.replace('.', '/')}.cs']),
@@ -1843,7 +1858,7 @@ class Bind {
                 }
 
                 write('(', ctx);
-                write(name + 'hobj_.address', ctx);
+                write(name + 'hobj_.Address', ctx);
 
                 for (funcArg in args) {
                     write(', ' + funcArg.name + '_csc_', ctx);

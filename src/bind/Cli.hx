@@ -207,6 +207,13 @@ class Cli {
 
         else if (kind == 'cs') {
 
+            if (options.bindSupport == 'bind.Support') {
+                options.bindSupport = 'Bind.Support';
+            }
+            if (bindClassOptions.bindSupport == 'bind.Support') {
+                bindClassOptions.bindSupport = 'Bind.Support';
+            }
+
             for (i in 0...fileArgs.length) {
                 var file = fileArgs[i];
 

@@ -38,7 +38,6 @@ namespace bind {
         ::String CSStringToHxcpp(const char * str) {
 
             if (str != nullptr) {
-                jboolean is_copy;
                 ::String result = ::String(str); // Makes a copy of (C) str
                 return result;
             }
@@ -101,7 +100,8 @@ extern "C" {
 
     BIND_CS_EXPORT void BIND_CS_FUNCTION(BIND_CS_SUPPORT, NativeInit)(void *runAwaitingNativeActions_ptr) {
 
-        ::bind::cs::BIND_CS_PTR_FUNCTION(BIND_CS_SUPPORT, RunAwaitingNativeActions) = (BIND_CS_TYPEDEF_FUNCTION(BIND_CS_SUPPORT, RunAwaitingNativeActions))runAwaitingNativeActions_ptr;
+        ::bind::cs::BIND_CS_PTR_FUNCTION(BIND_CS_SUPPORT, RunAwaitingNativeActions) =
+            reinterpret_cast<::bind::cs::BIND_CS_TYPEDEF_FUNCTION(BIND_CS_SUPPORT, RunAwaitingNativeActions)>(runAwaitingNativeActions_ptr);
 
     }
 

@@ -36,7 +36,7 @@ class CSObject {
     }
 
     @:noCompletion
-    @:void public static function _finalize(csobjectRef:JObject):Void {
+    @:void public static function _finalize(csobjectRef:CSObject):Void {
 
         csobjectRef.destroy();
 
@@ -167,6 +167,18 @@ class Support {
 
     }
 
+    @:noCompletion
+    public static function notifyReady():Void {
+
+        var callbacks = onceReadyCallbacks;
+        onceReadyCallbacks = [];
+
+        for (cb in callbacks) {
+            cb();
+        }
+
+    }
+
 /// Native action logic
 
     #if !debug inline #end public static function flushHaxeQueue():Void {
@@ -198,14 +210,21 @@ class Support {
                 }
                 haxe.Json.stringify(pairs);
 
-            case TClass(Array): // Handle arrays
-                var arr:Array<Dynamic> = value;
-                var serialized = arr.map(serializeValue).flatten();
-                haxe.Json.stringify(serialized);
-
-            default: // Handle primitive values by wrapping them in an array
-                var serialized = _toUnityJsonValue(value);
-                haxe.Json.stringify([serialized[0], serialized[1]]);
+            default:
+                if (value is Array) { // Handle arrays
+                    var arr:Array<Dynamic> = value;
+                    var serialized = [];
+                    for (item in arr) {
+                        var val = _toUnityJsonValue(item);
+                        serialized.push(val[0]);
+                        serialized.push(val[1]);
+                    }
+                    haxe.Json.stringify(serialized);
+                }
+                else { // Handle primitive values by wrapping them in an array
+                    var serialized = _toUnityJsonValue(value);
+                    haxe.Json.stringify([serialized[0], serialized[1]]);
+                }
         }
 
     }
@@ -220,16 +239,6 @@ class Support {
             case TNull: NULL_VALUE;
             case TBool: [value ? '1' : '0', 'b'];
             case TInt | TFloat: [Std.string(value), 'd'];
-            case TClass(String): [value, 's'];
-            case TClass(Array):
-                var arr:Array<Dynamic> = value;
-                var serialized = [];
-                for (item in arr) {
-                    var val = _toUnityJsonValue(item);
-                    serialized.push(val[0]);
-                    serialized.push(val[1]);
-                }
-                [haxe.Json.stringify(serialized), 'a'];
             case TObject:
                 var pairs = [];
                 for (field in Reflect.fields(value)) {
@@ -238,7 +247,19 @@ class Support {
                 }
                 [haxe.Json.stringify(pairs), 'o'];
             default:
-                [Std.string(value), 's'];
+                if (value is Array) {
+                    var arr:Array<Dynamic> = value;
+                    var serialized = [];
+                    for (item in arr) {
+                        var val = _toUnityJsonValue(item);
+                        serialized.push(val[0]);
+                        serialized.push(val[1]);
+                    }
+                    [haxe.Json.stringify(serialized), 'a'];
+                }
+                else {
+                    [Std.string(value), 's'];
+                }
         }
 
     }
@@ -262,10 +283,10 @@ private extern class Support_Extern {
     static function setHasNativeActions(value:Bool):Void;
 
     @:native('bind::cs::HasNativeActions')
-    static function hasNativeRunnables():Bool;
+    static function hasNativeActions():Bool;
 
     @:native('bind::cs::RunAwaitingActions')
-    static function runAwaitingRunnables():Void;
+    static function runAwaitingActions():Void;
 
     @:native('bind::cs::IsInitialized')
     static function isInitialized():Bool;

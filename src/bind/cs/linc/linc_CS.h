@@ -45,20 +45,21 @@
 #endif
 
 namespace bind {
-
     namespace cs {
+        // Function pointer typedef (removed const from function pointer type)
+        typedef void (*BIND_CS_TYPEDEF_FUNCTION(BIND_CS_SUPPORT, RunAwaitingNativeActions))();
 
-        typedef void (BIND_CS_TYPEDEF_FUNCTION(BIND_CS_SUPPORT, RunAwaitingNativeActions)*)()
+        // Using const char* for string returns
+        const char* HxcppToCSString(::String str);
 
-        const char * HxcppToCSString(::String str);
-
-        ::String CSStringToHxcpp(const char * str);
+        ::String CSStringToHxcpp(const char* str);
 
         void ReleaseCSObject(::cpp::Pointer<void> csobjectRef);
 
-        jstring HObjectToCSString(::Dynamic hobjectRef);
+        // Changed jstring to const char*
+        const char* HObjectToCSString(::Dynamic hobjectRef);
 
-        ::Dynamic CSStringToHObject(const char * address);
+        ::Dynamic CSStringToHObject(const char* address);
 
         void SetHasNativeActions(bool value);
 
@@ -67,19 +68,15 @@ namespace bind {
         void RunAwaitingActions(void);
 
         bool IsInitialized(void);
-
     }
-
 }
 
 extern "C" {
-
-    BIND_CS_EXPORT void BIND_CS_FUNCTION(BIND_CS_SUPPORT, NativeInit)(void *runAwaitingNativeActions_ptr);
+    BIND_CS_EXPORT void BIND_CS_FUNCTION(BIND_CS_SUPPORT, NativeInit)(void* runAwaitingNativeActions_ptr);
 
     BIND_CS_EXPORT void BIND_CS_FUNCTION(BIND_CS_SUPPORT, ReleaseHObject)(const char* address);
 
     BIND_CS_EXPORT void BIND_CS_FUNCTION(BIND_CS_SUPPORT, NativeSetHasActions)(int value);
 
     BIND_CS_EXPORT void BIND_CS_FUNCTION(BIND_CS_SUPPORT, NotifyReady)(void);
-
 }

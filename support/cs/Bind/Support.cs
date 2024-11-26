@@ -452,6 +452,11 @@ namespace Bind {
         private IntPtr _address;
         private bool _disposed;
 
+        public IntPtr Address
+        {
+            get { return _address; }
+        }
+
         public HObject(IntPtr address)
         {
             _address = address;

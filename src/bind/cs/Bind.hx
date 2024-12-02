@@ -108,7 +108,6 @@ class Bind {
 
         // Support
         writeLine('import bind.cs.Support;', ctx);
-        writeLine('import cpp.Pointer;', ctx);
 
         writeLineBreak(ctx);
 
@@ -602,6 +601,9 @@ class Bind {
             }
 
             writeLine('default:', ctx);
+            ctx.indent++;
+            writeLine('break;', ctx);
+            ctx.indent--;
             ctx.indent--;
             writeLine('}', ctx);
 
@@ -629,6 +631,10 @@ class Bind {
                     for (funcArg in args) {
                         var argType = toCSharpCType(funcArg.type, ctx);
                         write(', $argType arg' + (n++), ctx);
+                    }
+
+                    if (header && args.length == 0) {
+                        write('void', ctx);
                     }
 
                     if (header) {
@@ -1106,7 +1112,7 @@ class Bind {
         writeLine('}', ctx);
         writeLineBreak(ctx);
 
-        writeLine('[DllImport(Bind.Config.DllName, CallingConvention = CallingConvention.Cdecl)]', ctx);
+        writeLine('[DllImport(Config.DllName, CallingConvention = CallingConvention.Cdecl)]', ctx);
         writeIndent(ctx);
         write('private static extern void CS_', ctx);
         var csharpNamespace = (''+ctx.csharpClass.orig.namespace);
@@ -1148,7 +1154,7 @@ class Bind {
             switch (func) {
                 case Function(args, ret, orig):
 
-                    writeLine('[DllImport(Bind.Config.DllName, CallingConvention = CallingConvention.Cdecl)]', ctx);
+                    writeLine('[DllImport(Config.DllName, CallingConvention = CallingConvention.Cdecl)]', ctx);
 
                     writeIndent(ctx);
                     var retType = toCSharpBindType(ret, ctx);
@@ -1203,7 +1209,6 @@ class Bind {
 
         var csContent = sys.io.File.getContent(Path.join([Path.directory(Sys.programPath()), 'support/cs/Bind/Support.cs']));
 
-        // TODO: fix this to handle composed namespaces
         csContent = csContent.replace('namespace Bind ', 'namespace ${pack.join('.')} ');
 
         ctx.currentFile = {
@@ -1753,7 +1758,7 @@ class Bind {
             case String(orig): 'String';
             case Array(itemType, orig): 'String';
             case Map(itemType, orig): 'String';
-            case Object(orig): 'Pointer<Void>';
+            case Object(orig): 'cpp.Pointer<Void>';
             case Function(args, ret, orig): 'HObject';
         }
 

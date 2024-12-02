@@ -28,7 +28,7 @@ namespace Bind {
             bind_delegates_.Add(RunAwaitingNativeActions_delegate_);
             IntPtr RunAwaitingNativeActions_ptr_ = Marshal.GetFunctionPointerForDelegate(RunAwaitingNativeActions_delegate_);
 
-            CS_Bind_Support_nativeInit(RunAwaitingNativeActions_ptr_);
+            CS_Bind_Support_NativeInit(RunAwaitingNativeActions_ptr_);
 
         }
 
@@ -67,7 +67,7 @@ namespace Bind {
 
         public static void NotifyReady() {
 
-            CS_Bind_Support_notifyReady();
+            CS_Bind_Support_NotifyReady();
 
         }
 
@@ -76,7 +76,7 @@ namespace Bind {
         public static void NotifyDispose(IntPtr address) {
 
             Support.RunInNativeThread(() => {
-                CS_Bind_Support_releaseHObject(address);
+                CS_Bind_Support_ReleaseHObject(address);
             });
 
         }
@@ -84,14 +84,14 @@ namespace Bind {
 /// Native calls
 
         /** Utility to let C# side notify native (haxe) side that it is ready and can call C# stuff. This is not always necessary and is just a convenience when the setup requires it. */
-        [DllImport(Bind.Config.DllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern void CS_Bind_Support_notifyReady();
+        [DllImport(Config.DllName, CallingConvention = CallingConvention.Cdecl)]
+        private static extern void CS_Bind_Support_NotifyReady();
 
-        [DllImport(Bind.Config.DllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern void CS_Bind_Support_nativeInit(IntPtr runAwaitingNativeActions);
+        [DllImport(Config.DllName, CallingConvention = CallingConvention.Cdecl)]
+        private static extern void CS_Bind_Support_NativeInit(IntPtr runAwaitingNativeActions);
 
-        [DllImport(Bind.Config.DllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern void CS_Bind_Support_releaseHObject(IntPtr address);
+        [DllImport(Config.DllName, CallingConvention = CallingConvention.Cdecl)]
+        private static extern void CS_Bind_Support_ReleaseHObject(IntPtr address);
 
 /// Converters
 
@@ -174,7 +174,7 @@ namespace Bind {
 
             lock (nativeThreadQueue) {
                 nativeThreadQueue.Enqueue(a);
-                CS_Bind_Support_nativeSetHasActions(1);
+                CS_Bind_Support_NativeSetHasActions(1);
             }
 
         }
@@ -195,7 +195,7 @@ namespace Bind {
                 if (nativeThreadId == 0) {
                     nativeThreadId = Thread.CurrentThread.ManagedThreadId;
                 }
-                CS_Bind_Support_nativeSetHasActions(0);
+                CS_Bind_Support_NativeSetHasActions(0);
                 while (nativeThreadQueue.Count > 0)
                 {
                     toRun.Add(nativeThreadQueue.Dequeue());
@@ -314,8 +314,8 @@ namespace Bind {
         }
 
         /** Inform native/C that some Action instances are waiting to be run from native thread. */
-        [DllImport(Bind.Config.DllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern void CS_Bind_Support_nativeSetHasActions(int value);
+        [DllImport(Config.DllName, CallingConvention = CallingConvention.Cdecl)]
+        private static extern void CS_Bind_Support_NativeSetHasActions(int value);
 
 /// JSON
 

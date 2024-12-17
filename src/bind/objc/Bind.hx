@@ -15,6 +15,7 @@ typedef BindContext = {
     var headerPath:String;
     var headerCode:String;
     var lincFiles:Array<String>;
+    var noBindHeader:Bool;
 }
 
 class Bind {
@@ -31,7 +32,8 @@ class Bind {
             currentFile: null,
             headerPath: null,
             headerCode: null,
-            lincFiles: []
+            lincFiles: [],
+            noBindHeader: false
         };
 
     }
@@ -40,7 +42,7 @@ class Bind {
         To bind the related Objective-C class to Haxe.
         The files are returned as an array of bind.File objects.
         Nothing is written to disk at this stage. */
-    public static function bindClass(objcClass:bind.Class, ?options:{?namespace:String, ?pack:String, ?objcPrefix:String, ?headerPath:String, ?headerCode:String, ?lincFiles:Array<String>}):Array<bind.File> {
+    public static function bindClass(objcClass:bind.Class, ?options:{?namespace:String, ?pack:String, ?objcPrefix:String, ?headerPath:String, ?headerCode:String, ?lincFiles:Array<String>, ?noBindHeader:Bool}):Array<bind.File> {
 
         var ctx = createContext();
         ctx.objcClass = objcClass;
@@ -52,6 +54,7 @@ class Bind {
             if (options.headerPath != null) ctx.headerPath = options.headerPath;
             if (options.headerCode != null) ctx.headerCode = options.headerCode;
             if (options.lincFiles != null) ctx.lincFiles = options.lincFiles;
+            if (options.noBindHeader != null) ctx.noBindHeader = options.noBindHeader;
         }
 
         // Copy Objective C header file
@@ -267,8 +270,10 @@ class Bind {
             writeLine('package;', ctx);
         }
 
-        writeLine('// This file was generated with bind library', ctx);
-        writeLineBreak(ctx);
+        if (!ctx.noBindHeader) {
+            writeLine('// This file was generated with bind library', ctx);
+            writeLineBreak(ctx);
+        }
 
         // Objc support
         writeLine('import bind.objc.Support;', ctx);

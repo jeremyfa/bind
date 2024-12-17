@@ -16,6 +16,7 @@ typedef BindContext = {
     var nativeCallbacks:Map<String,bind.Class.Type>;
     var javaCallbacks:Map<String,bind.Class.Type>;
     var bindSupport:String;
+    var noBindHeader:Bool;
 }
 
 class Bind {
@@ -33,7 +34,8 @@ class Bind {
             javaCode: null,
             nativeCallbacks: new Map(),
             javaCallbacks: new Map(),
-            bindSupport: 'bind.Support'
+            bindSupport: 'bind.Support',
+            noBindHeader: false
         };
 
     }
@@ -42,7 +44,7 @@ class Bind {
         To bind the related Java class to Haxe.
         The files are returned as an array of bind.File objects.
         Nothing is written to disk at this stage. */
-    public static function bindClass(javaClass:bind.Class, ?options:{?namespace:String, ?pack:String, ?javaPath:String, ?javaCode:String, ?bindSupport:String}):Array<bind.File> {
+    public static function bindClass(javaClass:bind.Class, ?options:{?namespace:String, ?pack:String, ?javaPath:String, ?javaCode:String, ?bindSupport:String, ?noBindHeader:Bool}):Array<bind.File> {
 
         var ctx = createContext();
         ctx.javaClass = javaClass;
@@ -53,6 +55,7 @@ class Bind {
             if (options.javaPath != null) ctx.javaPath = options.javaPath;
             if (options.javaCode != null) ctx.javaCode = options.javaCode;
             if (options.bindSupport != null) ctx.bindSupport = options.bindSupport;
+            if (options.noBindHeader != null) ctx.noBindHeader = options.noBindHeader;
         }
 
         // Copy Java support file
@@ -103,8 +106,10 @@ class Bind {
             writeLine('package;', ctx);
         }
 
-        writeLine('// This file was generated with bind library', ctx);
-        writeLineBreak(ctx);
+        if (!ctx.noBindHeader) {
+            writeLine('// This file was generated with bind library', ctx);
+            writeLineBreak(ctx);
+        }
 
         // Support
         writeLine('import bind.java.Support;', ctx);
@@ -798,8 +803,10 @@ class Bind {
 
         writeLine('package ' + pack + ';', ctx);
 
-        writeLine('// This file was generated with bind library', ctx);
-        writeLineBreak(ctx);
+        if (!ctx.noBindHeader) {
+            writeLine('// This file was generated with bind library', ctx);
+            writeLineBreak(ctx);
+        }
 
         // Imports
         if (imports.indexOf('bind.Support.*') == -1 && imports.indexOf('${ctx.bindSupport}.*') == -1) {

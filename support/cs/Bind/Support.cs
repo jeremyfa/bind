@@ -7,20 +7,20 @@ using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 
-namespace Bind {
-
-    public static class Support {
-
-/// Initialize
+namespace Bind
+{
+    public static class Support
+    {
+        /// Initialize
 
         private static readonly List<Delegate> bind_delegates_ = new List<Delegate>();
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void RunAwaitingNativeActions_Delegate_();
 
-        public static void Init() {
+        public static void Init()
+        {
             // Should be called from C# main thread
-
             mainThreadId = Thread.CurrentThread.ManagedThreadId;
 
             // Register methods
@@ -32,26 +32,31 @@ namespace Bind {
 
         }
 
-        public static void Update() {
+        public static void Update()
+        {
             // Should be called from C# main thread
-
             FlushMainThreadActions();
             ScheduleAutoReleaseUTF8CStrings();
         }
 
-        private static void ScheduleAutoReleaseUTF8CStrings() {
+        private static void ScheduleAutoReleaseUTF8CStrings()
+        {
             // Moving from main to native then from native to main thread
             // will ensure the allocated strings that need to be released
             // will have been copied as needed.
-            if (_autoReleaseUTF8CStringPool.Count > 0) {
+            if (_autoReleaseUTF8CStringPool.Count > 0)
+            {
                 List<IntPtr> toRelease = new List<IntPtr>();
                 while (_autoReleaseUTF8CStringPool.TryDequeue(out IntPtr ptr))
                 {
                     toRelease.Add(ptr);
                 }
-                RunInNativeThread(() => {
-                    RunInMainThread(() => {
-                        foreach (IntPtr ptr in toRelease) {
+                RunInNativeThread(() =>
+                {
+                    RunInMainThread(() =>
+                    {
+                        foreach (IntPtr ptr in toRelease)
+                        {
                             ReleaseUTF8CString(ptr);
                         }
                     });
@@ -59,29 +64,47 @@ namespace Bind {
             }
         }
 
-        private static void FlushMainThreadActions() {
+        private static void FlushMainThreadActions()
+        {
+            List<Action> toRun = null;
 
-            FlushMainThreadActions();
+            lock (mainThreadQueue)
+            {
+                if (mainThreadQueue.Count > 0)
+                {
+                    toRun = new List<Action>(mainThreadQueue.Count);
+                    while (mainThreadQueue.Count > 0)
+                    {
+                        toRun.Add(mainThreadQueue.Dequeue());
+                    }
+                }
+            }
 
+            if (toRun != null)
+            {
+                foreach (Action a in toRun)
+                {
+                    a();
+                }
+            }
         }
 
-        public static void NotifyReady() {
-
+        public static void NotifyReady()
+        {
             CS_Bind_Support_NotifyReady();
-
         }
 
-/// Helpers for native
+        /// Helpers for native
 
-        public static void NotifyDispose(IntPtr address) {
-
-            Support.RunInNativeThread(() => {
+        public static void NotifyDispose(IntPtr address)
+        {
+            Support.RunInNativeThread(() =>
+            {
                 CS_Bind_Support_ReleaseHObject(address);
             });
-
         }
 
-/// Native calls
+        /// Native calls
 
         /** Utility to let C# side notify native (haxe) side that it is ready and can call C# stuff. This is not always necessary and is just a convenience when the setup requires it. */
         [DllImport(Config.DllName, CallingConvention = CallingConvention.Cdecl)]
@@ -93,10 +116,10 @@ namespace Bind {
         [DllImport(Config.DllName, CallingConvention = CallingConvention.Cdecl)]
         private static extern void CS_Bind_Support_ReleaseHObject(IntPtr address);
 
-/// Converters
+        /// Converters
 
-        public static string UTF8CStringToString(IntPtr ptr) {
-
+        public static string UTF8CStringToString(IntPtr ptr)
+        {
             if (ptr == IntPtr.Zero)
                 return null;
 
@@ -111,7 +134,6 @@ namespace Bind {
 
             // Convert to string
             return System.Text.Encoding.UTF8.GetString(buffer);
-
         }
 
         private static readonly ConcurrentQueue<IntPtr> _autoReleaseUTF8CStringPool = new ConcurrentQueue<IntPtr>();
@@ -144,12 +166,13 @@ namespace Bind {
 
         public static void ReleaseUTF8CString(IntPtr ptr)
         {
-            if (ptr != IntPtr.Zero) {
+            if (ptr != IntPtr.Zero)
+            {
                 Marshal.FreeHGlobal(ptr);
             }
         }
 
-/// Thread safety
+        /// Thread safety
 
         private static readonly Queue<Action> nativeThreadQueue = new Queue<Action>();
 
@@ -161,38 +184,42 @@ namespace Bind {
 
         private static int nativeThreadId = 0;
 
-        public static void SetUseNativeThreadQueue(bool value) {
+        public static void SetUseNativeThreadQueue(bool value)
+        {
             useNativeThreadQueue = value;
             nativeThreadId = 0;
         }
 
-        public static bool IsUseNativeThreadQueue() {
+        public static bool IsUseNativeThreadQueue()
+        {
             return useNativeThreadQueue;
         }
 
-        static void PushNativeThreadAction(Action a) {
-
-            lock (nativeThreadQueue) {
+        static void PushNativeThreadAction(Action a)
+        {
+            lock (nativeThreadQueue)
+            {
                 nativeThreadQueue.Enqueue(a);
                 CS_Bind_Support_NativeSetHasActions(1);
             }
-
         }
 
-        static void PushMainThreadAction(Action a) {
-
-            lock (mainThreadQueue) {
+        static void PushMainThreadAction(Action a)
+        {
+            lock (mainThreadQueue)
+            {
                 mainThreadQueue.Enqueue(a);
             }
-
         }
 
         /** Called by native/C to run an Action from its thread */
-        public static void RunAwaitingNativeActions() {
-
+        public static void RunAwaitingNativeActions()
+        {
             List<Action> toRun = new List<Action>();
-            lock (nativeThreadQueue) {
-                if (nativeThreadId == 0) {
+            lock (nativeThreadQueue)
+            {
+                if (nativeThreadId == 0)
+                {
                     nativeThreadId = Thread.CurrentThread.ManagedThreadId;
                 }
                 CS_Bind_Support_NativeSetHasActions(0);
@@ -201,10 +228,10 @@ namespace Bind {
                     toRun.Add(nativeThreadQueue.Dequeue());
                 }
             }
-            foreach (Action a in toRun) {
+            foreach (Action a in toRun)
+            {
                 a();
             }
-
         }
 
         private class SyncResult
@@ -213,24 +240,24 @@ namespace Bind {
             public readonly ManualResetEvent WaitHandle = new ManualResetEvent(false);
         }
 
-        public static bool IsMainThread() {
-
-            if (useNativeThreadQueue) {
+        public static bool IsMainThread()
+        {
+            if (useNativeThreadQueue)
+            {
                 if (mainThreadId == 0) return !IsNativeThread();
                 return mainThreadId == Thread.CurrentThread.ManagedThreadId;
             }
             return true;
-
         }
 
-        public static bool IsNativeThread() {
-
-            if (useNativeThreadQueue) {
+        public static bool IsNativeThread()
+        {
+            if (useNativeThreadQueue)
+            {
                 if (nativeThreadId == 0) return !IsMainThread();
                 return nativeThreadId == Thread.CurrentThread.ManagedThreadId;
             }
             return true;
-
         }
 
         // Your existing async method
@@ -274,19 +301,20 @@ namespace Bind {
             }
         }
 
-        public static void RunInMainThread(Action a) {
-
-            if (!IsMainThread()) {
+        public static void RunInMainThread(Action a)
+        {
+            if (!IsMainThread())
+            {
                 PushMainThreadAction(a);
             }
-            else {
+            else
+            {
                 a();
             }
-
         }
 
-        public static void RunInMainThreadSync(Action a) {
-
+        public static void RunInMainThreadSync(Action a)
+        {
             if (!IsNativeThread())
             {
                 var result = new SyncResult();
@@ -310,14 +338,13 @@ namespace Bind {
             {
                 a();
             }
-
         }
 
         /** Inform native/C that some Action instances are waiting to be run from native thread. */
         [DllImport(Config.DllName, CallingConvention = CallingConvention.Cdecl)]
         private static extern void CS_Bind_Support_NativeSetHasActions(int value);
 
-/// JSON
+        /// JSON
 
         [Serializable]
         private class Bind_Json_Array
@@ -367,8 +394,8 @@ namespace Bind {
             }
         }
 
-        public static object JSONStringToObject(string json) {
-
+        public static object JSONStringToObject(string json)
+        {
             if (json.StartsWith("{\"a\":"))
             {
                 var wrapper = JsonUtility.FromJson<Bind_Json_Array>(json);
@@ -394,22 +421,23 @@ namespace Bind {
                 var wrapper = JsonUtility.FromJson<Bind_Json_Value>(json);
                 return ParseWrappedJsonValue(wrapper.v, wrapper.t[0]);
             }
-
         }
 
-        public static List<object> JSONStringToArrayList(string json) {
-
-            object[] array = (object[]) JSONStringToObject(json);
-            if (array != null) {
+        public static List<object> JSONStringToArrayList(string json)
+        {
+            object[] array = (object[])JSONStringToObject(json);
+            if (array != null)
+            {
                 return new List<object>(array);
             }
-            else {
+            else
+            {
                 return null;
             }
         }
 
-        public static string ObjectToJSONString(object value) {
-
+        public static string ObjectToJSONString(object value)
+        {
             if (value == null)
                 return "null";
 
@@ -486,5 +514,4 @@ namespace Bind {
             GC.SuppressFinalize(this);
         }
     }
-
 }

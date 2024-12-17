@@ -34,7 +34,8 @@ class Cli {
             pretty: false,
             export: null,
             mute: false,
-            bindSupport: 'bind.Support'
+            bindSupport: 'bind.Support',
+            noBindHeader: false
         };
         var bindClassOptions:Dynamic = {};
         var fileArgs = [];
@@ -54,6 +55,10 @@ class Cli {
                 }
                 else if (arg == '--mute') {
                     options.mute = true;
+                }
+                else if (arg == '--no-bind-header') {
+                    options.noBindHeader = true;
+                    bindClassOptions.noBindHeader = true;
                 }
                 else if (arg == '--bind-support') {
                     i++;

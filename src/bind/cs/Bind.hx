@@ -16,6 +16,7 @@ typedef BindContext = {
     var nativeCallbacks:Map<String,bind.Class.Type>;
     var csharpCallbacks:Map<String,bind.Class.Type>;
     var bindSupport:String;
+    var noBindHeader:Bool;
 }
 
 class Bind {
@@ -33,7 +34,8 @@ class Bind {
             csharpCode: null,
             nativeCallbacks: new Map(),
             csharpCallbacks: new Map(),
-            bindSupport: 'Bind.Support'
+            bindSupport: 'Bind.Support',
+            noBindHeader: false
         };
 
     }
@@ -42,7 +44,7 @@ class Bind {
         To bind the related C# class to Haxe.
         The files are returned as an array of bind.File objects.
         Nothing is written to disk at this stage. */
-    public static function bindClass(csharpClass:bind.Class, ?options:{?namespace:String, ?pack:String, ?csharpPath:String, ?csharpCode:String, ?bindSupport:String}):Array<bind.File> {
+    public static function bindClass(csharpClass:bind.Class, ?options:{?namespace:String, ?pack:String, ?csharpPath:String, ?csharpCode:String, ?bindSupport:String, ?noBindHeader:Bool}):Array<bind.File> {
 
         var ctx = createContext();
         ctx.csharpClass = csharpClass;
@@ -53,6 +55,7 @@ class Bind {
             if (options.csharpPath != null) ctx.csharpPath = options.csharpPath;
             if (options.csharpCode != null) ctx.csharpCode = options.csharpCode;
             if (options.bindSupport != null) ctx.bindSupport = options.bindSupport;
+            if (options.noBindHeader != null) ctx.noBindHeader = options.noBindHeader;
         }
 
         // Copy C# support file
@@ -103,8 +106,10 @@ class Bind {
             writeLine('package;', ctx);
         }
 
-        writeLine('// This file was generated with bind library', ctx);
-        writeLineBreak(ctx);
+        if (!ctx.noBindHeader) {
+            writeLine('// This file was generated with bind library', ctx);
+            writeLineBreak(ctx);
+        }
 
         // Support
         writeLine('import bind.cs.Support;', ctx);
@@ -719,8 +724,10 @@ class Bind {
 
         ctx.currentFile = { path: Path.join(['cs', dir, bindingName + '.cs']), content: '' };
 
-        writeLine('// This file was generated with bind library', ctx);
-        writeLineBreak(ctx);
+        if (!ctx.noBindHeader) {
+            writeLine('// This file was generated with bind library', ctx);
+            writeLineBreak(ctx);
+        }
 
         // Imports
         var bindSupportBase = ctx.bindSupport.split('.');
@@ -744,11 +751,9 @@ class Bind {
 
         // Open namespaces
         if (pack.length > 0) {
-            for (name in pack.split('.')) {
-                writeLine('namespace $name {', ctx);
-                ctx.indent++;
-                writeLineBreak(ctx);
-            }
+            writeLine('namespace $pack', ctx);
+            writeLine('{', ctx);
+            ctx.indent++;
         }
 
         // Class comment
@@ -756,9 +761,9 @@ class Bind {
             writeComment(ctx.csharpClass.description, ctx);
         }
 
-        writeLine('class ' + bindingName + ' {', ctx);
+        writeLine('class ' + bindingName + '', ctx);
+        writeLine('{', ctx);
         ctx.indent++;
-        writeLineBreak(ctx);
 
         function writeMethod(method:bind.Class.Method) {
 
@@ -819,7 +824,10 @@ class Bind {
             write(ret + ' ', ctx);
             write(name + '(', ctx);
             write(args.join(', '), ctx);
-            write(') {', ctx);
+            write(')', ctx);
+            writeLineBreak(ctx);
+            writeIndent(ctx);
+            write('{', ctx);
             writeLineBreak(ctx);
             ctx.indent++;
 
@@ -828,16 +836,19 @@ class Bind {
                 writeCSharpArgAssignFirstPass(arg, index++, ctx);
             }
 
-            writeLine('if (!${ctx.bindSupport}.IsMainThread()) {', ctx);
+            writeLine('if (!${ctx.bindSupport}.IsMainThread())', ctx);
+            writeLine('{', ctx);
             ctx.indent++;
             if (hasReturn) {
                 writeLine(ret + ' _bind_result;', ctx);
             }
             if (hasReturn) {
-                writeLine('${ctx.bindSupport}.RunInMainThreadSync(() => {', ctx);
+                writeLine('${ctx.bindSupport}.RunInMainThreadSync(() =>', ctx);
+                writeLine('{', ctx);
             }
             else {
-                writeLine('${ctx.bindSupport}.RunInMainThread(() => {', ctx);
+                writeLine('${ctx.bindSupport}.RunInMainThread(() =>', ctx);
+                writeLine('{', ctx);
             }
             ctx.indent++;
 
@@ -871,7 +882,9 @@ class Bind {
             }
 
             ctx.indent--;
-            writeLine('} else {', ctx);
+            writeLine('}', ctx);
+            writeLine('else', ctx);
+            writeLine('{', ctx);
             ctx.indent++;
 
             if (hasReturn) {
@@ -960,7 +973,10 @@ class Bind {
             write(ret + ' ', ctx);
             write(name + '(', ctx);
             write(args.join(', '), ctx);
-            write(') {', ctx);
+            write(')', ctx);
+            writeLineBreak(ctx);
+            writeIndent(ctx);
+            write('{', ctx);
             writeLineBreak(ctx);
             ctx.indent++;
 
@@ -1053,7 +1069,8 @@ class Bind {
         }
 
         // Register C# methods to native
-        writeLine('public static void Bind_RegisterMethods() {', ctx);
+        writeLine('public static void Bind_RegisterMethods()', ctx);
+        writeLine('{', ctx);
         ctx.indent++;
 
         for (index in 0...ctx.csharpClass.methods.length) {
@@ -1184,15 +1201,11 @@ class Bind {
         // Class end
         ctx.indent--;
         writeLine('}', ctx);
-        writeLineBreak(ctx);
 
         // Close namespaces
         if (pack.length > 0) {
-            for (name in pack.split('.')) {
-                ctx.indent--;
-                writeLine('}', ctx);
-                writeLineBreak(ctx);
-            }
+            ctx.indent--;
+            writeLine('}', ctx);
         }
 
         ctx.files.push(ctx.currentFile);
@@ -1811,7 +1824,10 @@ class Bind {
                     if (argName == null) argName = 'arg' + (i + 1);
                     write('$argType ' + argName, ctx);
                 }
-                write(') => {', ctx);
+                write(') =>', ctx);
+                writeLineBreak(ctx);
+                writeIndent(ctx);
+                write('{', ctx);
                 writeLineBreak(ctx);
                 ctx.indent++;
 
@@ -1827,9 +1843,11 @@ class Bind {
                 if (hasReturn) {
                     var csharpBindRetType = toCSharpBindType(ret, ctx);
                     writeLine(csharpBindRetType + ' return_csc_result_;', ctx);
-                    writeLine('${ctx.bindSupport}.RunInNativeThreadSync(() => {', ctx);
+                    writeLine('${ctx.bindSupport}.RunInNativeThreadSync(() =>', ctx);
+                    writeLine('{', ctx);
                 } else {
-                    writeLine('${ctx.bindSupport}.RunInNativeThread(() => {', ctx);
+                    writeLine('${ctx.bindSupport}.RunInNativeThread(() =>', ctx);
+                    writeLine('{', ctx);
                 }
                 ctx.indent++;
 

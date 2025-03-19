@@ -213,6 +213,7 @@ namespace Bind
         }
 
         /** Called by native/C to run an Action from its thread */
+        [AOT.MonoPInvokeCallback(typeof(RunAwaitingNativeActions_Delegate_))]
         public static void RunAwaitingNativeActions()
         {
             List<Action> toRun = new List<Action>();

@@ -817,6 +817,8 @@ class Bind {
                 writeComment(method.description, ctx);
             }
 
+            writeLine('[AOT.MonoPInvokeCallback(typeof(${name}_Delegate_))]', ctx);
+
             writeIndent(ctx);
             write('public ', ctx);
             write('static ', ctx);

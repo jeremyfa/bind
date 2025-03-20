@@ -120,7 +120,7 @@ class Support {
 
         var fields = Context.getBuildFields();
 
-        final bindSupportValue = Context.definedValue("bind_support");
+        final bindSupportValue = Context.definedValue("bind_support_jni");
 
         if (bindSupportValue != null) {
 

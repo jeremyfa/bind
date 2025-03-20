@@ -3,6 +3,7 @@ package bind;
 import haxe.io.Path;
 import haxe.macro.Context;
 import haxe.macro.Expr;
+
 using StringTools;
 using haxe.macro.PositionTools;
 
@@ -54,8 +55,25 @@ class Linc {
         var _import = '<include name="$_import_path" />';
 
         final bindSupportValue = Context.definedValue("bind_support");
-        if (bindSupportValue != null) {
-            _define += '<set name="BIND_SUPPORT_IDENTIFIER" value="${bindSupportValue.replace('/', '_')}"/>';
+
+        final bindSupportValueJni = Context.definedValue("bind_support_jni");
+        if (bindSupportValueJni != null) {
+            trace("BIND SUPPORT JNI = " + bindSupportValueJni);
+            _define += '<set name="BIND_SUPPORT_IDENTIFIER_JNI" value="${bindSupportValueJni.replace('/', '_')}"/>';
+        }
+        else if (bindSupportValue != null) {
+            trace("BIND SUPPORT JNI2 = " + bindSupportValue);
+            _define += '<set name="BIND_SUPPORT_IDENTIFIER_JNI" value="${bindSupportValue.replace('/', '_')}"/>';
+        }
+
+        final bindSupportValueCs = Context.definedValue("bind_support_cs");
+        if (bindSupportValueCs != null) {
+            trace("BIND SUPPORT CS = " + bindSupportValueCs);
+            _define += '<set name="BIND_SUPPORT_IDENTIFIER_CS" value="${bindSupportValueCs.replace('/', '_')}"/>';
+        }
+        else if (bindSupportValue != null) {
+            trace("BIND SUPPORT CS2 = " + bindSupportValue);
+            _define += '<set name="BIND_SUPPORT_IDENTIFIER_CS" value="${bindSupportValue.replace('/', '_')}"/>';
         }
 
         _class.get().meta.add(":buildXml", [{ expr:EConst( CString( '$_define\n$_import' ) ), pos:_pos }], _pos );

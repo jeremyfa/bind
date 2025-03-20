@@ -1,7 +1,7 @@
 <xml>
     <files id="haxe">
         <compilerflag value="-I${LINC_CS_PATH}linc/" />
-        <compilerflag value ="-DBIND_CS_SUPPORT=${BIND_SUPPORT_IDENTIFIER}" if="BIND_SUPPORT_IDENTIFIER" />
+        <compilerflag value ="-DBIND_CS_SUPPORT=${BIND_SUPPORT_IDENTIFIER_CS}" if="BIND_SUPPORT_IDENTIFIER_CS" />
         <file name="${LINC_CS_PATH}linc/linc_CS.cpp" />
     </files>
     <target id="haxe">

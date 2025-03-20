@@ -490,7 +490,7 @@ class Bind {
             writeIndent(ctx);
             write('@:native(\'', ctx);
             if (ctx.namespace != null && ctx.namespace.trim() != '') {
-                write(ctx.namespace.trim() + '::', ctx);
+                write('::' + ctx.namespace.trim() + '::', ctx);
             }
             write(ctx.objcClass.name + '_' + method.name, ctx);
             write('\')', ctx);

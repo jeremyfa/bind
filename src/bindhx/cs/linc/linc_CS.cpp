@@ -5,14 +5,14 @@
 #include <atomic>
 
 #ifndef INCLUDED_bind_cs_HObject
-#include <bind/cs/HObject.h>
+#include <bindhx/cs/HObject.h>
 #endif
 
 #ifndef INCLUDED_bind_cs_Support
-#include <bind/cs/Support.h>
+#include <bindhx/cs/Support.h>
 #endif
 
-namespace bind {
+namespace bindhx {
 
     namespace cs {
 
@@ -54,7 +54,7 @@ namespace bind {
         const char * HObjectToCSString(::Dynamic hobjectRef) {
 
             if (hx::IsNotNull(hobjectRef)) {
-                return HxcppToCSString(::bind::cs::HObject_obj::idOf(hobjectRef));
+                return HxcppToCSString(::bindhx::cs::HObject_obj::idOf(hobjectRef));
             }
             return nullptr;
 
@@ -64,7 +64,7 @@ namespace bind {
 
             if (address == nullptr) return null();
 
-            return ::bind::cs::HObject_obj::getById(CSStringToHxcpp(address));
+            return ::bindhx::cs::HObject_obj::getById(CSStringToHxcpp(address));
 
         }
 
@@ -100,8 +100,8 @@ extern "C" {
 
     BIND_CS_EXPORT void BIND_CS_FUNCTION(BIND_CS_SUPPORT, NativeInit)(void *runAwaitingNativeActions_ptr) {
 
-        ::bind::cs::BIND_CS_PTR_FUNCTION(BIND_CS_SUPPORT, RunAwaitingNativeActions) =
-            reinterpret_cast<::bind::cs::BIND_CS_TYPEDEF_FUNCTION(BIND_CS_SUPPORT, RunAwaitingNativeActions)>(runAwaitingNativeActions_ptr);
+        ::bindhx::cs::BIND_CS_PTR_FUNCTION(BIND_CS_SUPPORT, RunAwaitingNativeActions) =
+            reinterpret_cast<::bindhx::cs::BIND_CS_TYPEDEF_FUNCTION(BIND_CS_SUPPORT, RunAwaitingNativeActions)>(runAwaitingNativeActions_ptr);
 
     }
 
@@ -110,8 +110,8 @@ extern "C" {
         int haxe_stack_ = 99;
         hx::SetTopOfStack(&haxe_stack_, true);
 
-        ::bind::cs::isInitialized = true;
-        ::bind::cs::Support_obj::notifyReady();
+        ::bindhx::cs::isInitialized = true;
+        ::bindhx::cs::Support_obj::notifyReady();
 
         hx::SetTopOfStack((int *)0, true);
 
@@ -122,9 +122,9 @@ extern "C" {
         int haxe_stack_ = 99;
         hx::SetTopOfStack(&haxe_stack_, true);
 
-        ::Dynamic hobjectRef = ::bind::cs::CSStringToHObject(address);
+        ::Dynamic hobjectRef = ::bindhx::cs::CSStringToHObject(address);
         if (hx::IsNotNull(hobjectRef)) {
-            ((::bind::cs::HObject)hobjectRef)->destroy();
+            ((::bindhx::cs::HObject)hobjectRef)->destroy();
         }
 
         hx::SetTopOfStack((int *)0, true);
@@ -133,7 +133,7 @@ extern "C" {
 
     BIND_CS_EXPORT void BIND_CS_FUNCTION(BIND_CS_SUPPORT, NativeSetHasActions)(int value) {
 
-        ::bind::cs::SetHasNativeActions(value != 0);
+        ::bindhx::cs::SetHasNativeActions(value != 0);
 
     }
 

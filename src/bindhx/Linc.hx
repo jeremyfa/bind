@@ -1,4 +1,4 @@
-package bind;
+package bindhx;
 
 import haxe.io.Path;
 import haxe.macro.Context;

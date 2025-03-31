@@ -1,11 +1,12 @@
-package bind.objc;
+package bindhx.objc;
 
 import Sys.println;
+
 using StringTools;
 
 typedef ParseContext = {
     var i:Int;
-    var types:Map<String,bind.Class.Type>;
+    var types:Map<String,bindhx.Class.Type>;
 }
 
 class Parse {
@@ -34,7 +35,7 @@ class Parse {
     }
 
     /** Parse Objective-C header content to get class informations. */
-    public static function parseClass(code:String, ?ctx:ParseContext):bind.Class {
+    public static function parseClass(code:String, ?ctx:ParseContext):bindhx.Class {
 
         if (ctx == null) ctx = createContext();
 
@@ -55,7 +56,7 @@ class Parse {
         var comment = null;
         var after = '';
 
-        var result:bind.Class = {
+        var result:bindhx.Class = {
             name: null,
             path: null,
             properties: [],
@@ -278,7 +279,7 @@ class Parse {
 
     }
 
-    public static function parseProperty(code:String, ?ctx:ParseContext):bind.Class.Property {
+    public static function parseProperty(code:String, ?ctx:ParseContext):bindhx.Class.Property {
 
         if (ctx == null) ctx = createContext();
 
@@ -326,11 +327,11 @@ class Parse {
                     objcArgs = [];
                 }
 
-                var args:Array<bind.Class.Arg> = [];
+                var args:Array<bindhx.Class.Arg> = [];
                 for (objcArg in objcArgs) {
                     args.push(parseArg(objcArg, ctx));
                 }
-                type = bind.Class.Type.Function(args, parseType(objcType, {i: 0, types: ctx.types}), {
+                type = bindhx.Class.Type.Function(args, parseType(objcType, {i: 0, types: ctx.types}), {
                     type: objcType
                 });
             }
@@ -374,7 +375,7 @@ class Parse {
 
     }
 
-    public static function parseMethod(code:String, ?ctx:ParseContext):bind.Class.Method {
+    public static function parseMethod(code:String, ?ctx:ParseContext):bindhx.Class.Method {
 
         if (ctx == null) ctx = createContext();
 
@@ -388,7 +389,7 @@ class Parse {
         var returnType = null;
         var name = null;
 
-        var args:Array<bind.Class.Arg> = [];
+        var args:Array<bindhx.Class.Arg> = [];
         var nameSection = null;
         var fullNameSections = [];
 
@@ -517,7 +518,7 @@ class Parse {
 
     }
 
-    public static function parseArg(objcArg:String, parentCtx:ParseContext):bind.Class.Arg {
+    public static function parseArg(objcArg:String, parentCtx:ParseContext):bindhx.Class.Arg {
 
         if (parentCtx == null) parentCtx = createContext();
 
@@ -540,7 +541,7 @@ class Parse {
 
     }
 
-    public static function parseType(objcType:String, ?ctx:ParseContext):bind.Class.Type {
+    public static function parseType(objcType:String, ?ctx:ParseContext):bindhx.Class.Type {
 
         if (ctx == null) ctx = createContext();
 
@@ -586,7 +587,7 @@ class Parse {
                     args.push(parseArg(objcArg, ctx));
                 }
 
-                return bind.Type.Function(args, parseType(objcReturnType, {i: 0, types: ctx.types}), {type: objcType, nullable: objcNullability != '_Nonnull' && objcNullability != 'nonnull' && objcNullability != '__nonnull'});
+                return bindhx.Type.Function(args, parseType(objcReturnType, {i: 0, types: ctx.types}), {type: objcType, nullable: objcNullability != '_Nonnull' && objcNullability != 'nonnull' && objcNullability != '__nonnull'});
             }
             else {
                 // Standard type
@@ -696,7 +697,7 @@ class Parse {
 
     }
 
-    public static function parseTypedef(code:String, ?ctx:ParseContext):bind.Class.Type {
+    public static function parseTypedef(code:String, ?ctx:ParseContext):bindhx.Class.Type {
 
         if (ctx == null) ctx = createContext();
 
@@ -792,9 +793,9 @@ class Parse {
 
     }
 
-    static function ensureDefaultInit(result:bind.Class):Void {
+    static function ensureDefaultInit(result:bindhx.Class):Void {
 
-        var existingMethods:Map<String,bind.Class.Method> = new Map();
+        var existingMethods:Map<String,bindhx.Class.Method> = new Map();
 
         for (method in result.methods) {
             existingMethods.set(method.name, method);
@@ -818,9 +819,9 @@ class Parse {
 
     }
 
-    static function extractPropertyMethods(result:bind.Class):Void {
+    static function extractPropertyMethods(result:bindhx.Class):Void {
 
-        var existingMethods:Map<String,bind.Class.Method> = new Map();
+        var existingMethods:Map<String,bindhx.Class.Method> = new Map();
 
         for (method in result.methods) {
             existingMethods.set(method.name, method);

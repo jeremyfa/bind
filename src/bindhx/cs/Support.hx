@@ -1,4 +1,4 @@
-package bind.cs;
+package bindhx.cs;
 
 #if macro
 
@@ -110,7 +110,7 @@ class HObject {
 
 @:keep
 #if !macro
-@:build(bind.cs.Support.build())
+@:build(bindhx.cs.Support.build())
 #end
 class Support {
 
@@ -270,25 +270,25 @@ class Support {
 @:keep
 @:include('linc_CS.h')
 #if !display
-@:build(bind.Linc.touch())
-@:build(bind.Linc.xml('CS', './'))
+@:build(bindhx.Linc.touch())
+@:build(bindhx.Linc.xml('CS', './'))
 #end
-@:allow(bind.cs.Support)
+@:allow(bindhx.cs.Support)
 private extern class Support_Extern {
 
-    @:native('bind::cs::ReleaseCSObject')
+    @:native('::bindhx::cs::ReleaseCSObject')
     static function releaseCSObject(csobjectRef:Pointer<Void>):Void;
 
-    @:native('bind::cs::SetHasNativeActions')
+    @:native('::bindhx::cs::SetHasNativeActions')
     static function setHasNativeActions(value:Bool):Void;
 
-    @:native('bind::cs::HasNativeActions')
+    @:native('::bindhx::cs::HasNativeActions')
     static function hasNativeActions():Bool;
 
-    @:native('bind::cs::RunAwaitingActions')
+    @:native('::bindhx::cs::RunAwaitingActions')
     static function runAwaitingActions():Void;
 
-    @:native('bind::cs::IsInitialized')
+    @:native('::bindhx::cs::IsInitialized')
     static function isInitialized():Bool;
 
 }

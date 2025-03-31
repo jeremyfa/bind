@@ -1,7 +1,7 @@
 package;
 
 import android.AppAndroidInterface;
-import bind.java.Support;
+import bindhx.java.Support;
 
 class Main {
 

@@ -1,7 +1,7 @@
 package;
 // This file was generated with bind library
 
-import bind.csharp.Support;
+import bindhx.csharp.Support;
 import cpp.Pointer;
 
 class AppCsInterface {
@@ -23,8 +23,8 @@ class AppCsInterface {
 @:keep
 @:include('linc_AppCsInterface.h')
 #if !display
-@:build(bind.Linc.touch())
-@:build(bind.Linc.xml('AppCsInterface', './'))
+@:build(bindhx.Linc.touch())
+@:build(bindhx.Linc.xml('AppCsInterface', './'))
 #end
 @:allow(AppCsInterface)
 private extern class AppCsInterface_Extern {

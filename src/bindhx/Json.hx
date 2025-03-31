@@ -1,17 +1,17 @@
-package bind;
+package bindhx;
 
-/** Utility to convert bind.CLass format to/from JSON,
-    including bind.Class.Type enums. */
+/** Utility to convert bindhx.CLass format to/from JSON,
+    including bindhx.Class.Type enums. */
 class Json {
 
-    /** Get JSON output with correct bind.Class.Type enum serialization */
+    /** Get JSON output with correct bindhx.Class.Type enum serialization */
     public static function stringify(input:Dynamic, pretty:Bool = false):String {
 
         return haxe.Json.stringify(toJson(input), null, pretty ? '    ' : null);
 
     }
 
-    /** Parse JSON input and restores bind.Class.Type enum instances */
+    /** Parse JSON input and restores bindhx.Class.Type enum instances */
     public static function parse(input:String):Dynamic {
 
         return fromJson(haxe.Json.parse(input));
@@ -44,7 +44,7 @@ class Json {
                 var value:Dynamic = Reflect.field(input, key);
                 if (Reflect.isEnumValue(value)) {
                     if (key == 'type') {
-                        // bind.Class.Type enum
+                        // bindhx.Class.Type enum
                         var res:Dynamic = typeEnumToJson(value);
                         Reflect.setField(result, key, res);
                     }
@@ -63,7 +63,7 @@ class Json {
 
     }
 
-    static function typeEnumToJson(value:bind.Class.Type):Dynamic {
+    static function typeEnumToJson(value:bindhx.Class.Type):Dynamic {
 
         if (value == null) return null;
 
@@ -139,7 +139,7 @@ class Json {
 
     }
 
-    static function typeEnumFromJson(value:Dynamic):bind.Class.Type {
+    static function typeEnumFromJson(value:Dynamic):bindhx.Class.Type {
 
         var name = Reflect.fields(value)[0];
         var params:Dynamic = Reflect.field(value, name);

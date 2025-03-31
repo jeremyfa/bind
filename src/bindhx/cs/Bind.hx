@@ -1,20 +1,20 @@
-package bind.cs;
+package bindhx.cs;
 
 import haxe.io.Path;
 
 using StringTools;
 
 typedef BindContext = {
-    var csharpClass:bind.Class;
+    var csharpClass:bindhx.Class;
     var indent:Int;
-    var files:Array<bind.File>;
+    var files:Array<bindhx.File>;
     var namespace:String;
     var pack:String;
-    var currentFile:bind.File;
+    var currentFile:bindhx.File;
     var csharpPath:String;
     var csharpCode:String;
-    var nativeCallbacks:Map<String,bind.Class.Type>;
-    var csharpCallbacks:Map<String,bind.Class.Type>;
+    var nativeCallbacks:Map<String,bindhx.Class.Type>;
+    var csharpCallbacks:Map<String,bindhx.Class.Type>;
     var bindSupport:String;
     var noBindHeader:Bool;
 }
@@ -40,11 +40,11 @@ class Bind {
 
     }
 
-    /** Reads bind.Class object informations and generate files
+    /** Reads bindhx.Class object informations and generate files
         To bind the related C# class to Haxe.
-        The files are returned as an array of bind.File objects.
+        The files are returned as an array of bindhx.File objects.
         Nothing is written to disk at this stage. */
-    public static function bindClass(csharpClass:bind.Class, ?options:{?namespace:String, ?pack:String, ?csharpPath:String, ?csharpCode:String, ?bindSupport:String, ?noBindHeader:Bool}):Array<bind.File> {
+    public static function bindClass(csharpClass:bindhx.Class, ?options:{?namespace:String, ?pack:String, ?csharpPath:String, ?csharpCode:String, ?bindSupport:String, ?noBindHeader:Bool}):Array<bindhx.File> {
 
         var ctx = createContext();
         ctx.csharpClass = csharpClass;
@@ -112,7 +112,7 @@ class Bind {
         }
 
         // Support
-        writeLine('import bind.cs.Support;', ctx);
+        writeLine('import bindhx.cs.Support;', ctx);
 
         writeLineBreak(ctx);
 
@@ -298,8 +298,8 @@ class Bind {
         writeLine('@:keep', ctx);
         writeLine('@:include(\'linc_' + ctx.csharpClass.name + '.h\')', ctx);
         writeLine('#if !display', ctx);
-        writeLine('@:build(bind.Linc.touch())', ctx);
-        writeLine('@:build(bind.Linc.xml(\'' + ctx.csharpClass.name + '\', \'./\'))', ctx);
+        writeLine('@:build(bindhx.Linc.touch())', ctx);
+        writeLine('@:build(bindhx.Linc.xml(\'' + ctx.csharpClass.name + '\', \'./\'))', ctx);
         writeLine('#end', ctx);
         writeLine('@:allow(' + packPrefix + haxeName + ')', ctx);
         writeLine('private extern class ' + haxeName + '_Extern {', ctx);
@@ -411,7 +411,7 @@ class Bind {
             writeLine('#include "linc_CS.h"', ctx);
             writeLine('#include "linc_' + ctx.csharpClass.name + '.h"', ctx);
             writeLine('#ifndef INCLUDED_bind_cs_HObject', ctx);
-            writeLine('#include <bind/cs/HObject.h>', ctx);
+            writeLine('#include <bindhx/cs/HObject.h>', ctx);
             writeLine('#endif', ctx);
         }
 
@@ -438,7 +438,7 @@ class Bind {
             writeLineBreak(ctx);
         }
 
-        function writeMethod(method:bind.Class.Method):Void {
+        function writeMethod(method:bindhx.Class.Method):Void {
 
             var isCSharpConstructor = isCSharpConstructor(method, ctx);
 
@@ -661,8 +661,8 @@ class Bind {
 
                         // Call
                         var hasReturn = false;
-                        writeLine('::Dynamic func_hobject_ = ::bind::cs::CSStringToHObject(address);', ctx);
-                        writeLine('::Dynamic func_unwrapped_ = ::bind::cs::HObject_obj::unwrap(func_hobject_);', ctx);
+                        writeLine('::Dynamic func_hobject_ = ::bindhx::cs::CSStringToHObject(address);', ctx);
+                        writeLine('::Dynamic func_unwrapped_ = ::bindhx::cs::HObject_obj::unwrap(func_hobject_);', ctx);
                         writeIndent(ctx);
                         switch (ret) {
                             case Void(orig):
@@ -765,7 +765,7 @@ class Bind {
         writeLine('{', ctx);
         ctx.indent++;
 
-        function writeMethod(method:bind.Class.Method) {
+        function writeMethod(method:bindhx.Class.Method) {
 
             // Constructor?
             var isCSharpConstructor = isCSharpConstructor(method, ctx);
@@ -920,7 +920,7 @@ class Bind {
 
         }
 
-        function writeInternalMethod(method:bind.Class.Method) {
+        function writeInternalMethod(method:bindhx.Class.Method) {
 
             // Constructor?
             var isCSharpConstructor = isCSharpConstructor(method, ctx);
@@ -1238,7 +1238,7 @@ class Bind {
 
 /// C# -> Haxe
 
-    static function toHaxeType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHaxeType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var csharpType = toCSharpType(type, ctx);
         if (csharpType == ctx.csharpClass.name || csharpType == ctx.csharpClass.orig.namespace + '.' + ctx.csharpClass.name) {
@@ -1261,7 +1261,7 @@ class Bind {
 
     }
 
-    static function toHaxeFunctionType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHaxeFunctionType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var result = 'Dynamic';
 
@@ -1299,7 +1299,7 @@ class Bind {
 
 /// Haxe -> HXCPP
 
-    static function toHxcppType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHxcppType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var result = switch (type) {
             case Void(orig): 'void';
@@ -1317,25 +1317,25 @@ class Bind {
 
     }
 
-    static function toHxcppArrayType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHxcppArrayType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         return '::Dynamic';
 
     }
 
-    static function toHxcppMapType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHxcppMapType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         return '::Dynamic';
 
     }
 
-    static function toHxcppObjectType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHxcppObjectType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         return '::Dynamic';
 
     }
 
-    static function toHxcppFunctionType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHxcppFunctionType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         return '::Dynamic';
 
@@ -1343,7 +1343,7 @@ class Bind {
 
 /// HXCPP -> C#-compatible C
 
-    static function toCSharpCType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toCSharpCType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var result = switch (type) {
             case Void(orig): 'void';
@@ -1371,7 +1371,7 @@ class Bind {
 
 /// HXCPP -> C#
 
-    static function toCSharpType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toCSharpType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var orig:Dynamic = null;
 
@@ -1395,7 +1395,7 @@ class Bind {
 
     }
 
-    static function toCSharpBindType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toCSharpBindType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var csharpType = toCSharpType(type, ctx);
         if (csharpType == ctx.csharpClass.name || csharpType == ctx.csharpClass.orig.namespace + '.' + ctx.csharpClass.name) {
@@ -1428,7 +1428,7 @@ class Bind {
 
     }
 
-    static function toCSharpBindInternalType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toCSharpBindInternalType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var csharpType = toCSharpType(type, ctx);
         if (csharpType == ctx.csharpClass.name || csharpType == ctx.csharpClass.orig.namespace + '.' + ctx.csharpClass.name) {
@@ -1461,7 +1461,7 @@ class Bind {
 
     }
 
-    static function toCSharpBindFromCSharpType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toCSharpBindFromCSharpType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var result = switch (type) {
             case Function(args, ret, orig): 'IntPtr';//'string';
@@ -1488,13 +1488,13 @@ class Bind {
 
 /// Helpers
 
-    static function isCSharpConstructor(method:bind.Class.Method, ctx:BindContext):Bool {
+    static function isCSharpConstructor(method:bindhx.Class.Method, ctx:BindContext):Bool {
 
         return method.name == 'constructor';
 
     }
 
-    static function isCSharpFactory(method:bind.Class.Method, ctx:BindContext):Bool {
+    static function isCSharpFactory(method:bindhx.Class.Method, ctx:BindContext):Bool {
 
         var isCSharpFactory = false;
         var csharpType = toCSharpType(method.type, ctx);
@@ -1506,7 +1506,7 @@ class Bind {
 
     }
 
-    static function isCSharpSingleton(property:bind.Class.Property, ctx:BindContext):Bool {
+    static function isCSharpSingleton(property:bindhx.Class.Property, ctx:BindContext):Bool {
 
         var isCSharpSingleton = false;
         var csharpType = toCSharpType(property.type, ctx);
@@ -1520,7 +1520,7 @@ class Bind {
 
 /// Write utils (specific)
 
-    static function writeHaxeBindArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+    static function writeHaxeBindArgAssign(arg:bindhx.Class.Arg, index:Int, ctx:BindContext):Void {
 
         var haxeType = toHaxeType(arg.type, ctx);
         var type = toHaxeBindType(arg.type, ctx);
@@ -1632,7 +1632,7 @@ class Bind {
 
     }
 
-    static function writeHaxeArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+    static function writeHaxeArgAssign(arg:bindhx.Class.Arg, index:Int, ctx:BindContext):Void {
 
         var type = toHaxeType(arg.type, ctx);
         var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_haxe_';
@@ -1763,7 +1763,7 @@ class Bind {
 
     }
 
-    static function toHaxeBindType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHaxeBindType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var result = switch (type) {
             case Void(orig): 'Void';
@@ -1781,7 +1781,7 @@ class Bind {
 
     }
 
-    static function writeCSharpArgAssignFirstPass(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+    static function writeCSharpArgAssignFirstPass(arg:bindhx.Class.Arg, index:Int, ctx:BindContext):Void {
 
         var type = toCSharpBindInternalType(arg.type, ctx);
         var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_csi_';
@@ -1802,7 +1802,7 @@ class Bind {
 
     }
 
-    static function writeCSharpArgAssignSecondPass(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+    static function writeCSharpArgAssignSecondPass(arg:bindhx.Class.Arg, index:Int, ctx:BindContext):Void {
 
         var type = toCSharpType(arg.type, ctx);
         var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_cs_';
@@ -1979,7 +1979,7 @@ class Bind {
 
     }
 
-    static function writeCSharpBindArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+    static function writeCSharpBindArgAssign(arg:bindhx.Class.Arg, index:Int, ctx:BindContext):Void {
 
         var type = toCSharpBindFromCSharpType(arg.type, ctx);
         var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_csc_';
@@ -2043,7 +2043,7 @@ class Bind {
 
     }
 
-    static function writeCSharpBindArgRelease(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+    static function writeCSharpBindArgRelease(arg:bindhx.Class.Arg, index:Int, ctx:BindContext):Void {
 
         var type = toCSharpBindFromCSharpType(arg.type, ctx);
         var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_csc_';
@@ -2092,7 +2092,7 @@ class Bind {
 
     }
 
-    static function shouldReleaseCSharpBindArg(arg:bind.Class.Arg):Bool {
+    static function shouldReleaseCSharpBindArg(arg:bindhx.Class.Arg):Bool {
 
         return switch (arg.type) {
 
@@ -2111,7 +2111,7 @@ class Bind {
 
     }
 
-    static function writeCSharpCArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+    static function writeCSharpCArgAssign(arg:bindhx.Class.Arg, index:Int, ctx:BindContext):Void {
 
         writeIndent(ctx);
 
@@ -2122,11 +2122,11 @@ class Bind {
         switch (arg.type) {
 
             case Function(args, ret, orig):
-                write('$type $name = ::bind::cs::HObjectToCSString($value);', ctx);
+                write('$type $name = ::bindhx::cs::HObjectToCSString($value);', ctx);
                 writeLineBreak(ctx);
 
             case String(orig):
-                write('$type $name = ::bind::cs::HxcppToCSString($value);', ctx);
+                write('$type $name = ::bindhx::cs::HxcppToCSString($value);', ctx);
                 writeLineBreak(ctx);
 
             case Bool(orig):
@@ -2144,11 +2144,11 @@ class Bind {
             // TODO typed arrays and maps
 
             case Array(itemType, orig):
-                write('$type $name = ::bind::cs::HxcppToCSString($value);', ctx);
+                write('$type $name = ::bindhx::cs::HxcppToCSString($value);', ctx);
                 writeLineBreak(ctx);
 
             case Map(itemType, orig):
-                write('$type $name = ::bind::cs::HxcppToCSString($value);', ctx);
+                write('$type $name = ::bindhx::cs::HxcppToCSString($value);', ctx);
                 writeLineBreak(ctx);
 
             case Object(orig):
@@ -2162,7 +2162,7 @@ class Bind {
 
     }
 
-    static function writeCSharpCCall(method:bind.Class.Method, ctx:BindContext):Void {
+    static function writeCSharpCCall(method:bindhx.Class.Method, ctx:BindContext):Void {
 
         var reserved = [];
 
@@ -2235,7 +2235,7 @@ class Bind {
 
     }
 
-    static function writeHxcppArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext, keepName:Bool = true):Void {
+    static function writeHxcppArgAssign(arg:bindhx.Class.Arg, index:Int, ctx:BindContext, keepName:Bool = true):Void {
 
         var type = toHxcppType(arg.type, ctx);
         var name = (keepName && arg.name != null ? arg.name : 'arg' + (index + 1)) + '_hxcpp_';
@@ -2250,7 +2250,7 @@ class Bind {
 
             case String(orig):
                 writeIndent(ctx);
-                write('$type $name = ::bind::cs::CSStringToHxcpp($value);', ctx);
+                write('$type $name = ::bindhx::cs::CSStringToHxcpp($value);', ctx);
                 writeLineBreak(ctx);
 
             case Int(orig):
@@ -2270,12 +2270,12 @@ class Bind {
 
             case Array(orig):
                 writeIndent(ctx);
-                write('$type $name = ::bind::cs::CSStringToHxcpp($value);', ctx);
+                write('$type $name = ::bindhx::cs::CSStringToHxcpp($value);', ctx);
                 writeLineBreak(ctx);
 
             case Map(orig):
                 writeIndent(ctx);
-                write('$type $name = ::bind::cs::CSStringToHxcpp($value);', ctx);
+                write('$type $name = ::bindhx::cs::CSStringToHxcpp($value);', ctx);
                 writeLineBreak(ctx);
 
             case Object(orig):
@@ -2291,7 +2291,7 @@ class Bind {
 
     }
 
-    static function writeCSharpCall(method:bind.Class.Method, ctx:BindContext):Void {
+    static function writeCSharpCall(method:bindhx.Class.Method, ctx:BindContext):Void {
 
         var hasReturn = false;
         var isCSharpConstructor = isCSharpConstructor(method, ctx);

@@ -44,7 +44,7 @@
 #define BIND_CS_LINC_FUNCTION(package, function) BIND_CS_CONCAT(package, BIND_CS_CONCAT(_, function))
 #endif
 
-namespace bind {
+namespace bindhx {
     namespace cs {
         // Function pointer typedef (removed const from function pointer type)
         typedef void (*BIND_CS_TYPEDEF_FUNCTION(BIND_CS_SUPPORT, RunAwaitingNativeActions))();

@@ -1,7 +1,7 @@
 package ios;
 // This file was generated with bind library
 
-import bind.objc.Support;
+import bindhx.objc.Support;
 
 /** Example of Objective-C interface exposed to Haxe */
 class AppNativeInterface {
@@ -75,8 +75,8 @@ class AppNativeInterface {
 @:keep
 @:include('linc_AppNativeInterface.h')
 #if !display
-@:build(bind.Linc.touch())
-@:build(bind.Linc.xml('AppNativeInterface', './'))
+@:build(bindhx.Linc.touch())
+@:build(bindhx.Linc.xml('AppNativeInterface', './'))
 #end
 @:allow(ios.AppNativeInterface)
 private extern class AppNativeInterface_Extern {

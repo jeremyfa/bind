@@ -1,7 +1,7 @@
 package ios;
 // This file was generated with bind library
 
-import bind.objc.Support;
+import bindhx.objc.Support;
 
 /** Swift interface */
 class AppSwiftInterface {
@@ -77,8 +77,8 @@ class AppSwiftInterface {
 @:keep
 @:include('linc_AppSwiftInterface.h')
 #if !display
-@:build(bind.Linc.touch())
-@:build(bind.Linc.xml('AppSwiftInterface', './'))
+@:build(bindhx.Linc.touch())
+@:build(bindhx.Linc.xml('AppSwiftInterface', './'))
 #end
 @:allow(ios.AppSwiftInterface)
 private extern class AppSwiftInterface_Extern {

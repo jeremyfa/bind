@@ -1,4 +1,4 @@
-package bind.java;
+package bindhx.java;
 
 #if macro
 
@@ -110,7 +110,7 @@ class HObject {
 
 @:keep
 #if !macro
-@:build(bind.java.Support.build())
+@:build(bindhx.java.Support.build())
 #end
 class Support {
 
@@ -228,10 +228,10 @@ class Support {
 @:keep
 @:include('linc_JNI.h')
 #if !display
-@:build(bind.Linc.touch())
-@:build(bind.Linc.xml('JNI', './'))
+@:build(bindhx.Linc.touch())
+@:build(bindhx.Linc.xml('JNI', './'))
 #end
-@:allow(bind.java.Support)
+@:allow(bindhx.java.Support)
 private extern class Support_Extern {
 
     @:native('bind::jni::ResolveJClass')

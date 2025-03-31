@@ -1,7 +1,7 @@
 package android;
 // This file was generated with bind library
 
-import bind.java.Support;
+import bindhx.java.Support;
 import cpp.Pointer;
 
 /** Java/Android interface */
@@ -182,8 +182,8 @@ class AppAndroidInterface {
 @:keep
 @:include('linc_AppAndroidInterface.h')
 #if !display
-@:build(bind.Linc.touch())
-@:build(bind.Linc.xml('AppAndroidInterface', './'))
+@:build(bindhx.Linc.touch())
+@:build(bindhx.Linc.xml('AppAndroidInterface', './'))
 #end
 @:allow(android.AppAndroidInterface)
 private extern class AppAndroidInterface_Extern {

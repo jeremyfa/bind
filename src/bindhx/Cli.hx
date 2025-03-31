@@ -1,4 +1,4 @@
-package bind;
+package bindhx;
 
 import Sys.println;
 import haxe.io.Path;
@@ -34,7 +34,7 @@ class Cli {
             pretty: false,
             export: null,
             mute: false,
-            bindSupport: 'bind.Support',
+            bindSupport: 'bindhx.Support',
             noBindHeader: false
         };
         var bindClassOptions:Dynamic = {};
@@ -131,16 +131,16 @@ class Cli {
 
                 var ctx = {i: 0, types: new Map()};
                 var result = null;
-                while ((result = bind.objc.Parse.parseClass(code, ctx)) != null) {
+                while ((result = bindhx.objc.Parse.parseClass(code, ctx)) != null) {
                     result.path = path;
 
                     if (options.json) {
                         if (options.parseOnly) {
-                            json.push(bind.Json.stringify(result, options.pretty));
+                            json.push(bindhx.Json.stringify(result, options.pretty));
                         }
                         else {
-                            for (entry in bind.objc.Bind.bindClass(result, bindClassOptions)) {
-                                json.push(bind.Json.stringify(entry, options.pretty));
+                            for (entry in bindhx.objc.Bind.bindClass(result, bindClassOptions)) {
+                                json.push(bindhx.Json.stringify(entry, options.pretty));
                             }
                         }
                     }
@@ -149,7 +149,7 @@ class Cli {
                             output += '' + result;
                         }
                         else {
-                            for (entry in bind.objc.Bind.bindClass(result, bindClassOptions)) {
+                            for (entry in bindhx.objc.Bind.bindClass(result, bindClassOptions)) {
                                 output += '-- BEGIN ' + entry.path + " --\n";
                                 output += entry.content.rtrim() + "\n\n";
                                 output += '-- END ' + entry.path + " --\n";
@@ -180,16 +180,16 @@ class Cli {
 
                 var ctx = {i: 0, types: new Map()};
                 var result = null;
-                while ((result = bind.java.Parse.parseClass(code, ctx)) != null) {
+                while ((result = bindhx.java.Parse.parseClass(code, ctx)) != null) {
                     result.path = path;
 
                     if (options.json) {
                         if (options.parseOnly) {
-                            json.push(bind.Json.stringify(result, options.pretty));
+                            json.push(bindhx.Json.stringify(result, options.pretty));
                         }
                         else {
-                            for (entry in bind.java.Bind.bindClass(result, bindClassOptions)) {
-                                json.push(bind.Json.stringify(entry, options.pretty));
+                            for (entry in bindhx.java.Bind.bindClass(result, bindClassOptions)) {
+                                json.push(bindhx.Json.stringify(entry, options.pretty));
                             }
                         }
                     }
@@ -198,7 +198,7 @@ class Cli {
                             output += '' + result;
                         }
                         else {
-                            for (entry in bind.java.Bind.bindClass(result, bindClassOptions)) {
+                            for (entry in bindhx.java.Bind.bindClass(result, bindClassOptions)) {
                                 output += '-- BEGIN ' + entry.path + " --\n";
                                 output += entry.content.rtrim() + "\n\n";
                                 output += '-- END ' + entry.path + " --\n";
@@ -212,10 +212,10 @@ class Cli {
 
         else if (kind == 'cs') {
 
-            if (options.bindSupport == 'bind.Support') {
+            if (options.bindSupport == 'bindhx.Support') {
                 options.bindSupport = 'Bind.Support';
             }
-            if (bindClassOptions.bindSupport == 'bind.Support') {
+            if (bindClassOptions.bindSupport == 'bindhx.Support') {
                 bindClassOptions.bindSupport = 'Bind.Support';
             }
 
@@ -236,16 +236,16 @@ class Cli {
 
                 var ctx = {i: 0, types: new Map()};
                 var result = null;
-                while ((result = bind.cs.Parse.parseClass(code, ctx)) != null) {
+                while ((result = bindhx.cs.Parse.parseClass(code, ctx)) != null) {
                     result.path = path;
 
                     if (options.json) {
                         if (options.parseOnly) {
-                            json.push(bind.Json.stringify(result, options.pretty));
+                            json.push(bindhx.Json.stringify(result, options.pretty));
                         }
                         else {
-                            for (entry in bind.cs.Bind.bindClass(result, bindClassOptions)) {
-                                json.push(bind.Json.stringify(entry, options.pretty));
+                            for (entry in bindhx.cs.Bind.bindClass(result, bindClassOptions)) {
+                                json.push(bindhx.Json.stringify(entry, options.pretty));
                             }
                         }
                     }
@@ -254,7 +254,7 @@ class Cli {
                             output += '' + result;
                         }
                         else {
-                            for (entry in bind.cs.Bind.bindClass(result, bindClassOptions)) {
+                            for (entry in bindhx.cs.Bind.bindClass(result, bindClassOptions)) {
                                 output += '-- BEGIN ' + entry.path + " --\n";
                                 output += entry.content.rtrim() + "\n\n";
                                 output += '-- END ' + entry.path + " --\n";

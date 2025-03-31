@@ -1,17 +1,17 @@
-package bind.objc;
+package bindhx.objc;
 
 import haxe.io.Path;
 
 using StringTools;
 
 typedef BindContext = {
-    var objcClass:bind.Class;
+    var objcClass:bindhx.Class;
     var indent:Int;
-    var files:Array<bind.File>;
+    var files:Array<bindhx.File>;
     var namespace:String;
     var pack:String;
     var objcPrefix:String;
-    var currentFile:bind.File;
+    var currentFile:bindhx.File;
     var headerPath:String;
     var headerCode:String;
     var lincFiles:Array<String>;
@@ -38,11 +38,11 @@ class Bind {
 
     }
 
-    /** Reads bind.Class object informations and generate files
+    /** Reads bindhx.Class object informations and generate files
         To bind the related Objective-C class to Haxe.
-        The files are returned as an array of bind.File objects.
+        The files are returned as an array of bindhx.File objects.
         Nothing is written to disk at this stage. */
-    public static function bindClass(objcClass:bind.Class, ?options:{?namespace:String, ?pack:String, ?objcPrefix:String, ?headerPath:String, ?headerCode:String, ?lincFiles:Array<String>, ?noBindHeader:Bool}):Array<bind.File> {
+    public static function bindClass(objcClass:bindhx.Class, ?options:{?namespace:String, ?pack:String, ?objcPrefix:String, ?headerPath:String, ?headerCode:String, ?lincFiles:Array<String>, ?noBindHeader:Bool}):Array<bindhx.File> {
 
         var ctx = createContext();
         ctx.objcClass = objcClass;
@@ -276,7 +276,7 @@ class Bind {
         }
 
         // Objc support
-        writeLine('import bind.objc.Support;', ctx);
+        writeLine('import bindhx.objc.Support;', ctx);
 
         writeLineBreak(ctx);
 
@@ -451,8 +451,8 @@ class Bind {
         writeLine('@:keep', ctx);
         writeLine('@:include(\'linc_' + ctx.objcClass.name + '.h\')', ctx);
         writeLine('#if !display', ctx);
-        writeLine('@:build(bind.Linc.touch())', ctx);
-        writeLine('@:build(bind.Linc.xml(\'' + ctx.objcClass.name + '\', \'./\'))', ctx);
+        writeLine('@:build(bindhx.Linc.touch())', ctx);
+        writeLine('@:build(bindhx.Linc.xml(\'' + ctx.objcClass.name + '\', \'./\'))', ctx);
         writeLine('#end', ctx);
         writeLine('@:allow(' + packPrefix + haxeName + ')', ctx);
         writeLine('private extern class ' + haxeName + '_Extern {', ctx);
@@ -542,7 +542,7 @@ class Bind {
                     writeLine('<file name="$'+'{LINC_' + ctx.objcClass.name.toUpperCase() + '_PATH}linc/${Path.withoutDirectory(lincFilePath)}" />', ctx);
                 }
 
-                var file:bind.File = {
+                var file:bindhx.File = {
                     content: sys.io.File.getContent(lincFilePath),
                     path: dir + 'linc/' + Path.withoutDirectory(lincFilePath)
                 };
@@ -562,7 +562,7 @@ class Bind {
 
     }
 
-    static function isObjcConstructor(method:bind.Class.Method, ctx:BindContext):Bool {
+    static function isObjcConstructor(method:bindhx.Class.Method, ctx:BindContext):Bool {
 
         var isObjcConstructor = false;
         var objcType = toObjcType(method.type, ctx);
@@ -574,7 +574,7 @@ class Bind {
 
     }
 
-    static function isObjcFactory(method:bind.Class.Method, ctx:BindContext):Bool {
+    static function isObjcFactory(method:bindhx.Class.Method, ctx:BindContext):Bool {
 
         var isObjcFactory = false;
         var objcType = toObjcType(method.type, ctx);
@@ -586,7 +586,7 @@ class Bind {
 
     }
 
-    static function isObjcSingleton(property:bind.Class.Property, ctx:BindContext):Bool {
+    static function isObjcSingleton(property:bindhx.Class.Property, ctx:BindContext):Bool {
 
         var isObjcSingleton = false;
         var objcType = toObjcType(property.type, ctx);
@@ -600,7 +600,7 @@ class Bind {
 
 /// Objective-C -> Haxe
 
-    static function toHaxeType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHaxeType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var result = switch (type) {
             case Void(orig): 'Void';
@@ -618,7 +618,7 @@ class Bind {
 
     }
 
-    static function toHaxeFunctionType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHaxeFunctionType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var result = 'Dynamic';
 
@@ -656,7 +656,7 @@ class Bind {
 
 /// Objective-C -> HXCPP
 
-    static function toHxcppType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHxcppType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var result = switch (type) {
             case Void(orig): 'void';
@@ -674,25 +674,25 @@ class Bind {
 
     }
 
-    static function toHxcppArrayType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHxcppArrayType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         return '::Dynamic';
 
     }
 
-    static function toHxcppMapType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHxcppMapType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         return '::Dynamic';
 
     }
 
-    static function toHxcppObjectType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHxcppObjectType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         return '::Dynamic';
 
     }
 
-    static function toHxcppFunctionType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHxcppFunctionType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         return '::Dynamic';
 
@@ -700,7 +700,7 @@ class Bind {
 
 /// HXCPP -> Objective-C
 
-    static function toObjcType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toObjcType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var orig:Dynamic = null;
 
@@ -726,7 +726,7 @@ class Bind {
 
 /// Write utils (specific)
 
-    static function writeHxcppArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+    static function writeHxcppArgAssign(arg:bindhx.Class.Arg, index:Int, ctx:BindContext):Void {
 
         var type = toHxcppType(arg.type, ctx);
         var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_hxcpp_';
@@ -739,7 +739,7 @@ class Bind {
                 var funcRetType = toHxcppType(ret, ctx);
 
                 // Keep track of objc instance on haxe side
-                writeLine('::Dynamic closure_' + name + ' = ::bind::objc::WrappedObjcIdToHxcpp(' + value + ');', ctx);
+                writeLine('::Dynamic closure_' + name + ' = ::bindhx::objc::WrappedObjcIdToHxcpp(' + value + ');', ctx);
                 writeIndent(ctx);
 
                 // Assign haxe function from objc block
@@ -789,7 +789,7 @@ class Bind {
                     if (argName == null) argName = 'arg' + i;
                     write(toObjcType(blockArg.type, ctx) + ' ' + argName, ctx);
                 }
-                write(') = ::bind::objc::HxcppToUnwrappedObjcId(closure_' + name + ');', ctx);
+                write(') = ::bindhx::objc::HxcppToUnwrappedObjcId(closure_' + name + ');', ctx);
                 writeLineBreak(ctx);
 
                 // Call block
@@ -844,11 +844,11 @@ class Bind {
                 var objcType = toObjcType(arg.type, ctx);
                 switch (objcType) {
                     case 'NSString*', 'NSMutableString*':
-                        write('$type $name = ::bind::objc::NSStringToHxcpp($value);', ctx);
+                        write('$type $name = ::bindhx::objc::NSStringToHxcpp($value);', ctx);
                     case 'char*':
-                        write('$type $name = ::bind::objc::CharStringToHxcpp($value);', ctx);
+                        write('$type $name = ::bindhx::objc::CharStringToHxcpp($value);', ctx);
                     case 'const char*':
-                        write('$type $name = ::bind::objc::ConstCharStringToHxcpp($value);', ctx);
+                        write('$type $name = ::bindhx::objc::ConstCharStringToHxcpp($value);', ctx);
                 }
                 writeLineBreak(ctx);
 
@@ -862,7 +862,7 @@ class Bind {
                 var objcType = toObjcType(arg.type, ctx);
                 switch (objcType) {
                     case 'NSNumber*':
-                        write('$type $name = ($type) ::bind::objc::ObjcIdToHxcpp($value);', ctx);
+                        write('$type $name = ($type) ::bindhx::objc::ObjcIdToHxcpp($value);', ctx);
                     default:
                         write('$type $name = ($type) $value;', ctx);
                 }
@@ -877,16 +877,16 @@ class Bind {
                 writeIndent(ctx);
                 var objcType = toObjcType(arg.type, ctx);
                 if (objcType == 'instancetype' || objcType == ctx.objcClass.name + '*') {
-                    write('::Dynamic $name = ::bind::objc::WrappedObjcIdToHxcpp($value);', ctx);
+                    write('::Dynamic $name = ::bindhx::objc::WrappedObjcIdToHxcpp($value);', ctx);
                 } else {
-                    write('$type $name = ::bind::objc::ObjcIdToHxcpp($value);', ctx);
+                    write('$type $name = ::bindhx::objc::ObjcIdToHxcpp($value);', ctx);
                 }
                 writeLineBreak(ctx);
         }
 
     }
 
-    static function writeObjcArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+    static function writeObjcArgAssign(arg:bindhx.Class.Arg, index:Int, ctx:BindContext):Void {
 
         writeIndent(ctx);
 
@@ -1029,30 +1029,30 @@ class Bind {
             case String(orig):
                 switch (type) {
                     case 'NSString*':
-                        write('$type $name = ::bind::objc::HxcppToNSString($value);', ctx);
+                        write('$type $name = ::bindhx::objc::HxcppToNSString($value);', ctx);
                     case 'NSMutableString*':
-                        write('$type $name = ::bind::objc::HxcppToNSMutableString($value);', ctx);
+                        write('$type $name = ::bindhx::objc::HxcppToNSMutableString($value);', ctx);
                     case 'char*':
-                        write('$type $name = ::bind::objc::HxcppToCharString($value);', ctx);
+                        write('$type $name = ::bindhx::objc::HxcppToCharString($value);', ctx);
                     case 'const char*':
-                        write('$type $name = ::bind::objc::HxcppToConstCharString($value);', ctx);
+                        write('$type $name = ::bindhx::objc::HxcppToConstCharString($value);', ctx);
                 }
                 writeLineBreak(ctx);
 
             case Array(itemType, orig):
                 switch (type) {
                     case 'NSArray*':
-                        write('$type $name = ::bind::objc::HxcppToNSArray($value);', ctx);
+                        write('$type $name = ::bindhx::objc::HxcppToNSArray($value);', ctx);
                     case 'NSMutableArray*':
-                        write('$type $name = ::bind::objc::HxcppToNSMutableArray($value);', ctx);
+                        write('$type $name = ::bindhx::objc::HxcppToNSMutableArray($value);', ctx);
                 }
                 writeLineBreak(ctx);
 
             case Object(orig):
                 if (type == 'instancetype' || type == ctx.objcClass.name + '*') {
-                    write(ctx.objcClass.name + '* $name = ::bind::objc::HxcppToUnwrappedObjcId($value);', ctx);
+                    write(ctx.objcClass.name + '* $name = ::bindhx::objc::HxcppToUnwrappedObjcId($value);', ctx);
                 } else if (type.endsWith('*')) {
-                    write('$type $name = ::bind::objc::HxcppToObjcId((Dynamic)$value);', ctx);
+                    write('$type $name = ::bindhx::objc::HxcppToObjcId((Dynamic)$value);', ctx);
                 } else {
                     write('$type $name = ($type) $value;', ctx);
                 }
@@ -1060,7 +1060,7 @@ class Bind {
 
             default:
                 if (type.endsWith('*')) {
-                    write('$type $name = ::bind::objc::HxcppToObjcId((Dynamic)$value);', ctx);
+                    write('$type $name = ::bindhx::objc::HxcppToObjcId((Dynamic)$value);', ctx);
                 } else {
                     write('$type $name = ($type) $value;', ctx);
                 }
@@ -1069,7 +1069,7 @@ class Bind {
 
     }
 
-    static function writeWrapToObjcThreadCall(method:bind.Class.Method, ctx:BindContext):Void {
+    static function writeWrapToObjcThreadCall(method:bindhx.Class.Method, ctx:BindContext):Void {
 
         var hasReturn = false;
         var isObjcConstructor = isObjcConstructor(method, ctx);
@@ -1128,7 +1128,7 @@ class Bind {
 
     }
 
-    static function writeObjcCall(method:bind.Class.Method, ctx:BindContext, convertReturnToHaxe:Bool = true):Void {
+    static function writeObjcCall(method:bindhx.Class.Method, ctx:BindContext, convertReturnToHaxe:Bool = true):Void {
 
         var hasReturn = false;
         var isObjcConstructor = isObjcConstructor(method, ctx);
@@ -1152,7 +1152,7 @@ class Bind {
         if (isObjcConstructor) {
             write('[[' + ctx.objcClass.name + ' alloc]', ctx);
         } else if (method.instance) {
-            write('[::bind::objc::HxcppToUnwrappedObjcId(instance_)', ctx);
+            write('[::bindhx::objc::HxcppToUnwrappedObjcId(instance_)', ctx);
         } else {
             write('[' + ctx.objcClass.name, ctx);
         }

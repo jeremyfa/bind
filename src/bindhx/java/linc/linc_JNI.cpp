@@ -5,16 +5,16 @@
 #include <atomic>
 
 #ifndef INCLUDED_bind_java_HObject
-#include <bind/java/HObject.h>
+#include <bindhx/java/HObject.h>
 #endif
 
 #ifndef INCLUDED_bind_java_Support
-#include <bind/java/Support.h>
+#include <bindhx/java/Support.h>
 #endif
 
 #include <android/log.h>
 
-namespace bind {
+namespace bindhx {
 
     namespace jni {
 
@@ -123,7 +123,7 @@ namespace bind {
         jstring HObjectToJString(::Dynamic hobjectRef) {
 
             if (hx::IsNotNull(hobjectRef)) {
-                return HxcppToJString(::bind::java::HObject_obj::idOf(hobjectRef));
+                return HxcppToJString(::bindhx::java::HObject_obj::idOf(hobjectRef));
             }
             return NULL;
 
@@ -133,7 +133,7 @@ namespace bind {
 
             if (address == NULL) return null();
 
-            return ::bind::java::HObject_obj::getById(JStringToHxcpp(address));
+            return ::bindhx::java::HObject_obj::getById(JStringToHxcpp(address));
 
         }
 
@@ -151,7 +151,7 @@ namespace bind {
 
         void RunAwaitingRunnables(::cpp::Pointer<void> class_, ::cpp::Pointer<void> method_) {
 
-            ::bind::jni::GetJNIEnv()->CallStaticVoidMethod((jclass) class_.ptr, (jmethodID) method_.ptr);
+            ::bindhx::jni::GetJNIEnv()->CallStaticVoidMethod((jclass) class_.ptr, (jmethodID) method_.ptr);
 
         }
 
@@ -172,7 +172,7 @@ extern "C" {
         // Keep java VM instance to get JNIEnv instance later on the correct thread
         JavaVM *jvm_;
         env->GetJavaVM(&jvm_);
-        ::bind::jni::jvm = jvm_;
+        ::bindhx::jni::jvm = jvm_;
 
     }
 
@@ -181,8 +181,8 @@ extern "C" {
         int haxe_stack_ = 99;
         hx::SetTopOfStack(&haxe_stack_, true);
 
-        ::bind::jni::isInitialized = true;
-        ::bind::java::Support_obj::notifyReady();
+        ::bindhx::jni::isInitialized = true;
+        ::bindhx::java::Support_obj::notifyReady();
 
         hx::SetTopOfStack((int *)0, true);
 
@@ -193,9 +193,9 @@ extern "C" {
         int haxe_stack_ = 99;
         hx::SetTopOfStack(&haxe_stack_, true);
 
-        ::Dynamic hobjectRef = ::bind::jni::JStringToHObject(address);
+        ::Dynamic hobjectRef = ::bindhx::jni::JStringToHObject(address);
         if (hx::IsNotNull(hobjectRef)) {
-            ((::bind::java::HObject)hobjectRef)->destroy();
+            ((::bindhx::java::HObject)hobjectRef)->destroy();
         }
 
         hx::SetTopOfStack((int *)0, true);
@@ -204,7 +204,7 @@ extern "C" {
 
     JNIEXPORT void JNICALL BIND_JNI_FUNCTION(BIND_JNI_SUPPORT, nativeSetHasRunnables)(JNIEnv *env, jclass clazz, jint value) {
 
-        ::bind::jni::SetHasNativeRunnables(value != 0);
+        ::bindhx::jni::SetHasNativeRunnables(value != 0);
 
     }
 

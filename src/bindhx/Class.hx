@@ -1,4 +1,4 @@
-package bind;
+package bindhx;
 
 typedef Class = {
 
@@ -6,9 +6,9 @@ typedef Class = {
 
     var path:String;
 
-    var properties:Array<bind.Property>;
+    var properties:Array<bindhx.Property>;
 
-    var methods:Array<bind.Method>;
+    var methods:Array<bindhx.Method>;
 
     var description:String;
 
@@ -20,7 +20,7 @@ typedef Property = {
 
     var name:String;
 
-    var type:bind.Type;
+    var type:bindhx.Type;
 
     var instance:Bool;
 
@@ -34,9 +34,9 @@ typedef Method = {
 
     var name:String;
 
-    var args:Array<bind.Arg>;
+    var args:Array<bindhx.Arg>;
 
-    var type:bind.Type;
+    var type:bindhx.Type;
 
     var instance:Bool;
 
@@ -50,7 +50,7 @@ typedef Arg = {
 
     var name:String;
 
-    var type:bind.Type;
+    var type:bindhx.Type;
 
     @:optional var orig:Dynamic;
 
@@ -68,12 +68,12 @@ enum Type {
 
     String(?orig:Dynamic);
 
-    Array(?itemType:bind.Type, ?orig:Dynamic);
+    Array(?itemType:bindhx.Type, ?orig:Dynamic);
 
-    Map(?itemType:bind.Type, ?orig:Dynamic);
+    Map(?itemType:bindhx.Type, ?orig:Dynamic);
 
     Object(?orig:Dynamic);
 
-    Function(args:Array<bind.Arg>, ret:bind.Type, ?orig:Dynamic);
+    Function(args:Array<bindhx.Arg>, ret:bindhx.Type, ?orig:Dynamic);
 
 }

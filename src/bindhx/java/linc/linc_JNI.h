@@ -17,7 +17,7 @@
 #define BIND_JNI_FUNCTION(package, function) BIND_JNI_CONCAT(Java_, BIND_JNI_CONCAT(package, BIND_JNI_CONCAT(_, function)))
 #endif
 
-namespace bind {
+namespace bindhx {
 
     namespace jni {
 

@@ -38,7 +38,7 @@
 
 @end
 
-namespace bind {
+namespace bindhx {
 
     namespace objc {
 

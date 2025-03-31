@@ -1,21 +1,22 @@
-package bind.java;
+package bindhx.cs;
 
 import Sys.println;
+
 using StringTools;
 
 typedef ParseContext = {
     var i:Int;
-    var types:Map<String,bind.Class.Type>;
+    var types:Map<String,bindhx.Class.Type>;
 }
 
 class Parse {
 
-    static var RE_STRING = ~/^(?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^'\\]*(?:\\.[^'\\]*)*)')/;
-    static var RE_IMPORT = ~/^import\s+(static\s+)?([^;\s]+)\s*;/;
-    static var RE_DECL = ~/^((?:(?:public|private|protected|static|final|abstract)\s+)+)?(enum|interface|class)\s+([a-zA-Z0-9,<>\[\]_ ]+)((?:\s+(?:implements|extends)\s*(?:[a-zA-Z0-9,<>\[\]_ ]+)(?:\s*,\s*[a-zA-Z0-9,<>\[\]_ ]+)*)*)\s*{/;
-    static var RE_PROPERTY = ~/^((?:(?:public|private|protected|static|final|dynamic)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*(;|=|,)/;
-    static var RE_METHOD = ~/^((?:(?:public|private|protected|static|final)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*\(\s*([^\)]*)\s*\)\s*({|;)/;
-    static var RE_CONSTRUCTOR = ~/^((?:(?:public|private|protected|final)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s*\(\s*([^\)]*)\s*\)\s*{/;
+    static var RE_STRING = ~/^(?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^'\\]*(?:\\.[^'\\]*)*)'|@"(?:[^"]|"")*")/;
+    static var RE_IMPORT = ~/^using\s+([^;\s]+)\s*;/;
+    static var RE_DECL = ~/^((?:(?:public|private|protected|internal|static|sealed|abstract|partial)\s+)+)?(enum|interface|class|struct)\s+([a-zA-Z0-9,<>\[\]_ ]+)((?:\s+(?::\s*(?:[a-zA-Z0-9,<>\[\]_ ]+)(?:\s*,\s*[a-zA-Z0-9,<>\[\]_ ]+)*)*))?\s*{/;
+    static var RE_PROPERTY = ~/^((?:(?:public|private|protected|internal|static|readonly|virtual|override)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*(?:\{(?:\s*get\s*;\s*)?(?:\s*set\s*;\s*)?\}|;|=)/;
+    static var RE_METHOD = ~/^((?:(?:public|private|protected|internal|static|virtual|override|async)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s+([a-zA-Z0-9_]+)\s*\(\s*([^\)]*)\s*\)\s*({|;)/;
+    static var RE_CONSTRUCTOR = ~/^((?:(?:public|private|protected|internal)\s+)+)?([a-zA-Z0-9,<>\[\]_]+)\s*\(\s*([^\)]*)\s*\)\s*(?::\s*(?:base|this)\s*\([^\)]*\)\s*)?{/;
     static var RE_ARG_END = ~/^\s*([a-zA-Z_][a-zA-Z_0-9]*)(?:(\s*,)?\s*)/;
 
     static var RE_BEFORE_COMMENT_LINE = ~/^[\s\*]*(\/\/)?\s*/g;
@@ -25,9 +26,9 @@ class Parse {
     static var RE_NOT_SEPARATOR = ~/[a-zA-Z0-9_]/g;
     static var RE_GETTER = ~/^get([A-Z][a-zA-Z0-9_]*)$/;
 
-    static var RE_FUNC = ~/^Func([0-9]+)$/;
-    static var RE_FUNC_OPEN = ~/^Func([0-9]+)\s*</;
-    static var RE_FINAL = ~/^\s*final\s+/;
+    static var RE_FUNC = ~/^(?:Func|Action)([0-9]+)$/;
+    static var RE_FUNC_OPEN = ~/^(?:Func|Action)([0-9]+)\s*</;
+    static var RE_FINAL = ~/^\s*readonly\s+/;
     static var RE_TYPE_PARAM_COMMENT = ~/\/\*+\s*([a-zA-Z][a-zA-Z0-9_]*)\s*\*+\/\s*(,|>)?$/;
 
     public static function createContext():ParseContext {
@@ -35,7 +36,7 @@ class Parse {
     }
 
     /** Parse Objective-C header content to get class informations. */
-    public static function parseClass(code:String, ?ctx:ParseContext):bind.Class {
+    public static function parseClass(code:String, ?ctx:ParseContext):bindhx.Class {
 
         if (ctx == null) ctx = createContext();
 
@@ -56,23 +57,22 @@ class Parse {
         var word = '';
         var after = '';
 
-        var result:bind.Class = {
+        var result:bindhx.Class = {
             name: null,
             path: null,
             properties: [],
             methods: [],
             description: null,
             orig: {
-                pack: null,
-                imports: [],
-                staticImports: []
+                namespace: null,
+                imports: []
             }
         };
 
         // Clean code
         var cleanedCode = getCodeWithEmptyCommentsAndStrings(code);
 
-        /** Skip java content but take care of handling parenthesis, brackets and braces imbrications. */
+        /** Skip C# content but take care of handling parenthesis, brackets and braces imbrications. */
         function consumeUntil(until:String) {
 
             var openBraces = 0;
@@ -258,7 +258,7 @@ class Parse {
                             }
                             else {
                                 // Add property info
-                                var property:bind.Class.Property = {
+                                var property:bindhx.Class.Property = {
                                     type: parseType(javaType, javaTypeWithComments),
                                     orig: {},
                                     name: name,
@@ -291,7 +291,7 @@ class Parse {
                             }
                             else {
                                 // Add property info
-                                var method:bind.Class.Method = {
+                                var method:bindhx.Class.Method = {
                                     type: type,
                                     args: args,
                                     orig: {},
@@ -321,12 +321,12 @@ class Parse {
                             i += RE_METHOD.matched(0).length;
 
                             // Skip private/protected/abstract stuff
-                            if (!modifiers.exists('public') || modifiers.exists('abstract')) {
+                            if ((!modifiers.exists('public') && !modifiers.exists('protected') && !modifiers.exists('internal')) || modifiers.exists('abstract')) {
                                 if (end != ';') consumeBlock();
                             }
                             else {
                                 // Add property info
-                                var method:bind.Class.Method = {
+                                var method:bindhx.Class.Method = {
                                     type: type,
                                     args: args,
                                     orig: {},
@@ -350,35 +350,35 @@ class Parse {
                         i++;
                     }
                 }
-                // Package
-                else if (word == 'package') {
+                // Namespace
+                else if (word == 'namespace') {
                     i += word.length;
-                    var pack = '';
+                    var namespace = '';
                     c = cleanedCode.charAt(i);
-                    while (c != ';') {
-                        pack += c;
+                    while (c != '{' && c != ';') {
+                        namespace += c;
                         i++;
                         c = cleanedCode.charAt(i);
                     }
-                    i++;
-                    if (result.orig.pack == null) result.orig.pack = pack.trim();
+                    if (c == '{') {
+                        i++; // Skip the opening brace
+                    } else {
+                        i++; // Skip the semicolon
+                    }
+                    if (result.orig.namespace == null) result.orig.namespace = namespace.trim();
+                    else result.orig.namespace += '.' + namespace.trim();
                 }
-                // Import
-                else if (word == 'import') {
+                // Using directive
+                else if (word == 'using') {
 
                     if (!RE_IMPORT.match(after)) {
-                        throw 'Failed to parse import';
+                        throw 'Failed to parse using directive';
                     }
 
-                    var pack = RE_IMPORT.matched(2);
-                    var isStatic = RE_IMPORT.matched(1) != null && RE_IMPORT.matched(1).trim() == 'static';
+                    var namespace = RE_IMPORT.matched(1);
 
-                    if (isStatic) {
-                        result.orig.staticImports.push(pack);
-                    }
-                    else {
-                        result.orig.imports.push(pack);
-                    }
+                    // C# doesn't have static imports like Java, so we'll just add all to imports
+                    result.orig.imports.push(namespace);
 
                     i += RE_IMPORT.matched(0).length;
 
@@ -392,8 +392,6 @@ class Parse {
 
         ctx.i = i;
 
-        extractPropertyMethods(result);
-
         if (result.name == null) {
             return null;
         }
@@ -403,12 +401,12 @@ class Parse {
 
     }
 
-    public static function parseType(input:String, inputWithComments:String, ?ctx:ParseContext, inTypeParam = false):bind.Class.Type {
+    public static function parseType(input:String, inputWithComments:String, ?ctx:ParseContext, inTypeParam = false):bindhx.Class.Type {
 
         if (ctx == null) ctx = createContext();
 
         var baseType = '';
-        var typeParameters:Array<{type:bind.Class.Type, name:String}> = [];
+        var typeParameters:Array<{type:bindhx.Class.Type, name:String}> = [];
         var len = input.length;
         var i = ctx.i;
         var startI = i;
@@ -485,41 +483,27 @@ class Parse {
             return null;
         }
         else {
-            var type:bind.Class.Type;
-            var javaType = removeSpacesForType(input.substring(startI, endI));
+            var type:bindhx.Class.Type;
+            var csharpType = removeSpacesForType(input.substring(startI, endI));
+
+            var arrayLevels:Int = 0;
+            var csharpTypeArrayLevels:Int = 0;
+            while (baseType.endsWith('[]')) {
+                baseType = baseType.substring(0, baseType.length - 2);
+                arrayLevels++;
+                if (csharpType.endsWith('[]')) {
+                    csharpType = csharpType.substring(0, csharpType.length - 2);
+                    csharpTypeArrayLevels++;
+                }
+            }
 
             switch (baseType) {
-                case 'String':
+                case 'string':
                     type = String({
-                        type: javaType
+                        type: csharpType
                     });
-                case 'Runnable':
-                    type = Function([], Void({ type: 'void' }), {
-                        type: javaType
-                    });
-                case 'List', 'AbstractList', 'ArrayList', 'AbstractSequentialList', 'AttributeList', 'CopyOnWriteArrayList', 'LinkedList', 'Stack', 'Vector':
-                    type = Array(typeParameters.length > 0 ? typeParameters[0].type : null, {
-                        type: javaType
-                    });
-                case 'Map', 'Attributes', 'ConcurrentHashMap', 'HashMap', 'Hashtable', 'LinkedHashMap', 'TreeMap':
-                    type = Map(typeParameters.length > 1 ? typeParameters[1].type : null, {
-                        type: javaType
-                    });
-                case 'boolean', 'Boolean':
-                    type = Bool({
-                        type: javaType
-                    });
-                case 'short', 'byte', 'int', 'long', 'char', 'Short', 'Byte', 'Integer', 'Long', 'Char':
-                    type = Int({
-                        type: javaType
-                    });
-                case 'float', 'double', 'Float', 'Double':
-                    type = Float({
-                        type: javaType
-                    });
-                case 'Func0', 'Func1', 'Func2', 'Func3', 'Func4', 'Func5', 'Func6', 'Func7', 'Func8', 'Func9', 'Func10', 'Func11', 'Func12', 'Func13', 'Func14', 'Func15', 'Func16':
-                    RE_FUNC.match(baseType);
-                    var numArgs = Std.parseInt(RE_FUNC.matched(1));
+                case 'Action' | 'Func':
+                    var numArgs = baseType == 'Action' ? typeParameters.length : typeParameters.length - 1;
                     var args = [];
                     for (n in 0...numArgs) {
                         args.push({
@@ -527,156 +511,51 @@ class Parse {
                             name: typeParameters[n].name != null ? typeParameters[n].name : 'arg' + (n + 1)
                         });
                     }
-                    var ret = typeParameters[numArgs].type;
+                    var ret:bindhx.Class.Type = baseType == 'Action' ? Void({ type: 'void' }) : typeParameters[numArgs].type;
                     type = Function(args, ret, {
-                        type: javaType
+                        type: csharpType
                     });
-                case 'void', 'Void':
+                case 'ArrayList', 'List', 'IList', 'ICollection', 'IEnumerable':
+                    type = Array(typeParameters.length > 0 ? typeParameters[0].type : null, {
+                        type: csharpType
+                    });
+                case 'Dictionary', 'IDictionary':
+                    type = Map(typeParameters.length > 1 ? typeParameters[1].type : null, {
+                        type: csharpType
+                    });
+                case 'bool':
+                    type = Bool({
+                        type: csharpType
+                    });
+                case 'short', 'byte', 'int', 'long', 'char':
+                    type = Int({
+                        type: csharpType
+                    });
+                case 'float', 'double', 'decimal':
+                    type = Float({
+                        type: csharpType
+                    });
+                case 'void':
                     type = Void({
-                        type: javaType
+                        type: csharpType
                     });
                 default:
                     // Unknown object
                     type = Object({
-                        type: javaType
+                        type: csharpType
                     });
+            }
+
+            while (arrayLevels-- > 0) {
+                if (csharpTypeArrayLevels-- > 0) {
+                    csharpType += '[]';
+                }
+                type = Array(type, {
+                    type: csharpType
+                });
             }
 
             return type;
-        }
-
-    }
-
-    static function extractPropertyMethods(result:bind.Class):Void {
-
-        var existingMethods:Map<String,bind.Class.Method> = new Map();
-        var existingProperties:Map<String,bind.Class.Property> = new Map();
-
-        for (method in result.methods) {
-            existingMethods.set(method.name, method);
-        }
-        for (property in result.properties) {
-            existingProperties.set(property.name, property);
-        }
-
-        // Link or imply getters and setters from public properties
-        for (property in result.properties) {
-            // Getter
-            var getterName = 'get' + property.name.charAt(0).toUpperCase() + property.name.substring(1);
-            if (!existingMethods.exists(getterName)) {
-                result.methods.push({
-                    name: getterName,
-                    args: [],
-                    type: property.type,
-                    instance: property.instance,
-                    description: property.description,
-                    orig: extendOrig(property.orig, {
-                        implicit: true,
-                        getter: true,
-                        property: {
-                            name: property.name
-                        }
-                    })
-                });
-            }
-            else {
-                var method = existingMethods.get(getterName);
-                if (method.orig == null) method.orig = {};
-                if (method.orig.property == null) {
-                    method.orig.property = {
-                        name: property.name
-                    }
-                    method.orig.getter = true;
-                }
-            }
-            // Setter
-            if (!property.orig.readonly) {
-                var setterName = 'set' + property.name.charAt(0).toUpperCase() + property.name.substring(1);
-                if (!existingMethods.exists(setterName)) {
-                    result.methods.push({
-                        name: setterName,
-                        args: [{
-                            name: property.name,
-                            orig: extendOrig(property.orig, {
-                                nameSection: setterName
-                            }),
-                            type: property.type
-                        }],
-                        type: Void({ type: 'void', nullable: false }),
-                        instance: property.instance,
-                        description: property.description,
-                        orig: extendOrig(property.orig, {
-                            implicit: true,
-                            setter: true,
-                            property: {
-                                name: property.name
-                            }
-                        })
-                    });
-                }
-                else {
-                    var method = existingMethods.get(setterName);
-                    if (method.orig == null) method.orig = {};
-                    if (method.orig.property == null) {
-                        method.orig.property = {
-                            name: property.name
-                        }
-                        method.orig.setter = true;
-                    }
-                }
-            }
-        }
-
-        // Resolve properties from public getters and setters
-        for (method in result.methods) {
-            if (RE_GETTER.match(method.name)) {
-                var propertyName = RE_GETTER.matched(1).charAt(0).toLowerCase() + RE_GETTER.matched(1).substring(1);
-                var getterName = 'get' + RE_GETTER.matched(1);
-                var setterName = 'set' + RE_GETTER.matched(1);
-                var setter = existingMethods.get(setterName);
-                var getter = existingMethods.get(getterName);
-                var canImplyProperty = true;
-                if (!existingProperties.exists(propertyName)) {
-                    // We resolve an implicit property from its public getters and setters
-                    var readonly = true;
-                    if (getter != null && setter != null) {
-                        var getterType = toJavaType(getter.type);
-                        // Ensure setter shares the same type as getter
-                        if (setter.args.length == 1) {
-                            var setterType = toJavaType(setter.args[0].type);
-                            if (getterType != setterType) {
-                                canImplyProperty = false;
-                            }
-                            else {
-                                // Setter matches, property is not readonly then
-                                readonly = false;
-                            }
-                        }
-                        else {
-                            canImplyProperty = false;
-                        }
-                    }
-
-                    // Disable this feature for now by default, because it has bugs
-                    #if !bind_java_implicit_properties
-                    canImplyProperty = false;
-                    #end
-
-                    if (canImplyProperty) {
-                        // Add implicit property
-                        result.properties.push({
-                            type: getter.type,
-                            orig: {
-                                implicit: true,
-                                readonly: readonly
-                            },
-                            name: propertyName,
-                            instance: getter.instance,
-                            description: getter.description
-                        });
-                    }
-                }
-            }
         }
 
     }
@@ -697,7 +576,7 @@ class Parse {
 
     }
 
-    static function toJavaType(type:bind.Class.Type):String {
+    static function toCSharpType(type:bindhx.Class.Type):String {
 
         var orig:Dynamic = null;
 
@@ -740,7 +619,7 @@ class Parse {
 
     }
 
-    static function extractArgs(inArgs:String, inArgsWithComments:String):Array<bind.Class.Arg> {
+    static function extractArgs(inArgs:String, inArgsWithComments:String):Array<bindhx.Class.Arg> {
 
         var args = [];
 
@@ -831,7 +710,7 @@ class Parse {
                 output += '  ';
                 i += 2;
             }
-            else if ((c == '"' || c == '\'') && RE_STRING.match(input.substring(i))) {
+            else if ((c == '"' || c == '\'' || c == '@') && RE_STRING.match(input.substring(i))) {
                 var len = RE_STRING.matched(0).length - 2;
                 output += c;
                 while (len-- > 0) {

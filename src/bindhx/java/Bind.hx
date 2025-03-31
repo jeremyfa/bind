@@ -1,20 +1,20 @@
-package bind.java;
+package bindhx.java;
 
 import haxe.io.Path;
 
 using StringTools;
 
 typedef BindContext = {
-    var javaClass:bind.Class;
+    var javaClass:bindhx.Class;
     var indent:Int;
-    var files:Array<bind.File>;
+    var files:Array<bindhx.File>;
     var namespace:String;
     var pack:String;
-    var currentFile:bind.File;
+    var currentFile:bindhx.File;
     var javaPath:String;
     var javaCode:String;
-    var nativeCallbacks:Map<String,bind.Class.Type>;
-    var javaCallbacks:Map<String,bind.Class.Type>;
+    var nativeCallbacks:Map<String,bindhx.Class.Type>;
+    var javaCallbacks:Map<String,bindhx.Class.Type>;
     var bindSupport:String;
     var noBindHeader:Bool;
 }
@@ -40,11 +40,11 @@ class Bind {
 
     }
 
-    /** Reads bind.Class object informations and generate files
+    /** Reads bindhx.Class object informations and generate files
         To bind the related Java class to Haxe.
-        The files are returned as an array of bind.File objects.
+        The files are returned as an array of bindhx.File objects.
         Nothing is written to disk at this stage. */
-    public static function bindClass(javaClass:bind.Class, ?options:{?namespace:String, ?pack:String, ?javaPath:String, ?javaCode:String, ?bindSupport:String, ?noBindHeader:Bool}):Array<bind.File> {
+    public static function bindClass(javaClass:bindhx.Class, ?options:{?namespace:String, ?pack:String, ?javaPath:String, ?javaCode:String, ?bindSupport:String, ?noBindHeader:Bool}):Array<bindhx.File> {
 
         var ctx = createContext();
         ctx.javaClass = javaClass;
@@ -112,7 +112,7 @@ class Bind {
         }
 
         // Support
-        writeLine('import bind.java.Support;', ctx);
+        writeLine('import bindhx.java.Support;', ctx);
         writeLine('import cpp.Pointer;', ctx);
 
         writeLineBreak(ctx);
@@ -377,8 +377,8 @@ class Bind {
         writeLine('@:keep', ctx);
         writeLine('@:include(\'linc_' + ctx.javaClass.name + '.h\')', ctx);
         writeLine('#if !display', ctx);
-        writeLine('@:build(bind.Linc.touch())', ctx);
-        writeLine('@:build(bind.Linc.xml(\'' + ctx.javaClass.name + '\', \'./\'))', ctx);
+        writeLine('@:build(bindhx.Linc.touch())', ctx);
+        writeLine('@:build(bindhx.Linc.xml(\'' + ctx.javaClass.name + '\', \'./\'))', ctx);
         writeLine('#end', ctx);
         writeLine('@:allow(' + packPrefix + haxeName + ')', ctx);
         writeLine('private extern class ' + haxeName + '_Extern {', ctx);
@@ -566,7 +566,7 @@ class Bind {
             writeLineBreak(ctx);
         }
 
-        function writeMethod(method:bind.Class.Method):Void {
+        function writeMethod(method:bindhx.Class.Method):Void {
 
             // Constructor?
             var isJavaConstructor = isJavaConstructor(method, ctx);
@@ -630,7 +630,7 @@ class Bind {
                     writeJniArgAssign(arg, i, ctx);
                     i++;
                 }
-                writeLine('JNIEnv *env = ::bind::jni::GetJNIEnv();', ctx);
+                writeLine('JNIEnv *env = ::bindhx::jni::GetJNIEnv();', ctx);
                 // Call jni
                 writeJniCall(method, ctx, 'env');
                 // Release reference to any jni argument like jstring
@@ -735,8 +735,8 @@ class Bind {
 
                         // Call
                         var hasReturn = false;
-                        writeLine('::Dynamic func_hobject_ = ::bind::jni::JStringToHObject(address);', ctx);
-                        writeLine('::Dynamic func_unwrapped_ = ::bind::java::HObject_obj::unwrap(func_hobject_);', ctx);
+                        writeLine('::Dynamic func_hobject_ = ::bindhx::jni::JStringToHObject(address);', ctx);
+                        writeLine('::Dynamic func_unwrapped_ = ::bindhx::java::HObject_obj::unwrap(func_hobject_);', ctx);
                         writeIndent(ctx);
                         switch (ret) {
                             case Void(orig):
@@ -843,7 +843,7 @@ class Bind {
         writeLine('}', ctx);
         writeLineBreak(ctx);
 
-        function writeMethod(method:bind.Class.Method) {
+        function writeMethod(method:bindhx.Class.Method) {
 
             // Constructor?
             var isJavaConstructor = isJavaConstructor(method, ctx);
@@ -1075,7 +1075,7 @@ class Bind {
         pack.pop();
 
         var javaContent = sys.io.File.getContent(Path.join([Path.directory(Sys.programPath()), 'support/java/bind/Support.java']));
-        javaContent = javaContent.replace('package bind;', 'package ${pack.join('.')};');
+        javaContent = javaContent.replace('package bindhx;', 'package ${pack.join('.')};');
 
         ctx.currentFile = {
             path: Path.join(['java', '${ctx.bindSupport.replace('.', '/')}.java']),
@@ -1089,7 +1089,7 @@ class Bind {
 
 /// Java -> Haxe
 
-    static function toHaxeType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHaxeType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var javaType = toJavaType(type, ctx);
         if (javaType == ctx.javaClass.name || javaType == ctx.javaClass.orig.pack + '.' + ctx.javaClass.name) {
@@ -1112,7 +1112,7 @@ class Bind {
 
     }
 
-    static function toHaxeFunctionType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHaxeFunctionType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var result = 'Dynamic';
 
@@ -1148,7 +1148,7 @@ class Bind {
 
     }
 
-    static function toHaxeBindType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHaxeBindType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var result = switch (type) {
             case Void(orig): 'Void';
@@ -1166,7 +1166,7 @@ class Bind {
 
     }
 
-    static function toHaxeBindFromJniType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHaxeBindFromJniType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var result = switch (type) {
             case Function(args, ret, orig): 'Pointer<Void>';
@@ -1179,7 +1179,7 @@ class Bind {
 
 /// Haxe -> HXCPP
 
-    static function toHxcppType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toHxcppType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var result = switch (type) {
             case Void(orig): 'void';
@@ -1197,7 +1197,7 @@ class Bind {
 
     }
 
-    static function toJniType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toJniType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var result = switch (type) {
             case Void(orig): 'void';
@@ -1218,7 +1218,7 @@ class Bind {
 
     }
 
-    static function toJniFromJavaType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toJniFromJavaType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var result = switch (type) {
             case Function(args, ret, orig): 'jobject';
@@ -1229,7 +1229,7 @@ class Bind {
 
     }
 
-    static function toJniSignatureType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toJniSignatureType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var javaType = toJavaType(type, ctx);
         if (javaType == ctx.javaClass.name || javaType == ctx.javaClass.orig.pack + '.' + ctx.javaClass.name) {
@@ -1255,7 +1255,7 @@ class Bind {
 
     }
 
-    static function toJniFromJavaSignatureType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toJniFromJavaSignatureType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var result = switch (type) {
             case Function(args, ret, orig): 'Ljava/lang/Object;';
@@ -1268,7 +1268,7 @@ class Bind {
 
 /// HXCPP -> Java
 
-    static function toJavaType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toJavaType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var orig:Dynamic = null;
 
@@ -1292,7 +1292,7 @@ class Bind {
 
     }
 
-    static function toJavaBindType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toJavaBindType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var javaType = toJavaType(type, ctx);
         if (javaType == ctx.javaClass.name || javaType == ctx.javaClass.orig.pack + '.' + ctx.javaClass.name) {
@@ -1318,7 +1318,7 @@ class Bind {
 
     }
 
-    static function toJavaBindFromJavaType(type:bind.Class.Type, ctx:BindContext):String {
+    static function toJavaBindFromJavaType(type:bindhx.Class.Type, ctx:BindContext):String {
 
         var result = switch (type) {
             case Function(args, ret, orig): 'Object';
@@ -1345,13 +1345,13 @@ class Bind {
 
 /// Helpers
 
-    static function isJavaConstructor(method:bind.Class.Method, ctx:BindContext):Bool {
+    static function isJavaConstructor(method:bindhx.Class.Method, ctx:BindContext):Bool {
 
         return method.name == 'constructor';
 
     }
 
-    static function isJavaFactory(method:bind.Class.Method, ctx:BindContext):Bool {
+    static function isJavaFactory(method:bindhx.Class.Method, ctx:BindContext):Bool {
 
         var isJavaFactory = false;
         var javaType = toJavaType(method.type, ctx);
@@ -1363,7 +1363,7 @@ class Bind {
 
     }
 
-    static function isJavaSingleton(property:bind.Class.Property, ctx:BindContext):Bool {
+    static function isJavaSingleton(property:bindhx.Class.Property, ctx:BindContext):Bool {
 
         var isJavaSingleton = false;
         var javaType = toJavaType(property.type, ctx);
@@ -1377,7 +1377,7 @@ class Bind {
 
 /// Write utils (specific)
 
-    static function writeJavaArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+    static function writeJavaArgAssign(arg:bindhx.Class.Arg, index:Int, ctx:BindContext):Void {
 
         var type = toJavaType(arg.type, ctx);
         var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_java_';
@@ -1519,7 +1519,7 @@ class Bind {
 
     }
 
-    static function writeJavaBindArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+    static function writeJavaBindArgAssign(arg:bindhx.Class.Arg, index:Int, ctx:BindContext):Void {
 
         var type = toJavaBindFromJavaType(arg.type, ctx);
         var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_jni_';
@@ -1583,7 +1583,7 @@ class Bind {
 
     }
 
-    static function writeJniArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+    static function writeJniArgAssign(arg:bindhx.Class.Arg, index:Int, ctx:BindContext):Void {
 
         writeIndent(ctx);
 
@@ -1594,11 +1594,11 @@ class Bind {
         switch (arg.type) {
 
             case Function(args, ret, orig):
-                write('$type $name = ::bind::jni::HObjectToJString($value);', ctx);
+                write('$type $name = ::bindhx::jni::HObjectToJString($value);', ctx);
                 writeLineBreak(ctx);
 
             case String(orig):
-                write('$type $name = ::bind::jni::HxcppToJString($value);', ctx);
+                write('$type $name = ::bindhx::jni::HxcppToJString($value);', ctx);
                 writeLineBreak(ctx);
 
             case Bool(orig):
@@ -1614,11 +1614,11 @@ class Bind {
                 writeLineBreak(ctx);
 
             case Array(itemType, orig):
-                write('$type $name = ::bind::jni::HxcppToJString($value);', ctx);
+                write('$type $name = ::bindhx::jni::HxcppToJString($value);', ctx);
                 writeLineBreak(ctx);
 
             case Map(itemType, orig):
-                write('$type $name = ::bind::jni::HxcppToJString($value);', ctx);
+                write('$type $name = ::bindhx::jni::HxcppToJString($value);', ctx);
                 writeLineBreak(ctx);
 
             case Object(orig):
@@ -1632,7 +1632,7 @@ class Bind {
 
     }
 
-    static function writeJniArgReleaseRef(arg:bind.Class.Arg, index:Int, ctx:BindContext, env:String = '::bind::jni::GetJNIEnv()'):Void {
+    static function writeJniArgReleaseRef(arg:bindhx.Class.Arg, index:Int, ctx:BindContext, env:String = '::bindhx::jni::GetJNIEnv()'):Void {
 
         var type = toJniType(arg.type, ctx);
         var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_jni_';
@@ -1673,7 +1673,7 @@ class Bind {
 
     }
 
-    static function writeJniCall(method:bind.Class.Method, ctx:BindContext, env:String = '::bind::jni::GetJNIEnv()'):Void {
+    static function writeJniCall(method:bindhx.Class.Method, ctx:BindContext, env:String = '::bindhx::jni::GetJNIEnv()'):Void {
 
         var hasReturn = false;
         var isJavaConstructor = isJavaConstructor(method, ctx);
@@ -1742,7 +1742,7 @@ class Bind {
 
     }
 
-    static function writeHaxeArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+    static function writeHaxeArgAssign(arg:bindhx.Class.Arg, index:Int, ctx:BindContext):Void {
 
         var type = toHaxeType(arg.type, ctx);
         var name = (arg.name != null ? arg.name : 'arg' + (index + 1)) + '_haxe_';
@@ -1873,7 +1873,7 @@ class Bind {
 
     }
 
-    static function writeHaxeBindArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext):Void {
+    static function writeHaxeBindArgAssign(arg:bindhx.Class.Arg, index:Int, ctx:BindContext):Void {
 
         var haxeType = toHaxeType(arg.type, ctx);
         var type = toHaxeBindType(arg.type, ctx);
@@ -1985,7 +1985,7 @@ class Bind {
 
     }
 
-    static function writeHxcppArgAssign(arg:bind.Class.Arg, index:Int, ctx:BindContext, keepName:Bool = true):Void {
+    static function writeHxcppArgAssign(arg:bindhx.Class.Arg, index:Int, ctx:BindContext, keepName:Bool = true):Void {
 
         var type = toHxcppType(arg.type, ctx);
         var name = (keepName && arg.name != null ? arg.name : 'arg' + (index + 1)) + '_hxcpp_';
@@ -1995,12 +1995,12 @@ class Bind {
 
             case Function(args, ret, orig):
                 writeIndent(ctx);
-                write('$type $name = $value != NULL ? ::cpp::Pointer<void>(::bind::jni::GetJNIEnv()->NewGlobalRef($value)) : null();', ctx);
+                write('$type $name = $value != NULL ? ::cpp::Pointer<void>(::bindhx::jni::GetJNIEnv()->NewGlobalRef($value)) : null();', ctx);
                 writeLineBreak(ctx);
 
             case String(orig):
                 writeIndent(ctx);
-                write('$type $name = ::bind::jni::JStringToHxcpp($value);', ctx);
+                write('$type $name = ::bindhx::jni::JStringToHxcpp($value);', ctx);
                 writeLineBreak(ctx);
 
             case Int(orig):
@@ -2020,17 +2020,17 @@ class Bind {
 
             case Array(orig):
                 writeIndent(ctx);
-                write('$type $name = ::bind::jni::JStringToHxcpp($value);', ctx);
+                write('$type $name = ::bindhx::jni::JStringToHxcpp($value);', ctx);
                 writeLineBreak(ctx);
 
             case Map(orig):
                 writeIndent(ctx);
-                write('$type $name = ::bind::jni::JStringToHxcpp($value);', ctx);
+                write('$type $name = ::bindhx::jni::JStringToHxcpp($value);', ctx);
                 writeLineBreak(ctx);
 
             case Object(orig):
                 writeIndent(ctx);
-                write('$type $name = $value != NULL ? ::cpp::Pointer<void>(::bind::jni::GetJNIEnv()->NewGlobalRef($value)) : null();', ctx);
+                write('$type $name = $value != NULL ? ::cpp::Pointer<void>(::bindhx::jni::GetJNIEnv()->NewGlobalRef($value)) : null();', ctx);
                 writeLineBreak(ctx);
 
             default:
@@ -2041,7 +2041,7 @@ class Bind {
 
     }
 
-    static function writeJavaCall(method:bind.Class.Method, ctx:BindContext):Void {
+    static function writeJavaCall(method:bindhx.Class.Method, ctx:BindContext):Void {
 
         var hasReturn = false;
         var isJavaConstructor = isJavaConstructor(method, ctx);

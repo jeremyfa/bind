@@ -1,4 +1,4 @@
-package bind;
+package bindhx;
 
 using StringTools;
 
@@ -15,7 +15,7 @@ class Main {
         var args:Array<String> = args();
         var cwd = args.pop();
 
-        new bind.Cli(cast args, cwd).run();
+        new bindhx.Cli(cast args, cwd).run();
 
     }
 

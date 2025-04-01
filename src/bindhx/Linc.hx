@@ -58,21 +58,17 @@ class Linc {
 
         final bindSupportValueJni = Context.definedValue("bind_support_jni");
         if (bindSupportValueJni != null) {
-            trace("BIND SUPPORT JNI = " + bindSupportValueJni);
             _define += '<set name="BIND_SUPPORT_IDENTIFIER_JNI" value="${bindSupportValueJni.replace('/', '_')}"/>';
         }
         else if (bindSupportValue != null) {
-            trace("BIND SUPPORT JNI2 = " + bindSupportValue);
             _define += '<set name="BIND_SUPPORT_IDENTIFIER_JNI" value="${bindSupportValue.replace('/', '_')}"/>';
         }
 
         final bindSupportValueCs = Context.definedValue("bind_support_cs");
         if (bindSupportValueCs != null) {
-            trace("BIND SUPPORT CS = " + bindSupportValueCs);
             _define += '<set name="BIND_SUPPORT_IDENTIFIER_CS" value="${bindSupportValueCs.replace('/', '_')}"/>';
         }
         else if (bindSupportValue != null) {
-            trace("BIND SUPPORT CS2 = " + bindSupportValue);
             _define += '<set name="BIND_SUPPORT_IDENTIFIER_CS" value="${bindSupportValue.replace('/', '_')}"/>';
         }
 

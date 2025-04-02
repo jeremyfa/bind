@@ -234,25 +234,25 @@ class Support {
 @:allow(bindhx.java.Support)
 private extern class Support_Extern {
 
-    @:native('bind::jni::ResolveJClass')
+    @:native('bindhx::jni::ResolveJClass')
     static function resolveJClass(className:String):Pointer<Void>;
 
-    @:native('bind::jni::ResolveStaticJMethodID')
+    @:native('bindhx::jni::ResolveStaticJMethodID')
     static function resolveStaticJMethodID(jclass:Pointer<Void>, name:String, signature:String):Pointer<Void>;
 
-    @:native('bind::jni::ReleaseJObject')
+    @:native('bindhx::jni::ReleaseJObject')
     static function releaseJObject(jobjectRef:Pointer<Void>):Void;
 
-    @:native('bind::jni::SetHasNativeRunnables')
+    @:native('bindhx::jni::SetHasNativeRunnables')
     static function setHasNativeRunnables(value:Bool):Void;
 
-    @:native('bind::jni::HasNativeRunnables')
+    @:native('bindhx::jni::HasNativeRunnables')
     static function hasNativeRunnables():Bool;
 
-    @:native('bind::jni::RunAwaitingRunnables')
+    @:native('bindhx::jni::RunAwaitingRunnables')
     static function runAwaitingRunnables(class_:JClass, method_:JMethodID):Void;
 
-    @:native('bind::jni::IsInitialized')
+    @:native('bindhx::jni::IsInitialized')
     static function isInitialized():Bool;
 
 }

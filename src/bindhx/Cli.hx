@@ -34,7 +34,7 @@ class Cli {
             pretty: false,
             export: null,
             mute: false,
-            bindSupport: 'bindhx.Support',
+            bindSupport: 'bind.Support',
             noBindHeader: false
         };
         var bindClassOptions:Dynamic = {};
@@ -212,10 +212,10 @@ class Cli {
 
         else if (kind == 'cs') {
 
-            if (options.bindSupport == 'bindhx.Support') {
+            if (options.bindSupport == 'bind.Support') {
                 options.bindSupport = 'Bind.Support';
             }
-            if (bindClassOptions.bindSupport == 'bindhx.Support') {
+            if (bindClassOptions.bindSupport == 'bind.Support') {
                 bindClassOptions.bindSupport = 'Bind.Support';
             }
 

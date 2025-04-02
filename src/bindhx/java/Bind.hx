@@ -539,7 +539,7 @@ class Bind {
             writeLine('#include "linc_JNI.h"', ctx);
             writeLine('#include "linc_' + ctx.javaClass.name + '.h"', ctx);
             writeLine('#ifndef INCLUDED_bind_java_HObject', ctx);
-            writeLine('#include <bind/java/HObject.h>', ctx);
+            writeLine('#include <bindhx/java/HObject.h>', ctx);
             writeLine('#endif', ctx);
         }
 
@@ -1075,7 +1075,7 @@ class Bind {
         pack.pop();
 
         var javaContent = sys.io.File.getContent(Path.join([Path.directory(Sys.programPath()), 'support/java/bind/Support.java']));
-        javaContent = javaContent.replace('package bindhx;', 'package ${pack.join('.')};');
+        javaContent = javaContent.replace('package bind;', 'package ${pack.join('.')};');
 
         ctx.currentFile = {
             path: Path.join(['java', '${ctx.bindSupport.replace('.', '/')}.java']),
